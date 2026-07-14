@@ -1,0 +1,5 @@
+/* Glass theme — uses default portfolio styles; scoped overrides if needed */
+
+[data-portfolio-theme='glass'] .portfolio-theme-root {
+  /* inherits global glass utilities */
+}

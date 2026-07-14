@@ -1,0 +1,134 @@
+:root {
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+}
+
+.portfolio-cursor-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 35;
+  overflow: hidden;
+}
+
+.portfolio-cursor-glow,
+.portfolio-cursor-spotlight,
+.portfolio-cursor-aura,
+.portfolio-cursor-hover-spotlight,
+.portfolio-cursor-follower-ring,
+.portfolio-cursor-follower-dot {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  will-change: left, top, opacity;
+}
+
+.portfolio-cursor-glow {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(var(--primary) / 0.14) 0%,
+    rgb(var(--secondary) / 0.06) 35%,
+    transparent 70%
+  );
+  filter: blur(2px);
+}
+
+.portfolio-cursor-spotlight {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(var(--primary) / 0.22) 0%,
+    rgb(var(--primary) / 0.08) 35%,
+    transparent 65%
+  );
+  filter: blur(1px);
+}
+
+.portfolio-cursor-aura {
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(var(--secondary) / 0.12) 0%,
+    rgb(var(--primary) / 0.06) 40%,
+    transparent 75%
+  );
+  filter: blur(10px);
+}
+
+.portfolio-cursor-hover-spotlight {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(var(--primary) / 0.2) 0%,
+    rgb(var(--secondary) / 0.08) 45%,
+    transparent 70%
+  );
+  filter: blur(2px);
+  transition: opacity 0.2s ease;
+}
+
+.portfolio-cursor-follower-ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--secondary) / 0.55);
+  box-shadow: 0 0 12px rgb(var(--primary) / 0.2);
+}
+
+.portfolio-cursor-follower-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--secondary));
+  box-shadow: 0 0 8px rgb(var(--secondary) / 0.8);
+}
+
+.portfolio-cursor-radial-bg,
+.portfolio-cursor-lighting-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.portfolio-cursor-radial-bg {
+  background: radial-gradient(
+    520px circle at var(--cursor-x) var(--cursor-y),
+    rgb(var(--primary) / 0.09),
+    rgb(var(--secondary) / 0.03) 35%,
+    transparent 55%
+  );
+}
+
+.portfolio-cursor-lighting-bg {
+  background: radial-gradient(
+    680px circle at var(--cursor-x) var(--cursor-y),
+    rgb(var(--primary) / 0.14),
+    rgb(var(--secondary) / 0.05) 30%,
+    transparent 50%
+  );
+}
+
+@media (max-width: 1023px), (prefers-reduced-motion: reduce), (pointer: coarse) {
+  .portfolio-cursor-layer,
+  .portfolio-cursor-glow,
+  .portfolio-cursor-spotlight,
+  .portfolio-cursor-aura,
+  .portfolio-cursor-hover-spotlight,
+  .portfolio-cursor-follower-ring,
+  .portfolio-cursor-follower-dot,
+  .portfolio-cursor-radial-bg,
+  .portfolio-cursor-lighting-bg {
+    display: none;
+  }
+}

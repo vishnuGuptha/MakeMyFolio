@@ -1,0 +1,258 @@
+@import './themes/shared/cursor-effects.css';
+@import './themes/shared/project-preview.css';
+@import './themes/glass/glass.css';
+@import './themes/spotlight/spotlight.css';
+@import './themes/terminal/terminal.css';
+@import './themes/command-center/command-center.css';
+@import './themes/bento/bento.css';
+@import './themes/studio/studio.css';
+@import './themes/olive/olive.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: 10 15 28;
+  --bg-elevated: 17 24 39;
+  --bg-muted: 30 41 59;
+  --text-primary: 248 250 252;
+  --text-secondary: 203 213 225;
+  --text-muted: 148 163 184;
+  --border-default: 51 65 85;
+  --accent: 45 212 191;
+  --primary: 45 212 191;
+  --secondary: 251 146 60;
+  --accent-hover: 94 234 212;
+  --secondary-hover: 253 186 116;
+  --brand: 45 212 191;
+  --brand-ink: 15 23 42;
+  --glass-blur: 16px;
+  --glass-opacity: 0.12;
+  --glass-border: 0.12;
+  --portfolio-font: 'DM Sans', system-ui, sans-serif;
+  --marketing-display: 'Instrument Serif', Georgia, serif;
+}
+
+.light {
+  --bg-base: 248 250 252;
+  --bg-elevated: 255 255 255;
+  --bg-muted: 241 245 249;
+  --text-primary: 15 23 42;
+  --text-secondary: 51 65 85;
+  --text-muted: 100 116 139;
+  --border-default: 226 232 240;
+}
+
+[data-glass='subtle'] {
+  --glass-blur: 10px;
+  --glass-opacity: 0.06;
+  --glass-border: 0.08;
+}
+
+[data-glass='medium'] {
+  --glass-blur: 16px;
+  --glass-opacity: 0.12;
+  --glass-border: 0.12;
+}
+
+[data-glass='strong'] {
+  --glass-blur: 24px;
+  --glass-opacity: 0.2;
+  --glass-border: 0.18;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-base text-primary antialiased;
+    font-family: var(--portfolio-font);
+  }
+}
+
+@layer utilities {
+  .gradient-mesh-bg {
+    background:
+      radial-gradient(ellipse 90% 60% at 10% -10%, rgb(var(--primary) / 0.22), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 95% 5%, rgb(var(--secondary) / 0.18), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, rgb(var(--primary) / 0.08), transparent 60%);
+  }
+
+  .glass-orb {
+    @apply pointer-events-none fixed rounded-full blur-3xl opacity-40;
+  }
+  .glass-orb-primary {
+    width: 420px;
+    height: 420px;
+    top: -120px;
+    left: -80px;
+    background: rgb(var(--primary) / 0.35);
+  }
+  .glass-orb-secondary {
+    width: 360px;
+    height: 360px;
+    top: 20%;
+    right: -100px;
+    background: rgb(var(--secondary) / 0.28);
+  }
+
+  .glass-nav {
+    @apply backdrop-blur-xl border-b;
+    background: rgb(var(--bg-elevated) / var(--glass-opacity));
+    border-color: rgb(255 255 255 / var(--glass-border));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-nav-mobile {
+    @apply backdrop-blur-xl;
+    background: rgb(var(--bg-elevated) / calc(var(--glass-opacity) + 0.08));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-card {
+    @apply rounded-2xl backdrop-blur-md shadow-glass;
+    background: rgb(var(--bg-elevated) / var(--glass-opacity));
+    border: 1px solid rgb(255 255 255 / var(--glass-border));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-panel {
+    @apply rounded-3xl backdrop-blur-lg shadow-glass-lg;
+    background: linear-gradient(
+      135deg,
+      rgb(var(--bg-elevated) / calc(var(--glass-opacity) + 0.04)) 0%,
+      rgb(var(--primary) / 0.06) 100%
+    );
+    border: 1px solid rgb(255 255 255 / var(--glass-border));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-pill {
+    background: rgb(var(--bg-muted) / 0.4);
+    border: 1px solid rgb(255 255 255 / 0.06);
+  }
+
+  .glass-pill-active {
+    background: rgb(var(--primary) / 0.18);
+    border: 1px solid rgb(var(--primary) / 0.35);
+    box-shadow: 0 0 20px rgb(var(--primary) / 0.15);
+  }
+
+  .glass-icon-btn {
+    @apply rounded-xl p-2 transition-colors;
+    background: rgb(var(--bg-muted) / 0.35);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    backdrop-filter: blur(8px);
+  }
+  .glass-icon-btn:hover {
+    background: rgb(var(--primary) / 0.15);
+    border-color: rgb(var(--primary) / 0.3);
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgb(var(--primary) / 0.3), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgb(var(--secondary) / 0.2), transparent);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, rgb(var(--primary)), rgb(var(--secondary)));
+  }
+
+  .shadow-glass {
+    box-shadow: 0 8px 32px rgb(0 0 0 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+
+  .shadow-glass-lg {
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  /* Dashboard sidebar: scroll if needed, no system chrome */
+  .admin-sidebar-nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .admin-sidebar-nav::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
+  /* Try / theme-demo iframes — scroll without visible track */
+  html.guest-preview-embed {
+    overflow: hidden;
+    height: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html.guest-preview-embed::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  html.guest-preview-embed body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    height: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Avoid white page flash / corner bleed inside device frames */
+    background-color: #000;
+  }
+  html.guest-preview-embed body::-webkit-scrollbar,
+  html.guest-preview-embed *::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+  html.guest-preview-embed * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .font-display {
+    font-family: var(--marketing-display);
+  }
+
+  .marketing-mesh {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgb(var(--brand) / 0.22), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 90% 10%, rgb(var(--secondary) / 0.12), transparent 50%),
+      radial-gradient(ellipse 50% 30% at 50% 100%, rgb(var(--brand) / 0.08), transparent 55%);
+  }
+}
+
+/* Outside @layer so OS scroll tracks definitely hide on try editor */
+.try-editor-scroll {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.try-editor-scroll::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+.try-editor-scroll::-webkit-scrollbar-track,
+.try-editor-scroll::-webkit-scrollbar-thumb,
+.try-editor-scroll::-webkit-scrollbar-corner,
+.try-editor-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

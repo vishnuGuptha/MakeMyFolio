@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1.2">
+      <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#CCFBF1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="180" fill="#CCFBF1"/>
+  <rect width="320" height="180" fill="url(#bg)"/>
+  <rect x="12" y="28" width="110" height="66" rx="14" fill="#E6FFFB"/>
+  <rect x="130" y="28" width="100" height="124" rx="14" fill="#F0FDFA"/>
+  <rect x="238" y="28" width="70" height="124" rx="14" fill="#14B8A6" opacity="0.9"/>
+  <rect x="12" y="102" width="110" height="50" rx="12" fill="#FFFFFF" fill-opacity="0.72"/>
+  <text x="22" y="58" fill="#141414" font-family="system-ui,sans-serif" font-size="11" font-weight="700">Building soft</text>
+  <text x="22" y="74" fill="#141414" font-family="system-ui,sans-serif" font-size="11" font-weight="700">product boards.</text>
+  <text x="140" y="52" fill="#5a5a5a" font-family="system-ui,sans-serif" font-size="8" font-weight="600">PROJECTS</text>
+  <text x="140" y="70" fill="#141414" font-family="system-ui,sans-serif" font-size="9" font-weight="600">Musea</text>
+  <text x="22" y="128" fill="#5a5a5a" font-family="system-ui,sans-serif" font-size="8">Bio snippet…</text>
+</svg>

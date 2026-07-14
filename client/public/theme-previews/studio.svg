@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" fill="none">
+  <rect width="320" height="180" fill="#000000"/>
+  <rect x="40" y="12" width="240" height="22" rx="11" fill="#121212" stroke="#2a2a2a"/>
+  <text x="58" y="26" fill="#a3a3a3" font-family="ui-monospace,monospace" font-size="7">Home | Case Studies | Contact</text>
+  <text x="24" y="70" fill="#ffffff" font-family="system-ui,sans-serif" font-size="18" font-weight="700">Your Name</text>
+  <text x="24" y="90" fill="#a3a3a3" font-family="ui-monospace,monospace" font-size="7">Building products with craft.</text>
+  <rect x="24" y="102" width="88" height="22" rx="6" fill="#68AD0F"/>
+  <text x="36" y="116" fill="#ffffff" font-family="ui-monospace,monospace" font-size="7" font-weight="600">Get started</text>
+  <circle cx="250" cy="95" r="42" fill="#2F4F4F"/>
+  <circle cx="250" cy="88" r="14" fill="#3d6363"/>
+  <ellipse cx="250" cy="120" rx="22" ry="14" fill="#3d6363"/>
+  <rect x="24" y="150" width="52" height="18" rx="4" fill="#121212" stroke="#2a2a2a"/>
+  <rect x="82" y="150" width="52" height="18" rx="4" fill="#121212" stroke="#2a2a2a"/>
+  <rect x="140" y="150" width="52" height="18" rx="4" fill="#121212" stroke="#2a2a2a"/>
+</svg>

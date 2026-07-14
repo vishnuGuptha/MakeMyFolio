@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="180" fill="url(#bg)"/>
+  <rect x="60" y="16" width="200" height="28" rx="14" fill="#172033" stroke="rgba(255,255,255,0.08)"/>
+  <text x="80" y="34" fill="#3B82F6" font-family="sans-serif" font-size="9" font-weight="bold">VISHNU</text>
+  <text x="118" y="34" fill="#22D3EE" font-family="sans-serif" font-size="9">DEV</text>
+  <rect x="16" y="56" width="140" height="100" rx="12" fill="#172033" stroke="rgba(59,130,246,0.3)"/>
+  <text x="28" y="78" fill="#22D3EE" font-family="monospace" font-size="8">&gt; initializing...</text>
+  <text x="28" y="98" fill="#F8FAFC" font-family="sans-serif" font-size="11" font-weight="bold">Hi, I'm Vishnu</text>
+  <rect x="28" y="108" width="60" height="14" rx="6" fill="url(#glow)"/>
+  <rect x="168" y="56" width="136" height="48" rx="12" fill="#172033" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="184" cy="72" r="4" fill="#22c55e"/>
+  <text x="194" y="76" fill="#86efac" font-family="sans-serif" font-size="8">Available</text>
+  <rect x="168" y="112" width="136" height="44" rx="12" fill="#172033" stroke="rgba(255,255,255,0.08)"/>
+  <polyline points="180,140 200,135 220,138 240,125 260,130 280,120" fill="none" stroke="#3B82F6" stroke-width="1.5"/>
+</svg>

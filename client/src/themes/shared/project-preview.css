@@ -1,0 +1,194 @@
+/* Shared project media preview (image | webview) */
+
+.project-card-flat-top {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+.project-preview {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  background: #e8eef0;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.project-webview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #dce4e8;
+  border-radius: 0;
+}
+
+.project-webview-chrome {
+  flex-shrink: 0;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: #d0d9de;
+  border-bottom: 1px solid rgb(0 0 0 / 0.06);
+  border-radius: 0;
+  z-index: 3;
+}
+
+.project-webview-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.18);
+}
+
+.project-webview-dot:nth-child(1) { background: #ff5f57; }
+.project-webview-dot:nth-child(2) { background: #febc2e; }
+.project-webview-dot:nth-child(3) { background: #28c840; }
+
+.project-webview-url {
+  margin-left: 8px;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgb(0 0 0 / 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-webview-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.project-webview-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: flex-start;
+  background: linear-gradient(180deg, #f7f4f1, #efe8e2);
+}
+
+.project-webview-loading-bar {
+  display: block;
+  height: 2px;
+  width: 40%;
+  margin-top: 0;
+  background: linear-gradient(90deg, transparent, rgb(var(--primary, 232 160 144)), transparent);
+  animation: project-webview-pulse 1.2s ease-in-out infinite;
+}
+
+.project-webview-shot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Fill the frame — viewport screenshots are already 16:9-ish; avoid letterbox gaps */
+  object-fit: cover;
+  object-position: top center;
+  z-index: 2;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.project-webview-shot.is-loaded {
+  opacity: 1;
+}
+
+.project-webview-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  pointer-events: none;
+  background: #fff;
+}
+
+.project-webview-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: linear-gradient(160deg, #f7efe9, #eadfd6);
+  text-align: center;
+}
+
+.project-webview-fallback-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.project-webview-fallback-host {
+  font-size: 0.7rem;
+  color: rgb(0 0 0 / 0.45);
+}
+
+.project-webview-fallback-link {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-webview-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+}
+
+.project-webview-slow .project-webview-pan {
+  animation: project-webview-scroll 16s ease-in-out infinite alternate;
+}
+
+.project-webview-slow .project-webview-frame.project-webview-pan {
+  animation-name: project-webview-scroll-frame;
+}
+
+@keyframes project-webview-pulse {
+  0%, 100% { opacity: 0.35; width: 30%; }
+  50% { opacity: 1; width: 70%; }
+}
+
+@keyframes project-webview-scroll {
+  from {
+    object-position: top center;
+  }
+  to {
+    object-position: 50% 35%;
+  }
+}
+
+@keyframes project-webview-scroll-frame {
+  from {
+    /* scale set inline — override via CSS variable */
+    transform: scale(var(--pw-scale, 0.25)) translateY(0);
+  }
+  to {
+    transform: scale(var(--pw-scale, 0.25)) translateY(-40%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-webview-slow .project-webview-pan {
+    animation: none;
+  }
+  .project-webview-loading-bar {
+    animation: none;
+  }
+}

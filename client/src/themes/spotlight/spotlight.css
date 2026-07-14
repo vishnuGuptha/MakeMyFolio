@@ -1,0 +1,283 @@
+/* Spotlight theme — respects dark/light via CSS variables */
+
+[data-portfolio-theme='spotlight'] .portfolio-theme-root,
+[data-portfolio-theme='spotlight'] .spotlight-shell {
+  background-color: rgb(var(--bg-base));
+  color: rgb(var(--text-primary));
+  min-height: 100vh;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-shell {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background overlays */
+[data-portfolio-theme='spotlight'] .spotlight-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgb(var(--text-primary) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--text-primary) / 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black, transparent);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-dots {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(rgb(var(--primary) / 0.3) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.35;
+}
+
+.light [data-portfolio-theme='spotlight'] .spotlight-dots {
+  opacity: 0.2;
+}
+
+/* Navbar */
+[data-portfolio-theme='spotlight'] .spotlight-nav-scrolled {
+  background: rgb(var(--bg-elevated) / 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgb(var(--border-default) / 0.5);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-icon-btn {
+  border-radius: 0.75rem;
+  padding: 0;
+  background: rgb(var(--bg-muted) / 0.5);
+  border: 1px solid rgb(var(--border-default) / 0.6);
+  color: rgb(var(--text-primary));
+  transition: background 0.2s, border-color 0.2s;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-icon-btn:hover {
+  background: rgb(var(--primary) / 0.12);
+  border-color: rgb(var(--primary) / 0.35);
+}
+
+[data-portfolio-theme='spotlight'] .theme-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+}
+
+[data-portfolio-theme='spotlight'] .theme-nav-link-active {
+  color: rgb(var(--primary));
+  border-bottom-color: rgb(var(--primary));
+}
+
+/* Footer */
+[data-portfolio-theme='spotlight'] .spotlight-footer {
+  background: rgb(var(--bg-elevated) / 0.7);
+  border-color: rgb(var(--border-default) / 0.6);
+}
+
+.light [data-portfolio-theme='spotlight'] .spotlight-footer {
+  background: rgb(var(--bg-elevated) / 0.9);
+}
+
+/* Hero */
+[data-portfolio-theme='spotlight'] .spotlight-typewriter-row {
+  align-items: center;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-typewriter-row .theme-hero-title {
+  min-width: 0;
+  word-break: break-word;
+  margin: 0;
+  padding: 0;
+}
+
+[data-portfolio-theme='spotlight'] .theme-hero-title {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--primary)),
+    rgb(var(--secondary)),
+    rgb(34 211 238),
+    rgb(168 85 247)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-portfolio-theme='spotlight'] .typewriter-cursor {
+  color: rgb(var(--primary));
+  animation: spotlight-blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes spotlight-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-avatar-float {
+  animation: spotlight-float 4s ease-in-out infinite;
+}
+
+@keyframes spotlight-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-avatar-ring {
+  position: relative;
+  border-radius: 9999px;
+  padding: 4px;
+  background: linear-gradient(135deg, rgb(var(--primary)), rgb(var(--primary) / 0.4));
+  box-shadow:
+    0 0 40px rgb(var(--primary) / 0.35),
+    0 0 80px rgb(var(--primary) / 0.12);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-availability-pill {
+  border: 1px solid rgb(var(--border-default) / 0.5);
+  background: rgb(var(--bg-elevated) / 0.6);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cta-primary {
+  background: rgb(var(--primary));
+  color: rgb(10 10 10);
+  line-height: 1;
+}
+
+.light [data-portfolio-theme='spotlight'] .spotlight-cta-primary {
+  color: white;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cta-primary:hover {
+  background: rgb(var(--accent-hover));
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cta-outline {
+  border: 1px solid rgb(var(--border-default) / 0.8);
+  color: rgb(var(--text-primary));
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cta-outline:hover {
+  border-color: rgb(var(--primary) / 0.5);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-heading-title {
+  color: rgb(var(--text-primary));
+}
+
+/* Section cards */
+[data-portfolio-theme='spotlight'] .spotlight-stat-card {
+  background: rgb(var(--bg-elevated) / 0.8);
+  border: 1px solid rgb(var(--primary) / 0.2);
+  border-radius: 1rem;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-stat-value {
+  background: linear-gradient(135deg, rgb(var(--primary)), rgb(var(--secondary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-ai-strip {
+  background: rgb(var(--bg-elevated) / 0.7);
+  border: 1px solid rgb(var(--primary) / 0.15);
+  border-radius: 0.75rem;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-ai-pill {
+  background: rgb(var(--primary) / 0.12);
+  color: rgb(var(--text-primary));
+  border: 1px solid rgb(var(--primary) / 0.25);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-side-card,
+[data-portfolio-theme='spotlight'] .spotlight-exp-card,
+[data-portfolio-theme='spotlight'] .spotlight-edu-card,
+[data-portfolio-theme='spotlight'] .spotlight-project-card,
+[data-portfolio-theme='spotlight'] .spotlight-contact-form {
+  background: rgb(var(--bg-elevated) / 0.85);
+  border: 1px solid rgb(var(--primary) / 0.15);
+  border-radius: 1rem;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-exp-card:hover,
+[data-portfolio-theme='spotlight'] .spotlight-project-card:hover {
+  border-color: rgb(var(--primary) / 0.4);
+  box-shadow: 0 8px 32px rgb(var(--primary) / 0.08);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-date-pill {
+  background: rgb(var(--primary) / 0.1);
+  color: rgb(var(--text-secondary));
+  border: 1px solid rgb(var(--primary) / 0.2);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-skill-pill {
+  background: rgb(var(--bg-muted) / 0.6);
+  border: 1px solid rgb(var(--border-default) / 0.5);
+  color: rgb(var(--text-primary));
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-skill-pill:hover {
+  border-color: rgb(var(--primary) / 0.4);
+  background: rgb(var(--primary) / 0.08);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-edu-line {
+  background: linear-gradient(to bottom, rgb(var(--primary) / 0.5), transparent);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cert-row {
+  background: rgb(var(--bg-elevated) / 0.6);
+  border: 1px solid rgb(var(--border-default) / 0.4);
+  border-radius: 0.75rem;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-cert-row:hover {
+  border-color: rgb(var(--primary) / 0.3);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-contact-banner {
+  background: linear-gradient(135deg, rgb(var(--primary) / 0.15), rgb(var(--secondary) / 0.08));
+  border: 1px solid rgb(var(--primary) / 0.2);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-contact-link {
+  background: rgb(var(--bg-elevated) / 0.7);
+  border: 1px solid rgb(var(--border-default) / 0.4);
+  transition: border-color 0.2s;
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-contact-link:hover {
+  border-color: rgb(var(--primary) / 0.4);
+}
+
+[data-portfolio-theme='spotlight'] .spotlight-input {
+  background: rgb(var(--bg-base) / 0.5) !important;
+  border-color: rgb(var(--border-default) / 0.6) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-portfolio-theme='spotlight'] .spotlight-avatar-float {
+    animation: none;
+  }
+  [data-portfolio-theme='spotlight'] .typewriter-cursor {
+    animation: none;
+  }
+}

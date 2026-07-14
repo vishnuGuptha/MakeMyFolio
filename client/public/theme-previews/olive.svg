@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" fill="none">
+  <rect width="320" height="180" fill="#0d0d0d"/>
+  <text x="24" y="48" fill="#ffffff" font-family="system-ui,sans-serif" font-size="10">Hello! My name is</text>
+  <text x="24" y="78" fill="#5F8A4A" font-family="system-ui,sans-serif" font-size="22" font-weight="800">Your Name</text>
+  <rect x="24" y="96" width="88" height="24" rx="6" fill="#5F8A4A"/>
+  <text x="40" y="112" fill="#ffffff" font-family="system-ui,sans-serif" font-size="8" font-weight="600">About me</text>
+  <circle cx="250" cy="80" r="42" fill="#2a2a2a"/>
+  <circle cx="250" cy="80" r="34" fill="#1a1a1a"/>
+  <rect x="24" y="140" width="60" height="24" rx="8" fill="#5F8A4A"/>
+  <rect x="92" y="140" width="60" height="24" rx="8" fill="#8E95A0"/>
+  <rect x="160" y="140" width="60" height="24" rx="8" fill="#8E95A0"/>
+  <rect x="228" y="140" width="60" height="24" rx="8" fill="#8E95A0"/>
+</svg>
