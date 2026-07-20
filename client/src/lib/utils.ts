@@ -47,7 +47,7 @@ export function getPublicPortfolioUrl(slug: string, section?: string) {
   if (usesSubdomainPortfolios()) {
     const proto = window.location.protocol === 'http:' ? 'http' : 'https';
     const path = section ? `/${section}` : '';
-    return `${proto}//${getPortfolioHost(slug)}${path}`;
+    return `${proto}://${getPortfolioHost(slug)}${path}`;
   }
   return `${window.location.origin}${getPublicPortfolioPath(slug, section)}`;
 }
