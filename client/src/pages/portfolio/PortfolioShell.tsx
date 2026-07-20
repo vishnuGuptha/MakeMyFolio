@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useParams, useLocation } from 'react-router-dom';
+import { Link, Outlet, useParams, useLocation } from 'react-router-dom';
 import { publicApi, userApi } from '@/api';
 import { PortfolioProvider } from '@/context/PortfolioContext';
 import { PortfolioThemeProvider } from '@/context/PortfolioThemeContext';
@@ -82,10 +82,13 @@ export default function PortfolioShell({
       <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {isPreview && (
-            <div className="sticky top-0 z-50 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-center text-xs font-medium text-amber-100 backdrop-blur">
-              Draft preview — only you can see this
-              {!data.profile.isPublished && ' · Not published yet'}
-            </div>
+            <Link
+              to="/dashboard"
+              className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
+              title="Back to dashboard — only you can see this draft"
+            >
+              Draft
+            </Link>
           )}
           <ThemeNavbar
             name={data.content.name}
