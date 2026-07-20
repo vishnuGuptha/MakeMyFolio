@@ -70,10 +70,9 @@ export function getPortfolioSlugFromHost(hostname = typeof window !== 'undefined
   return slug;
 }
 
+/** Marketing / copy placeholder — always subdomain form (product URL). */
 export function getPortfolioUrlPlaceholder(): string {
-  return usesSubdomainPortfolios()
-    ? `your-name.${getAppDomain()}`
-    : `${getAppDomain()}/your-name`;
+  return `your-name.${getAppDomain()}`;
 }
 
 export function isPortfolioSubdomainHost(hostname = typeof window !== 'undefined' ? window.location.hostname : ''): boolean {

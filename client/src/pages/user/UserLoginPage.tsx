@@ -7,7 +7,11 @@ import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FormField } from '@/components/ui/Label';
+
+const inputClass =
+  'h-9 rounded-lg border-border/80 bg-base/50 focus-visible:ring-[#0066FF]/35';
 
 export default function UserLoginPage() {
   const [email, setEmail] = useState('');
@@ -35,46 +39,66 @@ export default function UserLoginPage() {
   };
 
   return (
-    <AuthPageShell>
-      <h1 className="text-lg font-bold text-primary sm:text-xl">Sign in</h1>
-      <p className="mt-1 text-xs text-subtle">Manage your {BRAND.name} dashboard</p>
+    <AuthPageShell
+      eyebrow="Sign in"
+      panelTitle="Welcome back"
+      panelBody={`Manage your ${BRAND.name} drafts, themes, and published link.`}
+      highlights={[
+        'Drafts and published folios in one place',
+        'Switch themes anytime',
+        'Share your live subdomain',
+      ]}
+    >
+      <h1 className="font-display text-xl text-primary">Sign in</h1>
+      <p className="mt-1 text-xs text-subtle">
+        {claimGuest
+          ? `Attach your guest draft to your account.`
+          : `Access your ${BRAND.name} dashboard`}
+      </p>
+
       <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
         <FormField label="Email" className="space-y-1">
           <Input
-            className="h-9"
+            className={inputClass}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            placeholder="you@email.com"
           />
         </FormField>
         <FormField label="Password" className="space-y-1">
-          <Input
-            className="h-9"
-            type="password"
+          <PasswordInput
+            className={inputClass}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
+            placeholder="Your password"
           />
         </FormField>
         <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-xs text-accent hover:underline">
+          <Link to="/forgot-password" className="text-[11px] font-medium text-[#0066FF] hover:underline">
             Forgot password?
           </Link>
         </div>
-        <Button type="submit" size="sm" className="w-full" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign In'}
+        <Button
+          type="submit"
+          className="home-cta-primary h-9 w-full border-0 text-sm hover:bg-transparent"
+          disabled={loading}
+        >
+          {loading ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
-      <p className="mt-3 text-center text-xs text-subtle">
+
+      <p className="mt-3.5 text-center text-xs text-subtle">
         No account?{' '}
         <Link
           to={claimGuest ? '/register?claimGuest=1' : '/register'}
-          className="text-accent hover:underline"
+          className="font-medium text-[#0066FF] hover:underline"
         >
-          Create one
+          Create one free
         </Link>
       </p>
     </AuthPageShell>

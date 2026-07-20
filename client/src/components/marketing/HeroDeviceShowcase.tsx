@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils';
 const DESKTOP_IMG = '/marketing/hero-desktop.png';
 const MOBILE_IMG = '/marketing/hero-mobile.png';
 
-/** Mac screen matches screenshot aspect (1024×448) — no object-cover crop */
+/** Mac screen matches screenshot aspect (1024×640) — no crop */
 const MAC_W = 520;
-const MAC_H = Math.round((520 * 448) / 1024); // ~227
+const MAC_H = Math.round((520 * 640) / 1024); // 325
 const DESKTOP_PAD = 8;
 const DESKTOP_CAMERA = 10;
 
@@ -49,7 +49,7 @@ function MacFrame({ urlLabel }: { urlLabel: string }) {
               src={DESKTOP_IMG}
               alt="Portfolio preview on desktop"
               width={1024}
-              height={448}
+              height={640}
               decoding="async"
               fetchPriority="high"
               className="absolute left-0 block"

@@ -60,17 +60,17 @@ export default function TryEditorPage() {
       >
         <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-subtle">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0066FF]">
               Live preview
             </p>
-            <div className="flex rounded-md border border-border bg-elevated p-0.5">
+            <div className="flex rounded-lg border border-border/80 bg-elevated/70 p-0.5 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => setDevice('desktop')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors',
+                  'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors',
                   device === 'desktop'
-                    ? 'bg-muted text-primary'
+                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
                     : 'text-subtle hover:text-primary'
                 )}
                 aria-pressed={device === 'desktop'}
@@ -81,8 +81,10 @@ export default function TryEditorPage() {
                 type="button"
                 onClick={() => setDevice('mobile')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors',
-                  device === 'mobile' ? 'bg-muted text-primary' : 'text-subtle hover:text-primary'
+                  'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors',
+                  device === 'mobile'
+                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
+                    : 'text-subtle hover:text-primary'
                 )}
                 aria-pressed={device === 'mobile'}
               >
@@ -92,7 +94,7 @@ export default function TryEditorPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className="home-cta-secondary h-7 text-xs"
               onClick={openFullPreview}
             >
               <Eye className="h-3.5 w-3.5" /> Full view
@@ -102,18 +104,25 @@ export default function TryEditorPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs"
+              className="home-cta-secondary h-8 text-xs"
               onClick={() => requireAuth('import')}
             >
               <Upload className="h-3.5 w-3.5" /> Import
             </Button>
-            <Button size="sm" className="h-8 text-xs" onClick={() => requireAuth('publish')}>
+            <Button
+              size="sm"
+              className="home-cta-primary h-8 border-0 text-xs hover:bg-transparent"
+              onClick={() => requireAuth('publish')}
+            >
               <Globe className="h-3.5 w-3.5" /> Publish
             </Button>
             <Button
               variant={sidebarOpen ? 'outline' : 'default'}
               size="sm"
-              className="h-8 text-xs"
+              className={cn(
+                'h-8 text-xs',
+                !sidebarOpen && 'home-cta-primary border-0 hover:bg-transparent'
+              )}
               onClick={() => setSidebarOpen((v) => !v)}
               aria-pressed={sidebarOpen}
             >
@@ -132,7 +141,7 @@ export default function TryEditorPage() {
 
       <aside
         className={cn(
-          'flex h-full shrink-0 flex-col border-l border-border bg-base/95 shadow-xl backdrop-blur-md transition-[width] duration-200 ease-out',
+          'flex h-full shrink-0 flex-col border-l border-border/70 bg-elevated/80 shadow-xl backdrop-blur-md transition-[width] duration-200 ease-out',
           sidebarOpen ? 'w-[min(100vw,340px)]' : 'w-0 border-l-0'
         )}
         aria-hidden={!sidebarOpen}
@@ -171,7 +180,7 @@ export default function TryEditorPage() {
                 className={cn(
                   'shrink-0 rounded-md px-2.5 py-1.5 text-xs transition-colors',
                   section === s.id
-                    ? 'bg-accent/15 text-accent'
+                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
                     : 'text-secondary hover:bg-muted hover:text-primary'
                 )}
               >

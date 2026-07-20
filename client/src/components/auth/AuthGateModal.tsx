@@ -11,6 +11,7 @@ import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 import { BrandLogo } from '@/brand/logo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FormField } from '@/components/ui/Label';
 import { errorMessage } from '@/lib/apiError';
 import {
@@ -130,9 +131,8 @@ export default function AuthGateModal({
             />
           </FormField>
           <FormField label="Password" className="space-y-1 [&_label]:text-xs">
-            <Input
+            <PasswordInput
               className="h-9"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

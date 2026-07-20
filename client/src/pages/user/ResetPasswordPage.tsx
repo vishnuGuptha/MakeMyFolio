@@ -5,7 +5,7 @@ import { authApi } from '@/api';
 import { errorMessage } from '@/lib/apiError';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FormField } from '@/components/ui/Label';
 
 export default function ResetPasswordPage() {
@@ -44,8 +44,7 @@ export default function ResetPasswordPage() {
       <p className="text-sm text-subtle mb-6">Choose a password at least 6 characters long.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField label="New password">
-          <Input
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -54,8 +53,7 @@ export default function ResetPasswordPage() {
           />
         </FormField>
         <FormField label="Confirm password">
-          <Input
-            type="password"
+          <PasswordInput
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required

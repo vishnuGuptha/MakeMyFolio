@@ -8,11 +8,15 @@ import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FormField } from '@/components/ui/Label';
 import {
   LegalConsentFields,
   canSubmitWithLegalConsent,
 } from '@/components/auth/LegalConsentFields';
+
+const inputClass =
+  'h-9 rounded-lg border-border/80 bg-base/50 focus-visible:ring-[#0066FF]/35';
 
 export default function UserRegisterPage() {
   const [name, setName] = useState('');
@@ -50,42 +54,52 @@ export default function UserRegisterPage() {
   const canSubmit = canSubmitWithLegalConsent(acceptPrivacy, acceptTerms);
 
   return (
-    <AuthPageShell>
-      <h1 className="text-lg font-bold text-primary sm:text-xl">Create your free account</h1>
+    <AuthPageShell
+      eyebrow="Get started"
+      panelTitle="Create your free account"
+      panelBody={
+        claimGuest
+          ? `We’ll save your guest draft so you can publish when ready.`
+          : 'Start free. Publish your live portfolio link in minutes.'
+      }
+      highlights={['No credit card to start', 'Keep drafts after signup', 'Your own subdomain URL']}
+    >
+      <h1 className="font-display text-xl text-primary">Create account</h1>
       <p className="mt-1 text-xs text-subtle">
-        {claimGuest
-          ? `We'll save your guest draft to ${BRAND.name} after signup.`
-          : BRAND.shortTagline}
+        {claimGuest ? 'Save your guest draft permanently.' : BRAND.shortTagline}
       </p>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
-        <FormField label="Full Name" className="space-y-1">
+
+      <form onSubmit={handleSubmit} className="mt-3.5 space-y-2">
+        <FormField label="Full name" className="space-y-1">
           <Input
-            className="h-9"
+            className={inputClass}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             autoComplete="name"
+            placeholder="Alex Rivera"
           />
         </FormField>
         <FormField label="Email" className="space-y-1">
           <Input
-            className="h-9"
+            className={inputClass}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            placeholder="you@email.com"
           />
         </FormField>
         <FormField label="Password" className="space-y-1">
-          <Input
-            className="h-9"
-            type="password"
+          <PasswordInput
+            className={inputClass}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
             autoComplete="new-password"
+            placeholder="At least 6 characters"
           />
         </FormField>
         <LegalConsentFields
@@ -93,17 +107,22 @@ export default function UserRegisterPage() {
           acceptTerms={acceptTerms}
           onPrivacyChange={setAcceptPrivacy}
           onTermsChange={setAcceptTerms}
-          className="space-y-1.5 px-2.5 py-2"
+          className="!space-y-1 !rounded-lg !border-border/60 !bg-base/30 !px-2.5 !py-1.5"
         />
-        <Button type="submit" size="sm" className="w-full" disabled={loading || !canSubmit}>
-          {loading ? 'Creating...' : 'Create Account'}
+        <Button
+          type="submit"
+          className="home-cta-primary h-9 w-full border-0 text-sm hover:bg-transparent"
+          disabled={loading || !canSubmit}
+        >
+          {loading ? 'Creating...' : 'Create account'}
         </Button>
       </form>
+
       <p className="mt-3 text-center text-xs text-subtle">
         Already have an account?{' '}
         <Link
           to={claimGuest ? '/login?claimGuest=1' : '/login'}
-          className="text-accent hover:underline"
+          className="font-medium text-[#0066FF] hover:underline"
         >
           Sign in
         </Link>

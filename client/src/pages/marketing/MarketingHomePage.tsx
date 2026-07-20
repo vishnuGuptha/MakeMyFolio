@@ -9,27 +9,26 @@ import { HomeLivingScene } from '@/components/marketing/HomeLivingScene';
 import { HeroDeviceShowcase } from '@/components/marketing/HeroDeviceShowcase';
 import { GlassTiltCard, MagneticCta } from '@/components/marketing/HomeInteractions';
 import { Button } from '@/components/ui/Button';
-import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
   {
     n: '01',
     icon: Zap,
-    title: 'Try the editor',
-    body: 'Open a live theme, edit content, and preview — no account required.',
+    title: 'Try it free',
+    body: 'Pick a theme and edit your portfolio right away. No account needed.',
   },
   {
     n: '02',
     icon: FileUp,
-    title: 'Import or refine',
-    body: 'Sign up free to import a resume and keep your draft permanently.',
+    title: 'Save your work',
+    body: 'Create a free account to upload your resume and keep your draft forever.',
   },
   {
     n: '03',
     icon: Link2,
-    title: 'Publish your URL',
-    body: `Go live at ${getPortfolioUrlPlaceholder().replace('your-name', 'you')}. Share when you’re ready.`,
+    title: 'Share your link',
+    body: `Publish to ${getPortfolioUrlPlaceholder()} and share it with anyone.`,
   },
 ];
 
@@ -83,9 +82,9 @@ export default function MarketingHomePage() {
       <HomeLivingScene />
 
       {/* Hero */}
-      <section ref={heroRef} className="relative min-h-[min(88vh,860px)]">
+      <section ref={heroRef} className="relative min-h-[min(82vh,800px)]">
         <motion.div
-          className="relative z-10 mx-auto grid max-w-6xl gap-8 px-4 pb-14 pt-10 sm:px-6 lg:grid-cols-[0.95fr_1.15fr] lg:items-center lg:gap-10 lg:pb-16 lg:pt-12"
+          className="relative z-10 mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-4 sm:px-6 lg:grid-cols-[0.95fr_1.15fr] lg:items-center lg:gap-10 lg:pb-14 lg:pt-6"
           style={{ y: heroY, opacity: heroOpacity }}
         >
           <div className="space-y-4 sm:space-y-5">
@@ -206,7 +205,7 @@ export default function MarketingHomePage() {
         </div>
       </section>
 
-      {/* Mid-page beat — URL reveal + theme strip */}
+      {/* Mid-page beat — URL reveal */}
       <section className="relative overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0"
@@ -266,60 +265,6 @@ export default function MarketingHomePage() {
               </motion.span>
             </p>
           </motion.div>
-
-          <motion.div
-            className="mt-14"
-            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5, ease }}
-          >
-            <div className="mb-6 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
-                  Themes
-                </p>
-                <h3 className="mt-1 font-display text-xl text-primary sm:text-2xl">
-                  Pick a look, then make it yours
-                </h3>
-              </div>
-              <Link
-                to="/themes"
-                className="hidden text-sm font-medium text-[#0066FF] hover:underline sm:inline"
-              >
-                Browse all
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {PORTFOLIO_THEME_LIST.map((theme, i) => (
-                <motion.div
-                  key={theme.id}
-                  initial={reduceMotion ? false : { opacity: 0, x: 24 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05, ease }}
-                  className="w-[9.5rem] shrink-0 sm:w-[11rem]"
-                >
-                  <Link
-                    to="/themes"
-                    className="group block overflow-hidden rounded-xl border border-border/80 bg-elevated/60 shadow-sm transition-shadow hover:shadow-md"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden bg-muted">
-                      <img
-                        src={`/theme-previews/${theme.id}.svg`}
-                        alt=""
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    </div>
-                    <p className="truncate px-2.5 py-2 text-xs font-medium text-primary sm:text-sm">
-                      {theme.name}
-                    </p>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
         </div>
       </section>
 
@@ -342,10 +287,10 @@ export default function MarketingHomePage() {
               How it works
             </p>
             <h2 className="font-display text-3xl text-primary sm:text-4xl lg:text-[2.75rem]">
-              From try to live URL
+              Three simple steps
             </h2>
             <p className="mt-3 text-base text-subtle sm:text-lg">
-              Start in the editor. Account only when you import or publish.
+              Start free. Sign up only when you want to save or publish.
             </p>
           </motion.div>
 

@@ -81,6 +81,20 @@
   }
 }
 
+/* Hide scrollbar track on marketing pages (scroll still works) */
+html.marketing-hide-scrollbar,
+html.marketing-hide-scrollbar body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html.marketing-hide-scrollbar::-webkit-scrollbar,
+html.marketing-hide-scrollbar body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
 @layer utilities {
   .gradient-mesh-bg {
     background:

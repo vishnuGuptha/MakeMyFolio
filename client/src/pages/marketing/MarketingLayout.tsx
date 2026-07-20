@@ -36,7 +36,7 @@ function NavItemLink({
         href={item.to}
         onClick={onNavigate}
         className={cn(
-          'rounded-lg px-3 py-2 text-sm text-secondary transition-colors hover:bg-muted hover:text-primary',
+          'rounded-lg px-3 py-1.5 text-sm text-secondary transition-colors hover:bg-muted hover:text-primary',
           className
         )}
       >
@@ -52,7 +52,7 @@ function NavItemLink({
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'rounded-lg px-3 py-2 text-sm transition-colors',
+          'rounded-lg px-3 py-1.5 text-sm transition-colors',
           isActive
             ? 'bg-accent/10 font-medium text-accent'
             : 'text-secondary hover:bg-muted hover:text-primary',
@@ -80,6 +80,11 @@ function MarketingChrome() {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    document.documentElement.classList.add('marketing-hide-scrollbar');
+    return () => document.documentElement.classList.remove('marketing-hide-scrollbar');
+  }, []);
+
   const isHome = pathname === '/';
 
   return (
@@ -90,33 +95,28 @@ function MarketingChrome() {
         isTryWorkspace ? 'flex h-svh flex-col overflow-hidden' : 'min-h-svh'
       )}
     >
-      <header className="sticky top-0 z-50 shrink-0 px-3 pt-3 sm:px-4">
-        <div
-          className={cn(
-            'mx-auto flex h-12 max-w-5xl items-center justify-between gap-3 rounded-full border border-border/70 bg-elevated/75 px-3 shadow-[0_8px_32px_-12px_rgb(15_23_42/0.18)] backdrop-blur-xl sm:h-14 sm:px-4',
-            'dark:border-white/10 dark:bg-elevated/70 dark:shadow-[0_8px_32px_-12px_rgb(0_0_0/0.55)]'
-          )}
-        >
-          <Link to="/" className="shrink-0 pl-1" onClick={() => setOpen(false)}>
-            <BrandLogo size={24} />
+      <header className="sticky top-0 z-50 shrink-0 border-b border-border/60 bg-base/85 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
+          <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
+            <BrandLogo size={26} />
           </Link>
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary">
             {NAV.map((item) => (
-              <NavItemLink key={item.label} item={item} className="rounded-full px-3.5 py-1.5" />
+              <NavItemLink key={item.label} item={item} />
             ))}
           </nav>
-          <div className="hidden items-center gap-1.5 md:flex">
+          <div className="hidden items-center gap-2 md:flex">
             <AppThemeToggle />
             {user?.role === 'user' ? (
-              <Button size="sm" asChild className="rounded-full">
+              <Button size="sm" asChild>
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
               <>
-                <Button size="sm" variant="ghost" asChild className="rounded-full">
+                <Button size="sm" variant="ghost" asChild>
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button size="sm" variant="outline" asChild className="rounded-full">
+                <Button size="sm" variant="outline" asChild>
                   <Link to="/try">Try free</Link>
                 </Button>
               </>
@@ -126,7 +126,7 @@ function MarketingChrome() {
             <AppThemeToggle />
             <button
               type="button"
-              className="rounded-full p-2 hover:bg-muted"
+              className="rounded-lg p-2 hover:bg-muted"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
               aria-expanded={open}
@@ -136,30 +136,30 @@ function MarketingChrome() {
           </div>
         </div>
         {open && (
-          <div className="mx-auto mt-2 max-w-5xl space-y-1 rounded-2xl border border-border/70 bg-elevated/95 px-3 py-3 shadow-lg backdrop-blur-xl md:hidden">
+          <div className="space-y-1 border-t border-border px-4 py-3 md:hidden">
             {NAV.map((item) => (
               <NavItemLink
                 key={item.label}
                 item={item}
                 onNavigate={() => setOpen(false)}
-                className="block rounded-xl"
+                className="block"
               />
             ))}
             <div className="flex gap-2 pt-2">
               {user?.role === 'user' ? (
-                <Button size="sm" className="flex-1 rounded-full" asChild>
+                <Button size="sm" className="flex-1" asChild>
                   <Link to="/dashboard" onClick={() => setOpen(false)}>
                     Dashboard
                   </Link>
                 </Button>
               ) : (
                 <>
-                  <Button size="sm" variant="ghost" className="flex-1 rounded-full" asChild>
+                  <Button size="sm" variant="ghost" className="flex-1" asChild>
                     <Link to="/login" onClick={() => setOpen(false)}>
                       Log in
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1 rounded-full" asChild>
+                  <Button size="sm" variant="outline" className="flex-1" asChild>
                     <Link to="/try" onClick={() => setOpen(false)}>
                       Try free
                     </Link>
