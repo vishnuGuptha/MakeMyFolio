@@ -36,25 +36,39 @@ export default function UserLoginPage() {
 
   return (
     <AuthPageShell>
-      <h1 className="text-2xl font-bold text-primary mb-2">Sign in</h1>
-      <p className="text-sm text-subtle mb-6">Manage your {BRAND.name} dashboard</p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField label="Email">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+      <h1 className="text-lg font-bold text-primary sm:text-xl">Sign in</h1>
+      <p className="mt-1 text-xs text-subtle">Manage your {BRAND.name} dashboard</p>
+      <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
+        <FormField label="Email" className="space-y-1">
+          <Input
+            className="h-9"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
         </FormField>
-        <FormField label="Password">
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <FormField label="Password" className="space-y-1">
+          <Input
+            className="h-9"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
         </FormField>
         <div className="flex justify-end">
           <Link to="/forgot-password" className="text-xs text-accent hover:underline">
             Forgot password?
           </Link>
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" size="sm" className="w-full" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-      <p className="text-sm text-subtle mt-6 text-center">
+      <p className="mt-3 text-center text-xs text-subtle">
         No account?{' '}
         <Link
           to={claimGuest ? '/register?claimGuest=1' : '/register'}

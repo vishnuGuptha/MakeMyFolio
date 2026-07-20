@@ -16,8 +16,8 @@ export function LegalConsentFields({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-2.5 rounded-lg border border-border bg-muted/30 px-3 py-3', className)}>
-      <label className="flex items-start gap-2.5 text-xs text-secondary cursor-pointer">
+    <div className={cn('space-y-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-2', className)}>
+      <label className="flex items-start gap-2 text-xs leading-snug text-secondary cursor-pointer">
         <input
           type="checkbox"
           className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-border accent-[rgb(var(--accent))]"
@@ -32,7 +32,7 @@ export function LegalConsentFields({
           </Link>
         </span>
       </label>
-      <label className="flex items-start gap-2.5 text-xs text-secondary cursor-pointer">
+      <label className="flex items-start gap-2 text-xs leading-snug text-secondary cursor-pointer">
         <input
           type="checkbox"
           className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-border accent-[rgb(var(--accent))]"

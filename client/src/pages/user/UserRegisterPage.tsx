@@ -51,26 +51,41 @@ export default function UserRegisterPage() {
 
   return (
     <AuthPageShell>
-      <h1 className="text-2xl font-bold text-primary mb-2">Create your free account</h1>
-      <p className="text-sm text-subtle mb-6">
+      <h1 className="text-lg font-bold text-primary sm:text-xl">Create your free account</h1>
+      <p className="mt-1 text-xs text-subtle">
         {claimGuest
           ? `We'll save your guest draft to ${BRAND.name} after signup.`
-          : BRAND.tagline}
+          : BRAND.shortTagline}
       </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField label="Full Name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </FormField>
-        <FormField label="Email">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </FormField>
-        <FormField label="Password">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
+        <FormField label="Full Name" className="space-y-1">
           <Input
+            className="h-9"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoComplete="name"
+          />
+        </FormField>
+        <FormField label="Email" className="space-y-1">
+          <Input
+            className="h-9"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </FormField>
+        <FormField label="Password" className="space-y-1">
+          <Input
+            className="h-9"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete="new-password"
           />
         </FormField>
         <LegalConsentFields
@@ -78,12 +93,13 @@ export default function UserRegisterPage() {
           acceptTerms={acceptTerms}
           onPrivacyChange={setAcceptPrivacy}
           onTermsChange={setAcceptTerms}
+          className="space-y-1.5 px-2.5 py-2"
         />
-        <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
+        <Button type="submit" size="sm" className="w-full" disabled={loading || !canSubmit}>
           {loading ? 'Creating...' : 'Create Account'}
         </Button>
       </form>
-      <p className="text-sm text-subtle mt-6 text-center">
+      <p className="mt-3 text-center text-xs text-subtle">
         Already have an account?{' '}
         <Link
           to={claimGuest ? '/login?claimGuest=1' : '/login'}
