@@ -20,7 +20,7 @@ import { sendError } from './utils/errors.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 const CLIENT_URL = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
-const APP_DOMAIN = process.env.APP_DOMAIN || 'makemyfolio.ai';
+const APP_DOMAIN = process.env.APP_DOMAIN || 'buildmyfolio.com';
 
 function isAllowedCorsOrigin(origin: string | undefined): boolean {
   if (!origin) return true;
