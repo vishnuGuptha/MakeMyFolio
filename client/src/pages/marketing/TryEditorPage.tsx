@@ -142,13 +142,17 @@ export default function TryEditorPage() {
           </div>
         </div>
 
-        <div className="try-editor-stage relative min-h-0 flex-1">
+        <div className="try-editor-stage relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="try-editor-stage-glow" aria-hidden />
           <div
             className="pointer-events-none absolute -inset-4 rounded-full bg-gradient-to-br from-[#0066FF]/25 via-indigo-500/15 to-cyan-400/20 blur-3xl opacity-80"
             aria-hidden
           />
-          <DeviceThemePreview draft={draft} device={device} className="relative z-10 min-h-0 flex-1 p-3 sm:p-5" />
+          <DeviceThemePreview
+            draft={draft}
+            device={device}
+            className="relative z-10 min-h-0 flex-1 p-3 sm:p-4"
+          />
         </div>
       </div>
 
