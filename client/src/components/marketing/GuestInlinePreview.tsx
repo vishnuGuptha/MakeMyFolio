@@ -1,9 +1,8 @@
 import { ExternalLink } from 'lucide-react';
-import { BRAND } from '@/brand/constants';
 import { guestDraftToPortfolioData, type GuestDraft } from '@/context/GuestDraftContext';
 import type { PortfolioThemeId } from '@/themes/types';
 import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import { cn, getPublicPortfolioLabel } from '@/lib/utils';
 
 /** Rich card preview of guest draft (side panel). */
 export function GuestInlinePreview({
@@ -21,7 +20,7 @@ export function GuestInlinePreview({
     <div className="overflow-hidden rounded-2xl border border-border bg-elevated shadow-glass">
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
         <span className="truncate font-mono text-[10px] text-subtle">
-          {BRAND.domain}/{data.profile.slug}
+          {getPublicPortfolioLabel(data.profile.slug)}
         </span>
         <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-secondary capitalize">
           {theme.replace('-', ' ')}

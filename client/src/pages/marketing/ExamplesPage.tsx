@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { publicApi } from '@/api';
 import { BRAND } from '@/brand/constants';
+import { getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import type { PortfolioProfile } from '@/types';
 
@@ -39,14 +40,14 @@ export default function ExamplesPage() {
         {profiles.map((p) => (
           <a
             key={p._id}
-            href={`/${p.slug}`}
+            href={getPublicPortfolioUrl(p.slug)}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-xl border border-border bg-elevated/40 p-5 transition-colors hover:border-accent/40"
           >
             <p className="font-semibold text-primary">{p.displayName}</p>
             <p className="mt-1 font-mono text-xs text-subtle">
-              {BRAND.domain}/{p.slug}
+              {getPublicPortfolioLabel(p.slug)}
             </p>
           </a>
         ))}

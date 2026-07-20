@@ -15,7 +15,9 @@ import LegacyPortfolioRedirect from '@/pages/LegacyPortfolioRedirect';
 import PortfolioShell from '@/pages/portfolio/PortfolioShell';
 import PortfolioHomePage from '@/pages/portfolio/PortfolioHomePage';
 import PortfolioSectionPage from '@/pages/portfolio/PortfolioSectionPage';
+import PublicPortfolioEntry, { SubdomainPortfolioRoutes } from '@/pages/portfolio/PublicPortfolioEntry';
 import NotFoundPage from '@/pages/NotFoundPage';
+import { isPortfolioSubdomainHost } from '@/lib/domains';
 import UserLoginPage from '@/pages/user/UserLoginPage';
 import UserRegisterPage from '@/pages/user/UserRegisterPage';
 import ForgotPasswordPage from '@/pages/user/ForgotPasswordPage';
@@ -52,12 +54,17 @@ function Fallback({ label }: { label: string }) {
 }
 
 export default function App() {
+  const onPortfolioSubdomain = isPortfolioSubdomainHost();
+
   return (
     <ThemeProvider>
       <AuthProvider>
         <UnsavedChangesProvider>
           <AdminProfileProvider>
           <Toaster position="top-right" richColors />
+          {onPortfolioSubdomain ? (
+            <SubdomainPortfolioRoutes />
+          ) : (
           <Routes>
             <Route path="/try/preview" element={<Suspense fallback={<Fallback label="preview" />}><GuestFullPreviewPage /></Suspense>} />
             <Route path="/theme-demo/:themeId" element={<Suspense fallback={<Fallback label="theme" />}><ThemeDemoEmbedPage /></Suspense>} />
@@ -157,13 +164,16 @@ export default function App() {
               <Route path="activity" element={<Suspense fallback={<Fallback label="activity" />}><PlatformActivityPage /></Suspense>} />
             </Route>
 
-            <Route path="/:slug" element={<PortfolioShell />}>
-              <Route index element={<PortfolioHomePage />} />
-              <Route path=":section" element={<PortfolioSectionPage />} />
+            <Route path="/:slug" element={<PublicPortfolioEntry />}>
+              <Route element={<PortfolioShell />}>
+                <Route index element={<PortfolioHomePage />} />
+                <Route path=":section" element={<PortfolioSectionPage />} />
+              </Route>
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          )}
           </AdminProfileProvider>
         </UnsavedChangesProvider>
       </AuthProvider>

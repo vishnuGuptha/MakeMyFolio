@@ -12,11 +12,19 @@ import ThemeFooter from '@/themes/ThemeFooter';
 import NotFoundPage from '@/pages/NotFoundPage';
 import type { PortfolioThemeId } from '@/themes/types';
 import { cn } from '@/lib/utils';
+import { isPortfolioSubdomainHost, usesSubdomainPortfolios } from '@/lib/domains';
 
 type ShellMode = 'public' | 'preview';
 
-export default function PortfolioShell({ mode = 'public' }: { mode?: ShellMode }) {
-  const { slug, profileId } = useParams<{ slug?: string; profileId?: string }>();
+export default function PortfolioShell({
+  mode = 'public',
+  slugOverride,
+}: {
+  mode?: ShellMode;
+  slugOverride?: string;
+}) {
+  const { slug: paramSlug, profileId } = useParams<{ slug?: string; profileId?: string }>();
+  const slug = slugOverride ?? paramSlug;
   const location = useLocation();
   const [data, setData] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +72,10 @@ export default function PortfolioShell({ mode = 'public' }: { mode?: ShellMode }
 
   const layoutMode = data.settings?.layoutMode || 'single-page';
   const portfolioTheme = (data.settings?.portfolioTheme || 'glass') as PortfolioThemeId;
-  const basePath = isPreview && profileId ? `/preview/${profileId}` : `/${data.profile.slug}`;
+  const onSubdomain =
+    !isPreview && (isPortfolioSubdomainHost() || (Boolean(slugOverride) && usesSubdomainPortfolios()));
+  const basePath =
+    isPreview && profileId ? `/preview/${profileId}` : onSubdomain ? '' : `/${data.profile.slug}`;
 
   return (
     <PortfolioProvider data={data} basePath={basePath} isPreview={isPreview}>

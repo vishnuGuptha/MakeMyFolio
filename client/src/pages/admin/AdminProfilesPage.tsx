@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
-import { cn, generateSlug, getPortfolioViewPath, getPublicPortfolioUrl } from '@/lib/utils';
+import { cn, generateSlug, getPortfolioViewPath, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -120,7 +120,7 @@ export default function AdminProfilesPage() {
       setDetailsProfile(null);
       toast.success(
         updated.slug !== detailsProfile.slug
-          ? `URL updated to /${updated.slug}`
+          ? `URL updated to ${getPublicPortfolioLabel(updated.slug)}`
           : 'Portfolio details saved'
       );
     } catch (err) {
@@ -143,7 +143,7 @@ export default function AdminProfilesPage() {
       setDisplayName('');
       setSlug('');
       setDuplicateFromId('');
-      toast.success(`Draft created. Publish it when you’re ready — live URL: /${profile.slug}`);
+      toast.success(`Draft created. Publish it when you’re ready — live URL: ${getPublicPortfolioLabel(profile.slug)}`);
       navigate('/dashboard/content');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create profile');
@@ -162,7 +162,7 @@ export default function AdminProfilesPage() {
           if (
             !next &&
             !confirm(
-              `Unpublish “${profile.displayName}”? Visitors will no longer see the live page at /${profile.slug}.`
+              `Unpublish “${profile.displayName}”? Visitors will no longer see the live page at ${getPublicPortfolioLabel(profile.slug)}.`
             )
           ) {
             return;
@@ -170,7 +170,7 @@ export default function AdminProfilesPage() {
           await adminApi.publishProfile(profile._id, next);
           toast.success(
             next
-              ? `Published! Anyone with the link can view /${profile.slug}`
+              ? `Published! Anyone with the link can view ${getPublicPortfolioLabel(profile.slug)}`
               : 'Moved back to Draft — no longer publicly visible'
           );
           break;

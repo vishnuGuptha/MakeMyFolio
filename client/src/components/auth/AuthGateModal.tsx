@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { type AuthGateReason } from '@/context/GuestDraftContext';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
 import { startOnboarding } from '@/lib/onboarding';
-import { BRAND } from '@/brand/constants';
+import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 import { BrandLogo } from '@/brand/logo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -20,7 +20,7 @@ import {
 
 const REASON_COPY: Record<AuthGateReason, string> = {
   import: `Create a free account to import your resume and keep your work.`,
-  publish: `Create a free account to publish at ${BRAND.domain}/{slug}.`,
+  publish: `Create a free account to publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
   persist: `Create a free account to save your draft permanently.`,
 };
 

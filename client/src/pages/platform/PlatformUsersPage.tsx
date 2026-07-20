@@ -5,6 +5,7 @@ import { platformApi } from '@/api';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 
 export default function PlatformUsersPage() {
   const [users, setUsers] = useState<Awaited<ReturnType<typeof platformApi.getUsers>>>([]);
@@ -38,10 +39,10 @@ export default function PlatformUsersPage() {
                 <div className="mt-3 space-y-2">
                   {user.portfolios.map((p) => (
                     <div key={p._id} className="flex items-center gap-2 text-sm">
-                      <a href={`/${p.slug}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-1">
+                      <a href={getPublicPortfolioUrl(p.slug)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-1">
                         {p.displayName} <ExternalLink className="h-3 w-3" />
                       </a>
-                      <span className="font-mono text-xs text-subtle">/{p.slug}</span>
+                      <span className="font-mono text-xs text-subtle">{getPublicPortfolioLabel(p.slug)}</span>
                       {p.isPublished ? <Badge variant="accent">Live</Badge> : <Badge variant="outline">Draft</Badge>}
                     </div>
                   ))}

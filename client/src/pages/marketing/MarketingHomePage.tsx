@@ -6,10 +6,11 @@ import { publicApi } from '@/api';
 import { BRAND } from '@/brand/constants';
 import { BrandLogo, BrandMark } from '@/brand/logo';
 import { PLANS } from '@/lib/plans';
+import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
 import { ThemeLiveCard, ThemeLiveHeroFrame } from '@/components/marketing/ThemeLiveCard';
 import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import { cn, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 import type { PortfolioProfile } from '@/types';
 
 export default function MarketingHomePage() {
@@ -66,7 +67,7 @@ export default function MarketingHomePage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
                 <span className="ml-2 font-mono text-[10px] text-subtle">
-                  {BRAND.domain}/your-name
+                  {getPortfolioUrlPlaceholder()}
                 </span>
               </div>
               <div className="p-2 sm:p-3">
@@ -97,7 +98,7 @@ export default function MarketingHomePage() {
               {
                 icon: Globe,
                 title: 'Publish your URL',
-                body: `Go live at ${BRAND.domain}/your-slug. Preview privately until you’re ready.`,
+                body: `Go live at ${getPortfolioUrlPlaceholder().replace('your-name', 'your-slug')}. Preview privately until you’re ready.`,
               },
             ].map((step) => (
               <div key={step.title} className="rounded-2xl border border-border bg-elevated/50 p-6">
@@ -153,14 +154,14 @@ export default function MarketingHomePage() {
               examples.map((p) => (
                 <a
                   key={p._id}
-                  href={`/${p.slug}`}
+                  href={getPublicPortfolioUrl(p.slug)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group rounded-xl border border-border bg-elevated/40 p-5 transition-colors hover:border-accent/40"
                 >
                   <p className="font-semibold text-primary group-hover:text-accent">{p.displayName}</p>
                   <p className="mt-1 font-mono text-xs text-subtle">
-                    {BRAND.domain}/{p.slug}
+                    {getPublicPortfolioLabel(p.slug)}
                   </p>
                 </a>
               ))

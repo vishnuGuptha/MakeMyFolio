@@ -4,6 +4,7 @@ import { Users, Briefcase, Mail, Eye } from 'lucide-react';
 import { platformApi } from '@/api';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 
 type DashboardData = Awaited<ReturnType<typeof platformApi.getDashboard>>;
 
@@ -72,14 +73,14 @@ export default function PlatformDashboardPage() {
               <div key={profile._id} className="flex items-center justify-between text-sm gap-3">
                 <div>
                   <a
-                    href={`/${profile.slug}`}
+                    href={getPublicPortfolioUrl(profile.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-accent hover:underline"
                   >
                     {profile.displayName}
                   </a>
-                  <p className="text-xs text-subtle font-mono">/{profile.slug}</p>
+                  <p className="text-xs text-subtle font-mono">{getPublicPortfolioLabel(profile.slug)}</p>
                 </div>
                 {profile.isPublished ? (
                   <Badge variant="accent">Live</Badge>

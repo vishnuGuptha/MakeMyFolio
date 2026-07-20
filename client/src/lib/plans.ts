@@ -1,4 +1,4 @@
-import { BRAND } from '@/brand/constants';
+import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 
 export type PlanId = 'free' | 'pro' | 'team';
 
@@ -24,7 +24,7 @@ export const PLANS: PlanDef[] = [
     features: [
       '1 published portfolio',
       'Core themes',
-      `${BRAND.domain}/{slug} URL`,
+      `${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')} URL`,
       'Resume import (fair use)',
       'Contact form & messages',
     ],
