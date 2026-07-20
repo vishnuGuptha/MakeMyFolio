@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, FileUp, LayoutTemplate, Link2, Zap } from 'lucide-react';
+import { ArrowRight, Check, FileUp, Link2, Zap } from 'lucide-react';
 import { BRAND } from '@/brand/constants';
 import { BrandLogo, BrandMark } from '@/brand/logo';
-import { PLANS } from '@/lib/plans';
 import { getPortfolioUrlPlaceholder } from '@/lib/domains';
-import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
-import { ThemeLiveCard, ThemeLiveHeroFrame } from '@/components/marketing/ThemeLiveCard';
+import { ThemeLiveHeroFrame } from '@/components/marketing/ThemeLiveCard';
 import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
 
 const STEPS = [
   {
@@ -40,7 +37,6 @@ const TRUST = [
 export default function MarketingHomePage() {
   return (
     <main>
-      {/* Hero — one composition */}
       <section className="relative overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0 opacity-70"
@@ -105,8 +101,7 @@ export default function MarketingHomePage() {
         </div>
       </section>
 
-      {/* How */}
-      <section id="how" className="scroll-mt-20 border-t border-border/50">
+      <section className="border-t border-border/50">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="max-w-xl">
             <h2 className="font-display text-3xl text-primary sm:text-4xl">From try to live URL</h2>
@@ -122,102 +117,19 @@ export default function MarketingHomePage() {
               </div>
             ))}
           </div>
-          <div className="mt-10">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Button asChild>
               <Link to="/try">
                 Open try editor <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Themes */}
-      <section id="themes" className="scroll-mt-20 border-t border-border/50 bg-elevated/25">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-lg">
-              <h2 className="font-display text-3xl text-primary sm:text-4xl">Themes that feel designed</h2>
-              <p className="mt-2 text-subtle">
-                Preview every look with our demo folio — then open it in try mode.
-              </p>
-            </div>
             <Button variant="outline" asChild>
-              <Link to="/themes">
-                <LayoutTemplate className="h-4 w-4" /> View all themes
-              </Link>
+              <Link to="/pricing">View pricing</Link>
             </Button>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PORTFOLIO_THEME_LIST.slice(0, 6).map((theme) => (
-              <ThemeLiveCard
-                key={theme.id}
-                themeId={theme.id}
-                name={theme.name}
-                description={theme.description}
-                href={`/try?theme=${theme.id}`}
-              />
-            ))}
-          </div>
-          {PORTFOLIO_THEME_LIST.length > 6 && (
-            <div className="mt-6 text-center">
-              <Button variant="ghost" asChild>
-                <Link to="/themes">
-                  See all {PORTFOLIO_THEME_LIST.length} themes <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="scroll-mt-20 border-t border-border/50 bg-elevated/20">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="max-w-xl">
-            <h2 className="font-display text-3xl text-primary sm:text-4xl">Simple pricing</h2>
-            <p className="mt-2 text-subtle">Start free. Upgrade when you need more folios and themes.</p>
-          </div>
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                className={cn(
-                  'flex flex-col rounded-2xl border p-6',
-                  plan.highlighted
-                    ? 'border-accent/50 bg-accent/5 shadow-glass'
-                    : 'border-border bg-base/60'
-                )}
-              >
-                {plan.highlighted && (
-                  <span className="mb-2 w-fit rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
-                    Popular
-                  </span>
-                )}
-                <h3 className="text-lg font-semibold text-primary">{plan.name}</h3>
-                <p className="mt-1 text-sm text-subtle">{plan.description}</p>
-                <p className="mt-4">
-                  <span className="text-3xl font-bold text-primary">{plan.price}</span>
-                  <span className="ml-1 text-sm text-subtle">{plan.priceNote}</span>
-                </p>
-                <ul className="mt-6 flex-1 space-y-2.5">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex gap-2 text-sm text-secondary">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="mt-8 w-full" variant={plan.highlighted ? 'default' : 'outline'} asChild>
-                  <Link to={plan.ctaTo}>{plan.cta}</Link>
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
       <section className="border-t border-border/50">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:px-6 sm:py-20 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-4">

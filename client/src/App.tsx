@@ -44,6 +44,7 @@ const PlatformActivityPage = lazy(() => import('@/pages/platform/PlatformActivit
 const PlatformTryDemoPage = lazy(() => import('@/pages/platform/PlatformTryDemoPage'));
 const TryEditorPage = lazy(() => import('@/pages/marketing/TryEditorPage'));
 const ThemesPage = lazy(() => import('@/pages/marketing/ThemesPage'));
+const PricingPage = lazy(() => import('@/pages/marketing/PricingPage'));
 const GuestFullPreviewPage = lazy(() => import('@/pages/marketing/GuestFullPreviewPage'));
 const ThemeDemoEmbedPage = lazy(() => import('@/pages/marketing/ThemeDemoEmbedPage'));
 const PrivacyPage = lazy(() => import('@/pages/marketing/PrivacyPage'));
@@ -84,6 +85,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<Fallback label="themes" />}>
                     <ThemesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="pricing"
+                element={
+                  <Suspense fallback={<Fallback label="pricing" />}>
+                    <PricingPage />
                   </Suspense>
                 }
               />

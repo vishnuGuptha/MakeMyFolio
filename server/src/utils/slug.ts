@@ -9,6 +9,7 @@ export const RESERVED_SLUGS = [
   'mail',
   'try',
   'themes',
+  'pricing',
   'examples',
   'login',
   'register',

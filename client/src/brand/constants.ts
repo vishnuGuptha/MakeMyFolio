@@ -11,6 +11,7 @@ export const BRAND = {
 export const RESERVED_APP_PATHS = [
   'try',
   'themes',
+  'pricing',
   'examples',
   'login',
   'register',

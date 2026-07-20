@@ -23,6 +23,7 @@ function redirectToLogin() {
     path.startsWith('/platform/login') ||
     path.startsWith('/try') ||
     path.startsWith('/themes') ||
+    path.startsWith('/pricing') ||
     path.startsWith('/examples') ||
     path.startsWith('/privacy') ||
     path.startsWith('/terms')

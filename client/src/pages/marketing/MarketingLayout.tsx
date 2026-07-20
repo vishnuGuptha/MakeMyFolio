@@ -15,9 +15,10 @@ import { useGuestDraft } from '@/context/GuestDraftContext';
 type NavItem = { to: string; label: string; hash?: boolean };
 
 const NAV: NavItem[] = [
+  { to: '/', label: 'Home' },
   { to: '/try', label: 'Try' },
   { to: '/themes', label: 'Themes' },
-  { to: '/#pricing', label: 'Pricing', hash: true },
+  { to: '/pricing', label: 'Pricing' },
 ];
 
 function NavItemLink({
@@ -176,15 +177,18 @@ function MarketingChrome() {
             <div className="flex flex-wrap gap-10 text-sm">
               <div className="space-y-2">
                 <p className="font-medium text-primary">Product</p>
+                <Link to="/" className="block text-subtle hover:text-accent">
+                  Home
+                </Link>
                 <Link to="/try" className="block text-subtle hover:text-accent">
                   Try editor
                 </Link>
                 <Link to="/themes" className="block text-subtle hover:text-accent">
                   Themes
                 </Link>
-                <a href="/#pricing" className="block text-subtle hover:text-accent">
+                <Link to="/pricing" className="block text-subtle hover:text-accent">
                   Pricing
-                </a>
+                </Link>
               </div>
               <div className="space-y-2">
                 <p className="font-medium text-primary">Account</p>
