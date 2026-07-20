@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, FileUp, LayoutTemplate, Link2, Zap } from 'lucide-react';
-import { publicApi } from '@/api';
 import { BRAND } from '@/brand/constants';
 import { BrandLogo, BrandMark } from '@/brand/logo';
 import { PLANS } from '@/lib/plans';
@@ -10,8 +8,7 @@ import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
 import { ThemeLiveCard, ThemeLiveHeroFrame } from '@/components/marketing/ThemeLiveCard';
 import { Button } from '@/components/ui/Button';
-import { cn, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
-import type { PortfolioProfile } from '@/types';
+import { cn } from '@/lib/utils';
 
 const STEPS = [
   {
@@ -41,15 +38,6 @@ const TRUST = [
 ];
 
 export default function MarketingHomePage() {
-  const [examples, setExamples] = useState<PortfolioProfile[]>([]);
-
-  useEffect(() => {
-    publicApi
-      .getProfiles()
-      .then((list) => setExamples(list.filter((p) => p.isPublished).slice(0, 6)))
-      .catch(() => setExamples([]));
-  }, []);
-
   return (
     <main>
       {/* Hero — one composition */}
@@ -81,7 +69,7 @@ export default function MarketingHomePage() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/examples">See examples</Link>
+                <Link to="/themes">See themes</Link>
               </Button>
             </div>
             <ul className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1 text-xs text-subtle">
@@ -150,65 +138,36 @@ export default function MarketingHomePage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-lg">
               <h2 className="font-display text-3xl text-primary sm:text-4xl">Themes that feel designed</h2>
-              <p className="mt-2 text-subtle">Pick a look in try mode — switch anytime without losing content.</p>
+              <p className="mt-2 text-subtle">
+                Preview every look with our demo folio — then open it in try mode.
+              </p>
             </div>
             <Button variant="outline" asChild>
-              <Link to="/try">
-                <LayoutTemplate className="h-4 w-4" /> Try themes
+              <Link to="/themes">
+                <LayoutTemplate className="h-4 w-4" /> View all themes
               </Link>
             </Button>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PORTFOLIO_THEME_LIST.map((theme) => (
+            {PORTFOLIO_THEME_LIST.slice(0, 6).map((theme) => (
               <ThemeLiveCard
                 key={theme.id}
                 themeId={theme.id}
                 name={theme.name}
                 description={theme.description}
+                href={`/try?theme=${theme.id}`}
               />
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Examples */}
-      <section className="border-t border-border/50">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="font-display text-3xl text-primary sm:text-4xl">Live examples</h2>
-              <p className="mt-2 text-subtle">Real portfolios published on {BRAND.name}.</p>
-            </div>
-            <Button variant="ghost" asChild>
-              <Link to="/examples">
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {examples.length === 0 ? (
-              <p className="col-span-full text-sm text-subtle">
-                No published examples yet —{' '}
-                <Link to="/try" className="text-accent hover:underline">
-                  be the first
+          {PORTFOLIO_THEME_LIST.length > 6 && (
+            <div className="mt-6 text-center">
+              <Button variant="ghost" asChild>
+                <Link to="/themes">
+                  See all {PORTFOLIO_THEME_LIST.length} themes <ArrowRight className="h-4 w-4" />
                 </Link>
-                .
-              </p>
-            ) : (
-              examples.map((p) => (
-                <a
-                  key={p._id}
-                  href={getPublicPortfolioUrl(p.slug)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group rounded-xl border border-border px-5 py-4 transition-colors hover:border-accent/40 hover:bg-elevated/40"
-                >
-                  <p className="font-semibold text-primary group-hover:text-accent">{p.displayName}</p>
-                  <p className="mt-1 font-mono text-xs text-subtle">{getPublicPortfolioLabel(p.slug)}</p>
-                </a>
-              ))
-            )}
-          </div>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

@@ -16,8 +16,7 @@ type NavItem = { to: string; label: string; hash?: boolean };
 
 const NAV: NavItem[] = [
   { to: '/try', label: 'Try' },
-  { to: '/#themes', label: 'Themes', hash: true },
-  { to: '/examples', label: 'Examples' },
+  { to: '/themes', label: 'Themes' },
   { to: '/#pricing', label: 'Pricing', hash: true },
 ];
 
@@ -180,11 +179,8 @@ function MarketingChrome() {
                 <Link to="/try" className="block text-subtle hover:text-accent">
                   Try editor
                 </Link>
-                <a href="/#themes" className="block text-subtle hover:text-accent">
+                <Link to="/themes" className="block text-subtle hover:text-accent">
                   Themes
-                </a>
-                <Link to="/examples" className="block text-subtle hover:text-accent">
-                  Examples
                 </Link>
                 <a href="/#pricing" className="block text-subtle hover:text-accent">
                   Pricing

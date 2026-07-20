@@ -10,6 +10,7 @@ export const BRAND = {
 /** Path segments that must never be treated as portfolio slugs */
 export const RESERVED_APP_PATHS = [
   'try',
+  'themes',
   'examples',
   'login',
   'register',

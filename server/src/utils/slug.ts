@@ -8,6 +8,7 @@ export const RESERVED_SLUGS = [
   'static',
   'mail',
   'try',
+  'themes',
   'examples',
   'login',
   'register',

@@ -43,7 +43,7 @@ const PlatformPortfoliosPage = lazy(() => import('@/pages/platform/PlatformPortf
 const PlatformActivityPage = lazy(() => import('@/pages/platform/PlatformActivityPage'));
 const PlatformTryDemoPage = lazy(() => import('@/pages/platform/PlatformTryDemoPage'));
 const TryEditorPage = lazy(() => import('@/pages/marketing/TryEditorPage'));
-const ExamplesPage = lazy(() => import('@/pages/marketing/ExamplesPage'));
+const ThemesPage = lazy(() => import('@/pages/marketing/ThemesPage'));
 const GuestFullPreviewPage = lazy(() => import('@/pages/marketing/GuestFullPreviewPage'));
 const ThemeDemoEmbedPage = lazy(() => import('@/pages/marketing/ThemeDemoEmbedPage'));
 const PrivacyPage = lazy(() => import('@/pages/marketing/PrivacyPage'));
@@ -80,13 +80,14 @@ export default function App() {
                 }
               />
               <Route
-                path="examples"
+                path="themes"
                 element={
-                  <Suspense fallback={<Fallback label="examples" />}>
-                    <ExamplesPage />
+                  <Suspense fallback={<Fallback label="themes" />}>
+                    <ThemesPage />
                   </Suspense>
                 }
               />
+              <Route path="examples" element={<Navigate to="/themes" replace />} />
             </Route>
 
             <Route path="/p/*" element={<LegacyPortfolioRedirect />} />

@@ -7,20 +7,25 @@ export function ThemeLiveCard({
   themeId,
   name,
   description,
+  demoLabel,
   className,
-  href = '/try',
+  href,
 }: {
   themeId: PortfolioThemeId;
   name: string;
   description: string;
+  /** e.g. demo person name from try-demo seed */
+  demoLabel?: string;
   className?: string;
   href?: string;
 }) {
+  const to = href ?? `/try?theme=${themeId}`;
+
   return (
     <Link
-      to={href}
+      to={to}
       className={cn(
-        'group block overflow-hidden rounded-xl border border-border bg-base transition-transform hover:-translate-y-0.5',
+        'group block overflow-hidden rounded-xl border border-border bg-base transition-transform hover:-translate-y-0.5 hover:border-accent/40',
         className
       )}
     >
@@ -34,11 +39,17 @@ export function ThemeLiveCard({
           decoding="async"
           className="h-full w-full object-cover object-top"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-base/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-base/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+        <span className="absolute bottom-2.5 right-2.5 rounded-md bg-accent px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+          Try this
+        </span>
       </div>
       <div className="border-t border-border px-3 py-2.5">
         <p className="text-sm font-medium text-primary">{name}</p>
-        <p className="text-xs text-subtle line-clamp-1">{description}</p>
+        {demoLabel && (
+          <p className="mt-0.5 text-[11px] text-accent/90">Demo · {demoLabel}</p>
+        )}
+        <p className="mt-0.5 text-xs text-subtle line-clamp-2">{description}</p>
       </div>
     </Link>
   );

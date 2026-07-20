@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Globe, PanelRightClose, PanelRightOpen, Upload, Eye, Monitor, Smartphone } from 'lucide-react';
 import {
   useGuestDraft,
   writeGuestPreviewSnapshot,
 } from '@/context/GuestDraftContext';
 import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
+import type { PortfolioThemeId } from '@/themes/types';
 import { DeviceThemePreview } from '@/components/marketing/DeviceThemePreview';
 import {
   GuestDraftEditorFields,
@@ -16,9 +17,12 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 
+const THEME_IDS = new Set(PORTFOLIO_THEME_LIST.map((t) => t.id));
+
 export default function TryEditorPage() {
   const { draft, setDraft, requireAuth } = useGuestDraft();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [section, setSection] = useState<GuestDraftSectionId>('profile');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -26,6 +30,21 @@ export default function TryEditorPage() {
   useEffect(() => {
     resetDocumentThemeForAdmin();
   }, [draft.themeId]);
+
+  // Apply ?theme= from Themes gallery links
+  useEffect(() => {
+    const raw = params.get('theme');
+    if (!raw || !THEME_IDS.has(raw as PortfolioThemeId)) return;
+    const themeId = raw as PortfolioThemeId;
+    setDraft((prev) => {
+      if (prev.themeId === themeId) return prev;
+      return {
+        ...prev,
+        themeId,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, [params, setDraft]);
 
   const openFullPreview = () => {
     writeGuestPreviewSnapshot(draft);

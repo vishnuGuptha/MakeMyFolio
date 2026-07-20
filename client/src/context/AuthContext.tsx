@@ -22,6 +22,7 @@ function redirectToLogin() {
     path.startsWith('/reset-password') ||
     path.startsWith('/platform/login') ||
     path.startsWith('/try') ||
+    path.startsWith('/themes') ||
     path.startsWith('/examples') ||
     path.startsWith('/privacy') ||
     path.startsWith('/terms')
