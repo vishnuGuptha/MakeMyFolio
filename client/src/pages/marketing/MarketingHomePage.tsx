@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { BRAND } from '@/brand/constants';
 import { BrandMark } from '@/brand/logo';
 import { getPortfolioUrlPlaceholder } from '@/lib/domains';
-import { HomeLivingScene } from '@/components/marketing/HomeLivingScene';
+import { DeferredHomeLivingScene } from '@/components/marketing/DeferredHomeLivingScene';
 import { HeroDeviceShowcase } from '@/components/marketing/HeroDeviceShowcase';
 import { GlassTiltCard, MagneticCta } from '@/components/marketing/HomeInteractions';
 import { Button } from '@/components/ui/Button';
@@ -46,15 +46,6 @@ const PROOF = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: 0.06 * i, ease },
-  }),
-};
-
 const reveal = {
   hidden: { opacity: 0, y: 28, scale: 0.98 },
   show: {
@@ -79,55 +70,31 @@ export default function MarketingHomePage() {
 
   return (
     <main className="relative overflow-hidden">
-      <HomeLivingScene />
+      <DeferredHomeLivingScene />
 
-      {/* Hero */}
+      {/* Hero — paint visible immediately (no opacity-0) for LCP */}
       <section ref={heroRef} className="relative min-h-[min(82vh,800px)]">
         <motion.div
           className="relative z-10 mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-4 sm:px-6 lg:grid-cols-[0.95fr_1.15fr] lg:items-center lg:gap-10 lg:pb-14 lg:pt-6"
-          style={{ y: heroY, opacity: heroOpacity }}
+          style={reduceMotion ? undefined : { y: heroY, opacity: heroOpacity }}
         >
           <div className="space-y-4 sm:space-y-5">
-            <motion.div
-              custom={0}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="inline-flex items-center rounded-full border border-[#0066FF]/25 bg-[#0066FF]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#0066FF] dark:border-[#0066FF]/35 dark:bg-[#0066FF]/15"
-            >
+            <div className="inline-flex items-center rounded-full border border-[#0066FF]/25 bg-[#0066FF]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#0066FF] dark:border-[#0066FF]/35 dark:bg-[#0066FF]/15">
               No signup to try
-            </motion.div>
+            </div>
 
-            <motion.h1
-              custom={1}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="font-display text-[2.65rem] leading-[1.05] text-primary sm:text-5xl lg:text-[3.35rem]"
-            >
+            <h1 className="font-display text-[2.65rem] leading-[1.05] text-primary sm:text-5xl lg:text-[3.35rem]">
               A live portfolio from your resume —{' '}
               <span className="bg-gradient-to-r from-[#0066FF] via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
                 in minutes.
               </span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              custom={2}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="max-w-md text-base leading-relaxed text-secondary sm:text-lg"
-            >
+            <p className="max-w-md text-base leading-relaxed text-secondary sm:text-lg">
               {BRAND.tagline}
-            </motion.p>
+            </p>
 
-            <motion.div
-              custom={3}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="space-y-3 pt-0.5"
-            >
+            <div className="space-y-3 pt-0.5">
               <div className="flex flex-wrap items-center gap-3">
                 <MagneticCta>
                   <Button
@@ -149,15 +116,10 @@ export default function MarketingHomePage() {
               <p className="text-xs text-subtle sm:text-[13px]">
                 7 themes · free guest try · your subdomain
               </p>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 32, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.65, delay: 0.12, ease }}
-            className="relative min-w-0"
-          >
+          <div className="relative min-w-0">
             {/* Darker radial behind devices for drama */}
             <div
               className="pointer-events-none absolute -inset-6 rounded-[2.5rem] opacity-90"
@@ -175,19 +137,19 @@ export default function MarketingHomePage() {
               </>
             )}
             <HeroDeviceShowcase />
-          </motion.div>
+          </div>
         </motion.div>
 
         <div className="home-section-blend home-section-blend-bottom" />
       </section>
 
       {/* Trust strip */}
-      <section className="relative z-10 border-y border-border/50 bg-elevated/50 backdrop-blur-sm">
+      <section className="relative z-10 border-y border-[#0066FF]/10 bg-gradient-to-r from-[rgb(0_102_255/0.06)] via-elevated/80 to-[rgb(6_182_212/0.07)] backdrop-blur-sm dark:border-border/50 dark:from-transparent dark:via-elevated/50 dark:to-transparent">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-10 md:py-7">
           <ul className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-secondary">
             {TRUST.map((item) => (
               <li key={item} className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0066FF]/12 text-[#0066FF]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0066FF]/15 text-[#0066FF]">
                   <Check className="h-3 w-3" strokeWidth={2.5} />
                 </span>
                 {item}
@@ -208,10 +170,10 @@ export default function MarketingHomePage() {
       {/* Mid-page beat — URL reveal */}
       <section className="relative overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 dark:opacity-100 opacity-100"
           style={{
             background:
-              'radial-gradient(ellipse 55% 50% at 50% 40%, rgb(0 102 255 / 0.1), transparent 65%)',
+              'radial-gradient(ellipse 55% 50% at 50% 40%, rgb(0 102 255 / 0.16), transparent 65%), radial-gradient(ellipse 40% 35% at 80% 60%, rgb(6 182 212 / 0.1), transparent 60%)',
           }}
         />
         <div className="relative z-10 mx-auto max-w-6xl px-4 home-section-pad sm:px-6">

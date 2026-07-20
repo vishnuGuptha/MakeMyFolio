@@ -7,22 +7,26 @@ import { AdminProfileProvider } from '@/context/AdminProfileContext';
 import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 import RequireUser from '@/components/auth/RequireUser';
 import RequirePlatformAdmin from '@/components/auth/RequirePlatformAdmin';
-import AdminLayout from '@/components/admin/AdminLayout';
-import PlatformLayout from '@/components/platform/PlatformLayout';
 import MarketingLayout from '@/pages/marketing/MarketingLayout';
 import HomeRedirect from '@/pages/HomeRedirect';
 import LegacyPortfolioRedirect from '@/pages/LegacyPortfolioRedirect';
-import PortfolioShell from '@/pages/portfolio/PortfolioShell';
-import PortfolioHomePage from '@/pages/portfolio/PortfolioHomePage';
-import PortfolioSectionPage from '@/pages/portfolio/PortfolioSectionPage';
-import PublicPortfolioEntry, { SubdomainPortfolioRoutes } from '@/pages/portfolio/PublicPortfolioEntry';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { isPortfolioSubdomainHost } from '@/lib/domains';
-import UserLoginPage from '@/pages/user/UserLoginPage';
-import UserRegisterPage from '@/pages/user/UserRegisterPage';
-import ForgotPasswordPage from '@/pages/user/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/user/ResetPasswordPage';
-import PlatformLoginPage from '@/pages/platform/PlatformLoginPage';
+
+const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
+const PlatformLayout = lazy(() => import('@/components/platform/PlatformLayout'));
+const PortfolioShell = lazy(() => import('@/pages/portfolio/PortfolioShell'));
+const PortfolioHomePage = lazy(() => import('@/pages/portfolio/PortfolioHomePage'));
+const PortfolioSectionPage = lazy(() => import('@/pages/portfolio/PortfolioSectionPage'));
+const PublicPortfolioEntry = lazy(() => import('@/pages/portfolio/PublicPortfolioEntry'));
+const SubdomainPortfolioRoutes = lazy(() =>
+  import('@/pages/portfolio/PublicPortfolioEntry').then((m) => ({ default: m.SubdomainPortfolioRoutes }))
+);
+const UserLoginPage = lazy(() => import('@/pages/user/UserLoginPage'));
+const UserRegisterPage = lazy(() => import('@/pages/user/UserRegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/user/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/user/ResetPasswordPage'));
+const PlatformLoginPage = lazy(() => import('@/pages/platform/PlatformLoginPage'));
 
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));
 const AdminProfilesPage = lazy(() => import('@/pages/admin/AdminProfilesPage'));
@@ -64,7 +68,9 @@ export default function App() {
           <AdminProfileProvider>
           <Toaster position="top-right" richColors />
           {onPortfolioSubdomain ? (
-            <SubdomainPortfolioRoutes />
+            <Suspense fallback={<Fallback label="portfolio" />}>
+              <SubdomainPortfolioRoutes />
+            </Suspense>
           ) : (
           <Routes>
             <Route path="/try/preview" element={<Suspense fallback={<Fallback label="preview" />}><GuestFullPreviewPage /></Suspense>} />
@@ -102,8 +108,8 @@ export default function App() {
             <Route path="/p/*" element={<LegacyPortfolioRedirect />} />
             <Route path="/not-found" element={<NotFoundPage />} />
 
-            <Route path="/login" element={<UserLoginPage />} />
-            <Route path="/register" element={<UserRegisterPage />} />
+            <Route path="/login" element={<Suspense fallback={<Fallback label="login" />}><UserLoginPage /></Suspense>} />
+            <Route path="/register" element={<Suspense fallback={<Fallback label="register" />}><UserRegisterPage /></Suspense>} />
             <Route
               path="/privacy"
               element={
@@ -120,25 +126,29 @@ export default function App() {
                 </Suspense>
               }
             />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/forgot-password" element={<Suspense fallback={<Fallback label="forgot" />}><ForgotPasswordPage /></Suspense>} />
+            <Route path="/reset-password" element={<Suspense fallback={<Fallback label="reset" />}><ResetPasswordPage /></Suspense>} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
             <Route
               path="/preview/:profileId"
               element={
                 <RequireUser>
-                  <PortfolioShell mode="preview" />
+                  <Suspense fallback={<Fallback label="preview" />}>
+                    <PortfolioShell mode="preview" />
+                  </Suspense>
                 </RequireUser>
               }
             >
-              <Route index element={<PortfolioHomePage />} />
-              <Route path=":section" element={<PortfolioSectionPage />} />
+              <Route index element={<Suspense fallback={<Fallback label="portfolio" />}><PortfolioHomePage /></Suspense>} />
+              <Route path=":section" element={<Suspense fallback={<Fallback label="portfolio" />}><PortfolioSectionPage /></Suspense>} />
             </Route>
             <Route
               path="/dashboard"
               element={
                 <RequireUser>
-                  <AdminLayout />
+                  <Suspense fallback={<Fallback label="dashboard" />}>
+                    <AdminLayout />
+                  </Suspense>
                 </RequireUser>
               }
             >
@@ -158,12 +168,14 @@ export default function App() {
             </Route>
             <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
 
-            <Route path="/platform/login" element={<PlatformLoginPage />} />
+            <Route path="/platform/login" element={<Suspense fallback={<Fallback label="login" />}><PlatformLoginPage /></Suspense>} />
             <Route
               path="/platform"
               element={
                 <RequirePlatformAdmin>
-                  <PlatformLayout />
+                  <Suspense fallback={<Fallback label="platform" />}>
+                    <PlatformLayout />
+                  </Suspense>
                 </RequirePlatformAdmin>
               }
             >
@@ -174,10 +186,23 @@ export default function App() {
               <Route path="activity" element={<Suspense fallback={<Fallback label="activity" />}><PlatformActivityPage /></Suspense>} />
             </Route>
 
-            <Route path="/:slug" element={<PublicPortfolioEntry />}>
-              <Route element={<PortfolioShell />}>
-                <Route index element={<PortfolioHomePage />} />
-                <Route path=":section" element={<PortfolioSectionPage />} />
+            <Route
+              path="/:slug"
+              element={
+                <Suspense fallback={<Fallback label="portfolio" />}>
+                  <PublicPortfolioEntry />
+                </Suspense>
+              }
+            >
+              <Route
+                element={
+                  <Suspense fallback={<Fallback label="portfolio" />}>
+                    <PortfolioShell />
+                  </Suspense>
+                }
+              >
+                <Route index element={<Suspense fallback={<Fallback label="portfolio" />}><PortfolioHomePage /></Suspense>} />
+                <Route path=":section" element={<Suspense fallback={<Fallback label="portfolio" />}><PortfolioSectionPage /></Suspense>} />
               </Route>
             </Route>
 

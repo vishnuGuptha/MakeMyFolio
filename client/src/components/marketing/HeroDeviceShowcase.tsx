@@ -50,7 +50,7 @@ function MacFrame({ urlLabel }: { urlLabel: string }) {
               alt="Portfolio preview on desktop"
               width={1024}
               height={640}
-              decoding="async"
+              decoding="sync"
               fetchPriority="high"
               className="absolute left-0 block"
               style={{ top: DESKTOP_CAMERA, width: MAC_W, height: MAC_H, objectFit: 'fill' }}
@@ -133,9 +133,6 @@ export function HeroDeviceShowcase({ className }: { className?: string; themeId?
               ? undefined
               : { y: macY, rotateY: macRotY, rotateX: macRotX, transformPerspective: 1400 }
           }
-          initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
             className={cn(
@@ -154,9 +151,6 @@ export function HeroDeviceShowcase({ className }: { className?: string; themeId?
               ? undefined
               : { y: phoneY, rotateY: phoneRot, rotateZ: -3, transformPerspective: 1200 }
           }
-          initial={reduceMotion ? false : { opacity: 0, y: 52, x: 14 }}
-          animate={{ opacity: 1, y: 0, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className={cn('scale-95 sm:scale-105', !reduceMotion && 'home-float-device-alt')}>
             <PhoneFrame />

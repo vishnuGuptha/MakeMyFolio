@@ -121,6 +121,7 @@ export function HomeLivingScene({ className }: { className?: string }) {
     let ty = 0;
     let cx = 0;
     let cy = 0;
+    let running = false;
 
     const onMove = (e: PointerEvent) => {
       const rect = el.getBoundingClientRect();
@@ -130,6 +131,10 @@ export function HomeLivingScene({ className }: { className?: string }) {
       ty = (ny - 0.5) * 20;
       el.style.setProperty('--spot-x', `${nx * 100}%`);
       el.style.setProperty('--spot-y', `${ny * 100}%`);
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(tick);
+      }
     };
 
     const tick = () => {
@@ -137,11 +142,15 @@ export function HomeLivingScene({ className }: { className?: string }) {
       cy += (ty - cy) * 0.08;
       mouseX.set(cx);
       mouseY.set(cy);
+      const settled = Math.abs(tx - cx) < 0.05 && Math.abs(ty - cy) < 0.05;
+      if (settled || document.hidden) {
+        running = false;
+        return;
+      }
       raf = requestAnimationFrame(tick);
     };
 
     window.addEventListener('pointermove', onMove, { passive: true });
-    raf = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener('pointermove', onMove);
       cancelAnimationFrame(raf);

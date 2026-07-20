@@ -40,11 +40,11 @@ export default function ThemesPage() {
   return (
     <main className="relative overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-0 opacity-90"
+        className="pointer-events-none absolute inset-0 opacity-100 dark:opacity-90"
         aria-hidden
         style={{
           background:
-            'radial-gradient(ellipse 55% 40% at 10% 0%, rgb(0 102 255 / 0.12), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 10%, rgb(99 102 241 / 0.1), transparent 50%)',
+            'radial-gradient(ellipse 60% 45% at 10% 0%, rgb(0 102 255 / 0.2), transparent 55%), radial-gradient(ellipse 45% 40% at 90% 10%, rgb(99 102 241 / 0.16), transparent 50%), radial-gradient(ellipse 35% 30% at 40% 90%, rgb(6 182 212 / 0.1), transparent 55%)',
         }}
       />
 

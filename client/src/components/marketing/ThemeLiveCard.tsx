@@ -25,7 +25,7 @@ export function ThemeLiveCard({
     <Link
       to={to}
       className={cn(
-        'group block overflow-hidden rounded-2xl border border-white/40 bg-elevated/50 shadow-[0_18px_40px_-28px_rgb(15_23_42/0.35)] backdrop-blur-md transition-transform hover:-translate-y-1 hover:border-[#0066FF]/35 dark:border-white/10',
+        'group block overflow-hidden rounded-2xl border border-[#0066FF]/12 bg-gradient-to-b from-white/90 to-[rgb(240_245_255/0.85)] shadow-[0_20px_44px_-22px_rgb(0_70_180/0.22)] backdrop-blur-md transition-transform hover:-translate-y-1 hover:border-[#0066FF]/35 hover:shadow-[0_24px_48px_-18px_rgb(0_70_180/0.3)] dark:border-white/10 dark:from-elevated/50 dark:to-elevated/50 dark:shadow-[0_18px_40px_-28px_rgb(15_23_42/0.35)]',
         className
       )}
     >

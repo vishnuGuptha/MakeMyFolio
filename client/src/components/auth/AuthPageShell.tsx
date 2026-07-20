@@ -57,14 +57,15 @@ export function AuthPageShell({
       {/* Static atmosphere — no motion */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-100 dark:opacity-70"
           style={{
             background:
-              'radial-gradient(ellipse 70% 55% at 15% 20%, rgb(0 102 255 / 0.14), transparent 55%), radial-gradient(ellipse 50% 45% at 88% 70%, rgb(99 102 241 / 0.1), transparent 50%)',
+              'radial-gradient(ellipse 75% 60% at 12% 15%, rgb(0 102 255 / 0.22), transparent 52%), radial-gradient(ellipse 55% 50% at 90% 75%, rgb(99 102 241 / 0.16), transparent 50%), radial-gradient(ellipse 40% 35% at 50% 100%, rgb(6 182 212 / 0.12), transparent 55%)',
           }}
         />
-        <div className="absolute -left-16 top-[12%] h-56 w-56 rounded-full bg-[#0066FF]/20 blur-3xl" />
-        <div className="absolute -right-12 bottom-[18%] h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="absolute -left-16 top-[12%] h-56 w-56 rounded-full bg-[#0066FF]/30 blur-3xl dark:bg-[#0066FF]/20" />
+        <div className="absolute -right-12 bottom-[18%] h-48 w-48 rounded-full bg-cyan-400/25 blur-3xl dark:bg-cyan-400/15" />
+        <div className="absolute left-1/3 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-400/10" />
       </div>
 
       <header className="relative z-20 shrink-0 border-b border-border/50 bg-base/80 backdrop-blur-md">
@@ -95,7 +96,7 @@ export function AuthPageShell({
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
                 {eyebrow}
               </p>
-              <div className="mb-4 inline-flex rounded-xl border border-border/70 bg-elevated/60 p-2.5 shadow-sm backdrop-blur-sm">
+              <div className="mb-4 inline-flex rounded-xl border border-[#0066FF]/15 bg-white/80 p-2.5 shadow-[0_8px_24px_-12px_rgb(0_70_180/0.35)] backdrop-blur-sm dark:border-border/70 dark:bg-elevated/60 dark:shadow-sm">
                 <BrandMark size={40} />
               </div>
               <h1 className="font-display text-[1.85rem] leading-tight text-primary xl:text-[2.1rem]">
@@ -128,7 +129,7 @@ export function AuthPageShell({
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border/80 bg-elevated/90 p-4 shadow-[0_16px_40px_-24px_rgb(15_23_42/0.35)] backdrop-blur-md sm:p-5 dark:border-white/10 dark:bg-elevated/70">
+              <div className="marketing-auth-card rounded-2xl border border-border/80 bg-elevated/90 p-4 shadow-[0_16px_40px_-24px_rgb(15_23_42/0.35)] backdrop-blur-md sm:p-5 dark:border-white/10 dark:bg-elevated/70 dark:shadow-[0_16px_40px_-24px_rgb(0_0_0/0.55)]">
                 {children}
               </div>
               {footer}

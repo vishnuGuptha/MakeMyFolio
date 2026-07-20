@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/brand/logo';
@@ -8,9 +8,11 @@ import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { useAuth } from '@/context/AuthContext';
-import { GuestDraftProvider } from '@/context/GuestDraftContext';
-import AuthGateModal from '@/components/auth/AuthGateModal';
-import { useGuestDraft } from '@/context/GuestDraftContext';
+
+/** Lazy — pulls GuestDraft + theme registry only on /try */
+const TryGuestShell = lazy(() => import('./TryGuestShell'));
+
+type AuthGateReason = 'import' | 'publish' | 'persist';
 
 type NavItem = { to: string; label: string; hash?: boolean };
 
@@ -65,10 +67,15 @@ function NavItemLink({
   );
 }
 
-function MarketingChrome() {
+export function MarketingChrome({
+  authGate = null,
+  closeAuthGate,
+}: {
+  authGate?: AuthGateReason | null;
+  closeAuthGate?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
-  const { authGate, closeAuthGate } = useGuestDraft();
   const { pathname } = useLocation();
   const isTryWorkspace = pathname === '/try';
 
@@ -171,23 +178,16 @@ function MarketingChrome() {
         )}
       </header>
 
-      <div className={cn(isTryWorkspace && 'min-h-0 flex-1 overflow-hidden')}>
+      <div className={cn(isTryWorkspace ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1')}>
         <Outlet />
       </div>
 
       {!isTryWorkspace && (
-        <footer className="mt-auto border-t border-border/60">
-          <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:justify-between">
-            <div>
-              <BrandLogo size={24} />
-              <p className="mt-2 max-w-xs text-sm text-subtle">{BRAND.tagline}</p>
-            </div>
-            <div className="flex flex-wrap gap-10 text-sm">
+        <footer className="relative z-10 border-t border-border/50 bg-base/40">
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+            <div className="grid gap-8 text-sm sm:grid-cols-3">
               <div className="space-y-2">
                 <p className="font-medium text-primary">Product</p>
-                <Link to="/" className="block text-subtle hover:text-accent">
-                  Home
-                </Link>
                 <Link to="/try" className="block text-subtle hover:text-accent">
                   Try editor
                 </Link>
@@ -224,15 +224,28 @@ function MarketingChrome() {
         </footer>
       )}
 
-      {authGate && <AuthGateModal reason={authGate} onClose={closeAuthGate} />}
+      {authGate && closeAuthGate && (
+        <Suspense fallback={null}>
+          <LazyAuthGate reason={authGate} onClose={closeAuthGate} />
+        </Suspense>
+      )}
     </div>
   );
 }
 
+const LazyAuthGate = lazy(() => import('@/components/auth/AuthGateModal'));
+
 export default function MarketingLayout() {
-  return (
-    <GuestDraftProvider>
-      <MarketingChrome />
-    </GuestDraftProvider>
-  );
+  const { pathname } = useLocation();
+
+  // Guest draft + theme registry only on /try — keep them out of the home chunk
+  if (pathname === '/try') {
+    return (
+      <Suspense fallback={<MarketingChrome />}>
+        <TryGuestShell />
+      </Suspense>
+    );
+  }
+
+  return <MarketingChrome />;
 }

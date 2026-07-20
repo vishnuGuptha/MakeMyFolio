@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from 'react';
 import type { PortfolioThemeId } from '@/themes/types';
-import { getPortfolioTheme } from '@/themes/registry';
 import type {
   PortfolioData,
   ProfileContent,
@@ -21,6 +20,61 @@ import type {
 } from '@/types';
 import { BRAND } from '@/brand/constants';
 import { publicApi } from '@/api';
+
+/** Color defaults only — keeps the full theme React trees out of this module. */
+const THEME_COLOR_DEFAULTS: Record<
+  PortfolioThemeId,
+  {
+    primaryColor: string;
+    secondaryColor: string;
+    fontFamily: string;
+    glassStyle: SiteSettings['glassStyle'];
+    showStats?: boolean;
+  }
+> = {
+  glass: {
+    primaryColor: '#6366f1',
+    secondaryColor: '#22d3ee',
+    fontFamily: 'dm-sans',
+    glassStyle: 'medium',
+  },
+  spotlight: {
+    primaryColor: '#f97316',
+    secondaryColor: '#22c55e',
+    fontFamily: 'space-grotesk',
+    glassStyle: 'subtle',
+  },
+  terminal: {
+    primaryColor: '#4ade80',
+    secondaryColor: '#fbbf24',
+    fontFamily: 'jetbrains-mono',
+    glassStyle: 'subtle',
+  },
+  'command-center': {
+    primaryColor: '#3B82F6',
+    secondaryColor: '#22D3EE',
+    fontFamily: 'inter',
+    glassStyle: 'subtle',
+  },
+  bento: {
+    primaryColor: '#14B8A6',
+    secondaryColor: '#CCFBF1',
+    fontFamily: 'space-grotesk',
+    glassStyle: 'subtle',
+  },
+  studio: {
+    primaryColor: '#68AD0F',
+    secondaryColor: '#2F4F4F',
+    fontFamily: 'space-grotesk',
+    glassStyle: 'subtle',
+  },
+  olive: {
+    primaryColor: '#5E8C50',
+    secondaryColor: '#98A1A8',
+    fontFamily: 'poppins',
+    glassStyle: 'subtle',
+  },
+};
 
 const STORAGE_KEY = 'buildmyfolio-guest-draft';
 const LEGACY_STORAGE_KEY = 'buildmyfolio-guest-draft';
@@ -594,6 +648,15 @@ export function useGuestDraft() {
   return ctx;
 }
 
+/** Safe for marketing chrome outside GuestDraftProvider (home / pricing). */
+export function useOptionalGuestAuthGate() {
+  const ctx = useContext(GuestDraftContext);
+  return {
+    authGate: ctx?.authGate ?? null,
+    closeAuthGate: ctx?.closeAuthGate ?? (() => {}),
+  };
+}
+
 export function peekGuestDraft(): GuestDraft | null {
   return readDraft() || readGuestPreviewDraft();
 }
@@ -715,7 +778,8 @@ export function guestDraftToPortfolioData(draft: GuestDraft): PortfolioData {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || 'guest';
 
-  const themeDefaults = getPortfolioTheme(draft.themeId).defaults;
+  // Inline defaults — avoid importing the full theme registry into guest-draft chunk
+  const themeDefaults = THEME_COLOR_DEFAULTS[draft.themeId] ?? THEME_COLOR_DEFAULTS.glass;
 
   const settings: SiteSettings = {
     siteTitle: `${draft.content.name} | ${BRAND.name}`,
@@ -734,9 +798,9 @@ export function guestDraftToPortfolioData(draft: GuestDraft): PortfolioData {
     showAiStrip: false,
     showTestimonials: true,
     showBlog: false,
-    cursorEffect: themeDefaults.cursorEffect || 'none',
-    projectPreviewMode: themeDefaults.projectPreviewMode || 'image',
-    projectWebviewSlowScroll: Boolean(themeDefaults.projectWebviewSlowScroll),
+    cursorEffect: 'none',
+    projectPreviewMode: 'image',
+    projectWebviewSlowScroll: false,
   };
 
   const content: ProfileContent = {
