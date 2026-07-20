@@ -18,11 +18,18 @@ import {
   LegalConsentFields,
   canSubmitWithLegalConsent,
 } from '@/components/auth/LegalConsentFields';
+import { cn } from '@/lib/utils';
 
 const REASON_COPY: Record<AuthGateReason, string> = {
   import: `Create a free account to import your resume and keep your work.`,
   publish: `Create a free account to publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
   persist: `Create a free account to save your draft permanently.`,
+};
+
+const REASON_EYEBROW: Record<AuthGateReason, string> = {
+  import: 'Import',
+  publish: 'Publish',
+  persist: 'Save',
 };
 
 export default function AuthGateModal({
@@ -83,7 +90,7 @@ export default function AuthGateModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4" role="presentation">
       <button
         type="button"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
         aria-label="Close"
         onClick={onClose}
       />
@@ -91,7 +98,7 @@ export default function AuthGateModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-gate-title"
-        className="relative w-full max-w-sm rounded-xl border border-border bg-elevated p-4 shadow-2xl"
+        className="marketing-auth-card relative w-full max-w-sm rounded-2xl border border-[#0066FF]/14 bg-elevated p-4 shadow-2xl dark:border-white/10 dark:bg-elevated/90"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -102,17 +109,43 @@ export default function AuthGateModal({
         >
           <X className="h-4 w-4" />
         </button>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
+          {REASON_EYEBROW[reason]}
+        </p>
         <BrandLogo size={22} className="mb-2.5" />
         <h2 id="auth-gate-title" className="pr-7 text-base font-semibold text-primary">
           {mode === 'register' ? 'Create your free account' : 'Welcome back'}
         </h2>
         <p className="mt-1 text-xs leading-snug text-subtle">{REASON_COPY[reason]}</p>
 
+        <div className="try-editor-device-shell mt-3 w-full">
+          <button
+            type="button"
+            className={cn(
+              'try-editor-chip flex-1 px-2.5 py-1.5 text-center text-xs',
+              mode === 'register' && 'try-editor-chip-active'
+            )}
+            onClick={() => setMode('register')}
+          >
+            Create account
+          </button>
+          <button
+            type="button"
+            className={cn(
+              'try-editor-chip flex-1 px-2.5 py-1.5 text-center text-xs',
+              mode === 'login' && 'try-editor-chip-active'
+            )}
+            onClick={() => setMode('login')}
+          >
+            Sign in
+          </button>
+        </div>
+
         <form onSubmit={onSubmit} className="mt-3.5 space-y-2.5">
           {mode === 'register' && (
             <FormField label="Name" className="space-y-1 [&_label]:text-xs">
               <Input
-                className="h-9"
+                className="h-9 focus-visible:ring-[#0066FF]/35"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -122,7 +155,7 @@ export default function AuthGateModal({
           )}
           <FormField label="Email" className="space-y-1 [&_label]:text-xs">
             <Input
-              className="h-9"
+              className="h-9 focus-visible:ring-[#0066FF]/35"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -132,7 +165,7 @@ export default function AuthGateModal({
           </FormField>
           <FormField label="Password" className="space-y-1 [&_label]:text-xs">
             <PasswordInput
-              className="h-9"
+              className="h-9 focus-visible:ring-[#0066FF]/35"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -152,7 +185,7 @@ export default function AuthGateModal({
           <Button
             type="submit"
             size="sm"
-            className="w-full"
+            className="home-cta-primary w-full border-0 hover:bg-transparent"
             disabled={loading || (mode === 'register' && !canRegister)}
           >
             {loading ? 'Please wait…' : mode === 'register' ? 'Create account' : 'Sign in'}
@@ -163,14 +196,22 @@ export default function AuthGateModal({
           {mode === 'register' ? (
             <>
               Already have an account?{' '}
-              <button type="button" className="text-accent hover:underline" onClick={() => setMode('login')}>
+              <button
+                type="button"
+                className="font-medium text-[#0066FF] hover:underline"
+                onClick={() => setMode('login')}
+              >
                 Sign in
               </button>
             </>
           ) : (
             <>
               New here?{' '}
-              <button type="button" className="text-accent hover:underline" onClick={() => setMode('register')}>
+              <button
+                type="button"
+                className="font-medium text-[#0066FF] hover:underline"
+                onClick={() => setMode('register')}
+              >
                 Create account
               </button>
             </>

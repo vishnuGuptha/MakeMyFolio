@@ -33,7 +33,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
   };
 
   return (
-    <>
+    <div className="try-editor-fields space-y-3 [&_input]:focus-visible:ring-[#0066FF]/30 [&_textarea]:focus-visible:ring-[#0066FF]/30">
       {section === 'theme' && (
         <div className="flex flex-wrap gap-1.5">
           {PORTFOLIO_THEME_LIST.map((t) => (
@@ -42,9 +42,9 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
               type="button"
               onClick={() => setDraft((d) => ({ ...d, themeId: t.id }))}
               className={cn(
-                'rounded-md border px-2.5 py-1.5 text-xs transition-colors',
+                'try-editor-chip rounded-md border px-2.5 py-1.5 text-xs',
                 draft.themeId === t.id
-                  ? 'border-accent bg-accent/15 text-accent'
+                  ? 'try-editor-chip-active'
                   : 'border-border text-secondary hover:bg-muted'
               )}
             >
@@ -153,7 +153,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.skills.map((skill, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <div className="flex gap-2">
                 <Input
                   value={skill.name}
@@ -228,7 +228,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.experiences.map((exp, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <Input
                 placeholder="Role"
                 value={exp.role}
@@ -339,7 +339,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.projects.map((proj, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <Input
                 placeholder="Title"
                 value={proj.title}
@@ -412,7 +412,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.education.map((edu, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <Input
                 placeholder="Degree"
                 value={edu.degree}
@@ -483,7 +483,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.certifications.map((cert, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <Input
                 placeholder="Certificate"
                 value={cert.name}
@@ -546,7 +546,7 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
             </Button>
           </div>
           {draft.testimonials.map((t, i) => (
-            <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-[#0066FF]/10 bg-base/30 p-2.5 dark:border-border/60 dark:bg-transparent">
               <Textarea
                 rows={3}
                 placeholder="Quote"
@@ -610,6 +610,6 @@ export function GuestDraftEditorFields({ draft, setDraft, section }: Props) {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

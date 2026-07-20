@@ -115,7 +115,7 @@ export function MarketingChrome({
           <div className="hidden items-center gap-2 md:flex">
             <AppThemeToggle />
             {user?.role === 'user' ? (
-              <Button size="sm" asChild>
+              <Button size="sm" asChild className={cn(isTryWorkspace && 'home-cta-secondary')}>
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
@@ -123,7 +123,12 @@ export function MarketingChrome({
                 <Button size="sm" variant="ghost" asChild>
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button size="sm" variant="outline" asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                  className={cn(isTryWorkspace && 'home-cta-secondary')}
+                >
                   <Link to="/try">Try free</Link>
                 </Button>
               </>
@@ -154,7 +159,11 @@ export function MarketingChrome({
             ))}
             <div className="flex gap-2 pt-2">
               {user?.role === 'user' ? (
-                <Button size="sm" className="flex-1" asChild>
+                <Button
+                  size="sm"
+                  className={cn('flex-1', isTryWorkspace && 'home-cta-secondary')}
+                  asChild
+                >
                   <Link to="/dashboard" onClick={() => setOpen(false)}>
                     Dashboard
                   </Link>
@@ -166,7 +175,12 @@ export function MarketingChrome({
                       Log in
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1" asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={cn('flex-1', isTryWorkspace && 'home-cta-secondary')}
+                    asChild
+                  >
                     <Link to="/try" onClick={() => setOpen(false)}>
                       Try free
                     </Link>

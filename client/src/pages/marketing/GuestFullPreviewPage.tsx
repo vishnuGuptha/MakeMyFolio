@@ -72,7 +72,7 @@ export default function GuestFullPreviewPage() {
       >
         <p className="text-sm text-subtle">Waiting for draft…</p>
         {!embed && (
-          <Button type="button" onClick={() => navigate('/try')}>
+          <Button type="button" className="home-cta-primary border-0 hover:bg-transparent" onClick={() => navigate('/try')}>
             Back to try editor
           </Button>
         )}
@@ -91,7 +91,7 @@ export default function GuestFullPreviewPage() {
           {!embed && (
             <Link
               to="/try"
-              className="fixed right-4 top-4 z-[100] inline-flex items-center rounded-md border border-border/80 bg-base/90 px-2.5 py-1.5 text-[11px] font-medium text-secondary shadow-sm backdrop-blur transition-colors hover:border-accent/40 hover:text-accent"
+              className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
               title="Back to try editor"
             >
               Preview / Demo mode

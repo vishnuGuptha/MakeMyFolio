@@ -60,18 +60,16 @@ export default function TryEditorPage() {
       >
         <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0066FF]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
               Live preview
             </p>
-            <div className="flex rounded-lg border border-border/80 bg-elevated/70 p-0.5 backdrop-blur-sm">
+            <div className="try-editor-device-shell">
               <button
                 type="button"
                 onClick={() => setDevice('desktop')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors',
-                  device === 'desktop'
-                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
-                    : 'text-subtle hover:text-primary'
+                  'try-editor-chip inline-flex items-center gap-1.5 px-2.5 py-1 text-xs',
+                  device === 'desktop' && 'try-editor-chip-active'
                 )}
                 aria-pressed={device === 'desktop'}
               >
@@ -81,10 +79,8 @@ export default function TryEditorPage() {
                 type="button"
                 onClick={() => setDevice('mobile')}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors',
-                  device === 'mobile'
-                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
-                    : 'text-subtle hover:text-primary'
+                  'try-editor-chip inline-flex items-center gap-1.5 px-2.5 py-1 text-xs',
+                  device === 'mobile' && 'try-editor-chip-active'
                 )}
                 aria-pressed={device === 'mobile'}
               >
@@ -117,11 +113,11 @@ export default function TryEditorPage() {
               <Globe className="h-3.5 w-3.5" /> Publish
             </Button>
             <Button
-              variant={sidebarOpen ? 'outline' : 'default'}
+              variant={sidebarOpen ? 'ghost' : 'default'}
               size="sm"
               className={cn(
                 'h-8 text-xs',
-                !sidebarOpen && 'home-cta-primary border-0 hover:bg-transparent'
+                sidebarOpen ? 'home-cta-secondary' : 'home-cta-primary border-0 hover:bg-transparent'
               )}
               onClick={() => setSidebarOpen((v) => !v)}
               aria-pressed={sidebarOpen}
@@ -141,8 +137,8 @@ export default function TryEditorPage() {
 
       <aside
         className={cn(
-          'flex h-full shrink-0 flex-col border-l border-border/70 bg-elevated/80 shadow-xl backdrop-blur-md transition-[width] duration-200 ease-out',
-          sidebarOpen ? 'w-[min(100vw,340px)]' : 'w-0 border-l-0'
+          'try-editor-panel flex h-full shrink-0 flex-col transition-[width] duration-200 ease-out',
+          sidebarOpen ? 'w-[min(100vw,340px)]' : 'w-0 overflow-hidden border-l-0'
         )}
         aria-hidden={!sidebarOpen}
       >
@@ -152,9 +148,11 @@ export default function TryEditorPage() {
             !sidebarOpen && 'pointer-events-none invisible'
           )}
         >
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#0066FF]/12 px-3 py-2.5 dark:border-border">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-primary">Editor</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
+                Editor
+              </p>
               <p className="truncate text-[11px] text-subtle">
                 {draft.content.name || 'Your name'} ·{' '}
                 {PORTFOLIO_THEME_LIST.find((t) => t.id === draft.themeId)?.name}
@@ -171,17 +169,15 @@ export default function TryEditorPage() {
             </Button>
           </div>
 
-          <div className="flex shrink-0 flex-wrap gap-1 border-b border-border px-2 py-1.5">
+          <div className="flex shrink-0 flex-wrap gap-1 border-b border-[#0066FF]/10 px-2 py-1.5 dark:border-border">
             {GUEST_DRAFT_SECTIONS.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => setSection(s.id)}
                 className={cn(
-                  'shrink-0 rounded-md px-2.5 py-1.5 text-xs transition-colors',
-                  section === s.id
-                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
-                    : 'text-secondary hover:bg-muted hover:text-primary'
+                  'try-editor-chip shrink-0 px-2.5 py-1.5 text-xs',
+                  section === s.id && 'try-editor-chip-active'
                 )}
               >
                 {s.label}
@@ -193,17 +189,17 @@ export default function TryEditorPage() {
             <GuestDraftEditorFields draft={draft} setDraft={setDraft} section={section} />
           </div>
 
-          <div className="shrink-0 border-t border-border px-3 py-2.5 text-xs text-subtle">
+          <div className="shrink-0 border-t border-[#0066FF]/10 px-3 py-2.5 text-xs text-subtle dark:border-border">
             Guest draft clears on refresh.{' '}
             <button
               type="button"
-              className="text-accent hover:underline"
+              className="font-medium text-[#0066FF] hover:underline"
               onClick={() => requireAuth('persist')}
             >
               Create an account
             </button>{' '}
             or{' '}
-            <Link to="/register?claimGuest=1" className="text-accent hover:underline">
+            <Link to="/register?claimGuest=1" className="font-medium text-[#0066FF] hover:underline">
               register
             </Link>
             .
