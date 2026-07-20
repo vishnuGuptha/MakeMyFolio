@@ -12,10 +12,10 @@ import { GuestDraftProvider } from '@/context/GuestDraftContext';
 import AuthGateModal from '@/components/auth/AuthGateModal';
 import { useGuestDraft } from '@/context/GuestDraftContext';
 
-type NavItem = { to: string; label: string; hash?: boolean; emphasize?: boolean };
+type NavItem = { to: string; label: string; hash?: boolean };
 
 const NAV: NavItem[] = [
-  { to: '/try', label: 'Try', emphasize: true },
+  { to: '/try', label: 'Try' },
   { to: '/#themes', label: 'Themes', hash: true },
   { to: '/examples', label: 'Examples' },
   { to: '/#pricing', label: 'Pricing', hash: true },
@@ -48,17 +48,14 @@ function NavItemLink({
   return (
     <NavLink
       to={item.to}
+      end
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
           'rounded-lg px-3 py-2 text-sm transition-colors',
-          item.emphasize
-            ? isActive
-              ? 'bg-accent/15 font-medium text-accent'
-              : 'font-medium text-accent hover:bg-accent/10'
-            : isActive
-              ? 'text-accent'
-              : 'text-secondary hover:bg-muted hover:text-primary',
+          isActive
+            ? 'bg-accent/10 font-medium text-accent'
+            : 'text-secondary hover:bg-muted hover:text-primary',
           className
         )
       }
