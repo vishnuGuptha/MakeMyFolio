@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { RESERVED_APP_PATHS } from '@/brand/constants';
-import { getPortfolioSlugFromHost } from '@/lib/domains';
+import { getPortfolioSlugFromHost, usesSubdomainPortfolios } from '@/lib/domains';
 import { getPublicPortfolioUrl } from '@/lib/utils';
 import PortfolioHomePage from '@/pages/portfolio/PortfolioHomePage';
 import PortfolioSectionPage from '@/pages/portfolio/PortfolioSectionPage';
@@ -29,7 +29,7 @@ export default function PublicPortfolioEntry() {
     return <Navigate to="/not-found" replace />;
   }
 
-  if (import.meta.env.VITE_PORTFOLIO_URL_MODE === 'subdomain') {
+  if (usesSubdomainPortfolios()) {
     const sectionFromPath = location.pathname.replace(`/${paramSlug}`, '').replace(/^\//, '') || undefined;
     return <PathToSubdomainRedirect slug={paramSlug} section={sectionFromPath} />;
   }

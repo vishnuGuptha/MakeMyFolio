@@ -14,7 +14,7 @@ import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
 import { AdminListSkeleton } from '@/components/admin/AdminEmptyState';
 import { errorMessage } from '@/lib/apiError';
-import { getPortfolioViewPath } from '@/lib/utils';
+import { getPortfolioViewUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
   const isPublished = stats?.isPublished ?? activeProfile?.isPublished ?? false;
   const slug = stats?.slug ?? activeProfile?.slug ?? '';
   const previewHref = activeProfile
-    ? getPortfolioViewPath({
+    ? getPortfolioViewUrl({
         _id: activeProfile._id,
         slug,
         isPublished,

@@ -31,7 +31,7 @@ import { useAdminProfile } from '@/context/AdminProfileContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { isOnboardingActive } from '@/lib/onboarding';
-import { cn, getPortfolioViewPath, getPublicPortfolioUrl } from '@/lib/utils';
+import { cn, getPortfolioViewUrl, getPublicPortfolioUrl } from '@/lib/utils';
 import { BrandLogo, BrandMark } from '@/brand/logo';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -206,9 +206,7 @@ export default function AdminLayout() {
   const copyLink = () => {
     if (!activeProfile) return;
     if (!activeProfile.isPublished) {
-      navigator.clipboard.writeText(
-        `${window.location.origin}${getPortfolioViewPath(activeProfile)}`
-      );
+      navigator.clipboard.writeText(getPortfolioViewUrl(activeProfile));
       toast.success('Preview link copied (login required)');
       return;
     }
@@ -478,7 +476,7 @@ export default function AdminLayout() {
                 </Button>
                 <Button size="sm" variant="outline" asChild>
                   <a
-                    href={getPortfolioViewPath(activeProfile)}
+                    href={getPortfolioViewUrl(activeProfile)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

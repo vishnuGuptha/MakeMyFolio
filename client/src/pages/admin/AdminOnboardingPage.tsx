@@ -11,7 +11,7 @@ import {
   skipOnboarding,
   type OnboardingStepId,
 } from '@/lib/onboarding';
-import { getPortfolioViewPath } from '@/lib/utils';
+import { getPortfolioViewUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -37,7 +37,7 @@ export default function AdminOnboardingPage() {
   };
 
   const previewHref = activeProfile
-    ? getPortfolioViewPath(activeProfile)
+    ? getPortfolioViewUrl(activeProfile)
     : '#';
 
   return (

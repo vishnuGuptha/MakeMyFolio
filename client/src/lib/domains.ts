@@ -1,11 +1,14 @@
 /** Apex domain for the app (marketing, dashboard). */
 export function getAppDomain(): string {
-  return import.meta.env.VITE_APP_DOMAIN || 'makemyfolio.ai';
+  return import.meta.env.VITE_APP_DOMAIN || 'buildmyfolio.com';
 }
 
-/** `path` → buildmyfolio.com/vishnu · `subdomain` → vishnu.buildmyfolio.com */
+/**
+ * `path` → buildmyfolio.com/vishnu · `subdomain` → vishnu.buildmyfolio.com
+ * Defaults to subdomain unless explicitly set to `path` (useful for local path testing).
+ */
 export function usesSubdomainPortfolios(): boolean {
-  return import.meta.env.VITE_PORTFOLIO_URL_MODE === 'subdomain';
+  return import.meta.env.VITE_PORTFOLIO_URL_MODE !== 'path';
 }
 
 /** Subdomains that must never map to a portfolio slug. */

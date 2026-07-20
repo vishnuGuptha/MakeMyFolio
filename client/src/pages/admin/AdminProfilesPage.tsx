@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
-import { cn, generateSlug, getPortfolioViewPath, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
+import { cn, generateSlug, getPortfolioViewUrl, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -228,7 +228,7 @@ export default function AdminProfilesPage() {
       toast.success('Public link copied');
       return;
     }
-    await navigator.clipboard.writeText(`${window.location.origin}${getPortfolioViewPath(profile)}`);
+    await navigator.clipboard.writeText(getPortfolioViewUrl(profile));
     toast.success('Preview link copied (login required)');
   };
 
@@ -561,7 +561,7 @@ export default function AdminProfilesPage() {
                     )}
                     <Button size="sm" variant="outline" asChild>
                       <a
-                        href={getPortfolioViewPath(profile)}
+                        href={getPortfolioViewUrl(profile)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={profile.isPublished ? 'Open live site' : 'Open draft preview'}
