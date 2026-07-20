@@ -35,6 +35,7 @@ import { cn, getPortfolioViewUrl, getPublicPortfolioUrl } from '@/lib/utils';
 import { BrandLogo, BrandMark } from '@/brand/logo';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 
 const COLLAPSE_KEY = 'portfolio-sidebar-collapsed';
 
@@ -489,6 +490,7 @@ export default function AdminLayout() {
             <span className="hidden sm:block text-xs text-subtle truncate max-w-[10rem]">
               {user?.name || user?.email}
             </span>
+            <AppThemeToggle />
             <Button size="sm" variant="ghost" onClick={handleLogout} className="md:hidden">
               <LogOut className="h-4 w-4" />
             </Button>

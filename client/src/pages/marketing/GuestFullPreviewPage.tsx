@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { applyPortfolioTheme, resetDocumentThemeForAdmin } from '@/lib/theme';
+import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import {
   guestDraftToPortfolioData,
   readGuestPreviewDraft,
@@ -28,11 +28,11 @@ export default function GuestFullPreviewPage() {
   useEffect(() => {
     const bump = () => setTick((t) => t + 1);
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'makemyfolio-guest-preview' || e.key === null) bump();
+      if (e.key === 'buildmyfolio-guest-preview' || e.key === null) bump();
     };
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
-      if (e.data?.type === 'makemyfolio-guest-refresh') bump();
+      if (e.data?.type === 'buildmyfolio-guest-refresh') bump();
     };
     window.addEventListener('storage', onStorage);
     window.addEventListener('message', onMessage);
@@ -57,7 +57,6 @@ export default function GuestFullPreviewPage() {
 
   useEffect(() => {
     if (!data?.settings) return;
-    applyPortfolioTheme(data.settings);
     if (!embed) {
       document.title = `[Guest] ${data.settings.siteTitle || BRAND.name}`;
     }
@@ -87,7 +86,7 @@ export default function GuestFullPreviewPage() {
 
   return (
     <PortfolioProvider data={data} basePath={basePath} isPreview>
-      <PortfolioThemeProvider themeId={portfolioTheme}>
+      <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {!embed && (
             <Link

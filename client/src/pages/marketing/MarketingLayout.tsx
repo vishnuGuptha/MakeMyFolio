@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/brand/logo';
 import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
+import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import { cn } from '@/lib/utils';
+import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { useAuth } from '@/context/AuthContext';
 import { GuestDraftProvider } from '@/context/GuestDraftContext';
 import AuthGateModal from '@/components/auth/AuthGateModal';
@@ -23,6 +25,10 @@ function MarketingChrome() {
   const { authGate, closeAuthGate } = useGuestDraft();
   const { pathname } = useLocation();
   const isTryWorkspace = pathname === '/try';
+
+  useEffect(() => {
+    resetDocumentThemeForAdmin();
+  }, [pathname]);
 
   return (
     <div
@@ -63,6 +69,7 @@ function MarketingChrome() {
             )}
           </nav>
           <div className="hidden items-center gap-2 md:flex">
+            <AppThemeToggle />
             {user?.role === 'user' ? (
               <Button size="sm" asChild>
                 <Link to="/dashboard">Dashboard</Link>
@@ -78,14 +85,17 @@ function MarketingChrome() {
               </>
             )}
           </div>
-          <button
-            type="button"
-            className="rounded-lg p-2 hover:bg-muted md:hidden"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-1 md:hidden">
+            <AppThemeToggle />
+            <button
+              type="button"
+              className="rounded-lg p-2 hover:bg-muted"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
         {open && (
           <div className="border-t border-border px-4 py-3 space-y-1 md:hidden">

@@ -88,7 +88,7 @@ export const userApi = {
   getBinnedProfiles: () =>
     request<import('@/types').PortfolioProfile[]>('/api/user/profiles/bin'),
   checkSlug: (slug: string, excludeId?: string) =>
-    request<{ available: boolean; valid: boolean; liveTaken?: boolean }>(
+    request<{ available: boolean; valid: boolean; liveTaken?: boolean; reserved?: boolean }>(
       `/api/user/profiles/check-slug/${slug}${excludeId ? `?excludeId=${excludeId}` : ''}`
     ),
   createProfile: (data: { displayName: string; slug?: string; duplicateFromId?: string }) =>

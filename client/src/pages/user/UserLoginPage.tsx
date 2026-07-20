@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Label';
 import { Card } from '@/components/ui/Card';
+import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 
 export default function UserLoginPage() {
   const [email, setEmail] = useState('');
@@ -36,7 +37,10 @@ export default function UserLoginPage() {
   };
 
   return (
-    <div className="min-h-screen marketing-mesh flex items-center justify-center px-6">
+    <div className="relative min-h-screen marketing-mesh flex items-center justify-center px-6">
+      <div className="absolute right-4 top-4 z-10">
+        <AppThemeToggle />
+      </div>
       <Card className="w-full max-w-md glass-panel">
         <BrandLogo size={28} className="mb-4" />
         <h1 className="text-2xl font-bold text-primary mb-2">Sign in</h1>

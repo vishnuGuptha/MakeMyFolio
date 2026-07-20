@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Label';
 import { Card } from '@/components/ui/Card';
+import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -39,7 +40,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen gradient-mesh flex items-center justify-center px-6">
+    <div className="relative min-h-screen gradient-mesh flex items-center justify-center px-6">
+      <div className="absolute right-4 top-4 z-10">
+        <AppThemeToggle />
+      </div>
       <Card className="w-full max-w-md glass-panel">
         <h1 className="text-2xl font-bold text-primary mb-2">Set a new password</h1>
         <p className="text-sm text-subtle mb-6">Choose a password at least 6 characters long.</p>

@@ -35,9 +35,9 @@
   font-family: var(--portfolio-font, 'Poppins', system-ui, sans-serif);
 }
 
-html[data-portfolio-theme='olive'],
-html[data-portfolio-theme='olive'] body {
+[data-portfolio-theme='olive'].portfolio-theme-root {
   background: var(--olive-bg-deep);
+  min-height: 100vh;
 }
 
 [data-portfolio-theme='olive'] .olive-shell {

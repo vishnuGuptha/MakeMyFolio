@@ -22,10 +22,10 @@ import type {
 import { BRAND } from '@/brand/constants';
 import { publicApi } from '@/api';
 
-const STORAGE_KEY = 'makemyfolio-guest-draft';
+const STORAGE_KEY = 'buildmyfolio-guest-draft';
 const LEGACY_STORAGE_KEY = 'buildmyfolio-guest-draft';
 /** Shared across tabs so /try/preview can load (sessionStorage is per-tab). */
-const PREVIEW_KEY = 'makemyfolio-guest-preview';
+const PREVIEW_KEY = 'buildmyfolio-guest-preview';
 
 export type AuthGateReason = 'import' | 'publish' | 'persist';
 

@@ -21,7 +21,7 @@ import {
   getPortfolioAggregateById,
   logActivity,
 } from '../services/portfolio.js';
-import { generateSlug, isValidSlug, ensureUniqueSlug } from '../utils/slug.js';
+import { generateSlug, isValidSlug, isReservedSlug, ensureUniqueSlug } from '../utils/slug.js';
 import { ownerSlugTaken, publishedSlugTaken } from '../utils/slugAvailability.js';
 import { deleteStoredFile, getStorageProvider, storeUpload } from '../services/storage.js';
 import { AppError, sendError } from '../utils/errors.js';
@@ -122,7 +122,12 @@ router.get('/profiles/check-slug/:slug', async (req: AuthRequest, res) => {
     const excludeId = typeof req.query.excludeId === 'string' ? req.query.excludeId : undefined;
     const valid = isValidSlug(slug);
     if (!valid) {
-      return res.json({ available: false, valid, liveTaken: false });
+      return res.json({
+        available: false,
+        valid,
+        liveTaken: false,
+        reserved: isReservedSlug(slug),
+      });
     }
 
     const ownerId = req.auth?.role === 'user' ? req.auth.id : undefined;
@@ -147,6 +152,9 @@ router.post('/profiles', async (req: AuthRequest, res) => {
     if (!displayName) return res.status(400).json({ error: 'Display name is required' });
 
     let slug = customSlug || generateSlug(displayName);
+    if (isReservedSlug(slug)) {
+      return res.status(400).json({ error: 'That URL is reserved. Choose a different slug.' });
+    }
     if (!isValidSlug(slug)) return res.status(400).json({ error: 'Invalid slug format' });
 
     const ownerId = req.auth?.role === 'user' ? new Types.ObjectId(req.auth.id) : undefined;
@@ -220,6 +228,11 @@ router.put('/profiles/:profileId', requireProfileAccess, async (req, res) => {
 
     if (typeof rawSlug === 'string') {
       const slug = rawSlug.trim().toLowerCase();
+      if (isReservedSlug(slug)) {
+        return res.status(400).json({
+          error: 'That URL is reserved. Choose a different slug.',
+        });
+      }
       if (!isValidSlug(slug)) {
         return res.status(400).json({
           error: 'Invalid slug. Use 3–60 characters: lowercase letters, numbers, and hyphens.',

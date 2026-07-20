@@ -86,8 +86,13 @@ export default function AdminProfilesPage() {
       adminApi
         .checkSlug(value, detailsProfile._id)
         .then((r) => {
-          if (!r.valid) setSlugHint('Use 3–60 chars: lowercase letters, numbers, hyphens.');
-          else if (!r.available)
+          if (!r.valid) {
+            setSlugHint(
+              r.reserved
+                ? 'That URL is reserved. Choose a different slug.'
+                : 'Use 3–60 chars: lowercase letters, numbers, hyphens.'
+            );
+          } else if (!r.available)
             setSlugHint('You already use this URL on another of your portfolios.');
           else if (r.liveTaken && detailsProfile.isPublished)
             setSlugHint('That URL is already live on another published portfolio.');

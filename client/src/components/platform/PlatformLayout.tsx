@@ -2,7 +2,10 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Briefcase, Activity, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
+import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import { cn } from '@/lib/utils';
+import { resetDocumentThemeForAdmin } from '@/lib/theme';
+import { useEffect } from 'react';
 
 const NAV = [
   { to: '/platform', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -15,6 +18,10 @@ const NAV = [
 export default function PlatformLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    resetDocumentThemeForAdmin();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -52,6 +59,7 @@ export default function PlatformLayout() {
           <p className="text-sm text-subtle font-mono">Platform Control Center</p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-subtle">{user?.email}</span>
+            <AppThemeToggle />
             <Button size="sm" variant="ghost" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>

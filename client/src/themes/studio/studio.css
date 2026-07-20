@@ -1,8 +1,8 @@
 /* Studio — Figma Personal Portfolio Template (dark/light bands) */
 
-html[data-portfolio-theme='studio'],
-html[data-portfolio-theme='studio'] body {
+[data-portfolio-theme='studio'].portfolio-theme-root {
   background-color: #000000;
+  min-height: 100vh;
 }
 
 [data-portfolio-theme='studio'] .portfolio-theme-root,

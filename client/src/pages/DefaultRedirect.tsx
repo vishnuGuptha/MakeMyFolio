@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { publicApi } from '@/api';
+import { usesSubdomainPortfolios } from '@/lib/domains';
+import { getPublicPortfolioUrl } from '@/lib/utils';
 import { PortfolioSkeleton } from '@/components/ui/Skeleton';
 
 export default function DefaultRedirect() {
@@ -10,8 +12,15 @@ export default function DefaultRedirect() {
     publicApi
       .getDefaultSlug()
       .then(({ slug }) => {
-        if (slug) navigate(`/${slug}`, { replace: true });
-        else navigate('/not-found', { replace: true });
+        if (!slug) {
+          navigate('/not-found', { replace: true });
+          return;
+        }
+        if (usesSubdomainPortfolios()) {
+          window.location.replace(getPublicPortfolioUrl(slug));
+          return;
+        }
+        navigate(`/${slug}`, { replace: true });
       })
       .catch(() => navigate('/not-found', { replace: true }));
   }, [navigate]);

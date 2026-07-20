@@ -155,31 +155,39 @@ function adjustBrightness(hex: string, percent: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-export function applyPortfolioTheme(settings?: ThemeSettings | null) {
+export function applyPortfolioTheme(
+  settings?: ThemeSettings | null,
+  target?: HTMLElement | null
+) {
   if (!settings) return;
+
+  const root =
+    target ??
+    (typeof document !== 'undefined'
+      ? (document.querySelector('.portfolio-theme-root') as HTMLElement | null)
+      : null);
+  if (!root) return;
 
   const primary = settings.primaryColor || settings.accentColor || '#6366f1';
   const secondary = settings.secondaryColor || '#22d3ee';
 
-  document.documentElement.style.setProperty('--accent', hexToRgb(primary));
-  document.documentElement.style.setProperty('--primary', hexToRgb(primary));
-  document.documentElement.style.setProperty('--accent-hover', hexToRgb(adjustBrightness(primary, 20)));
-  document.documentElement.style.setProperty('--secondary', hexToRgb(secondary));
-  document.documentElement.style.setProperty('--secondary-hover', hexToRgb(adjustBrightness(secondary, 15)));
+  root.style.setProperty('--accent', hexToRgb(primary));
+  root.style.setProperty('--primary', hexToRgb(primary));
+  root.style.setProperty('--accent-hover', hexToRgb(adjustBrightness(primary, 20)));
+  root.style.setProperty('--secondary', hexToRgb(secondary));
+  root.style.setProperty('--secondary-hover', hexToRgb(adjustBrightness(secondary, 15)));
 
   const font = FONT_OPTIONS.find((f) => f.id === settings.fontFamily) || FONT_OPTIONS[0];
-  // Keep the CSS variable as a full font stack so `font-family: var(--portfolio-font)` works.
-  document.documentElement.style.setProperty('--portfolio-font', font.family);
-  document.documentElement.style.setProperty('font-family', font.family);
-  document.body.style.setProperty('font-family', font.family);
+  root.style.setProperty('--portfolio-font', font.family);
+  root.style.setProperty('font-family', font.family);
 
   ensureGoogleFontLoaded(font.google);
 
   const glass = settings.glassStyle || 'medium';
-  document.documentElement.setAttribute('data-glass', glass);
+  root.setAttribute('data-glass', glass);
 
   const portfolioTheme = settings.portfolioTheme || 'glass';
-  document.documentElement.setAttribute('data-portfolio-theme', portfolioTheme);
+  root.setAttribute('data-portfolio-theme', portfolioTheme);
 }
 
 /** Load (or swap) the Google Font stylesheet used by portfolio themes. */
@@ -206,22 +214,29 @@ export function applyAccentColor(color: string) {
   applyPortfolioTheme({ accentColor: color });
 }
 
-/** Clear portfolio theme tokens from the document so the admin CMS chrome stays stable. */
+const PORTFOLIO_STYLE_PROPS = [
+  '--accent',
+  '--primary',
+  '--accent-hover',
+  '--secondary',
+  '--secondary-hover',
+  '--portfolio-font',
+] as const;
+
+function clearPortfolioThemeOn(el: HTMLElement) {
+  for (const prop of PORTFOLIO_STYLE_PROPS) {
+    el.style.removeProperty(prop);
+  }
+  el.style.removeProperty('font-family');
+  el.removeAttribute('data-glass');
+}
+
+/** Clear any portfolio theme tokens left on the document (legacy / safety net). */
 export function resetDocumentThemeForAdmin() {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  for (const prop of [
-    '--accent',
-    '--primary',
-    '--accent-hover',
-    '--secondary',
-    '--secondary-hover',
-    '--portfolio-font',
-  ]) {
-    root.style.removeProperty(prop);
-  }
-  root.style.removeProperty('font-family');
-  root.removeAttribute('data-glass');
+  clearPortfolioThemeOn(root);
   root.removeAttribute('data-portfolio-theme');
   document.body.style.removeProperty('font-family');
+  document.querySelectorAll<HTMLElement>('.portfolio-theme-root').forEach(clearPortfolioThemeOn);
 }

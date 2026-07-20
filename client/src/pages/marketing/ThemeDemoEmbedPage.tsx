@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { applyPortfolioTheme } from '@/lib/theme';
 import {
   createDemoGuestDraft,
   fetchDemoGuestDraft,
@@ -53,11 +52,6 @@ export default function ThemeDemoEmbedPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!data.settings) return;
-    applyPortfolioTheme(data.settings);
-  }, [data]);
-
   if (!data.content) return null;
 
   const layoutMode = data.settings?.layoutMode || 'single-page';
@@ -66,7 +60,7 @@ export default function ThemeDemoEmbedPage() {
 
   return (
     <PortfolioProvider data={data} basePath={basePath} isPreview>
-      <PortfolioThemeProvider themeId={portfolioTheme}>
+      <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           <ThemeNavbar
             name={data.content.name}

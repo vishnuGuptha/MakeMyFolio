@@ -12,6 +12,7 @@ import {
   type OnboardingStepId,
 } from '@/lib/onboarding';
 import { getPortfolioViewUrl } from '@/lib/utils';
+import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -44,7 +45,7 @@ export default function AdminOnboardingPage() {
     <RequireActiveProfile>
       <div className="max-w-2xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Welcome to MakeMyFolio</h1>
+          <h1 className="text-2xl font-bold text-primary">Welcome to {BRAND.name}</h1>
           <p className="text-sm text-subtle mt-1">
             Five quick steps for{' '}
             <span className="text-accent">{activeProfile?.displayName}</span>

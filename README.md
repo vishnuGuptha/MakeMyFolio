@@ -1,6 +1,6 @@
-# MakeMyFolio
+# BuildMyFolio
 
-**MakeMyFolio** ([makemyfolio.ai](https://makemyfolio.ai)) turns a resume into a polished live portfolio — minutes, not weeks.
+**BuildMyFolio** ([buildmyfolio.com](https://buildmyfolio.com)) turns a resume into a polished live portfolio — minutes, not weeks.
 
 ## Stack
 
@@ -51,7 +51,7 @@ Seed credentials (dev only, from `npm run seed`):
 
 | URL | Description |
 |-----|-------------|
-| `/` | **MakeMyFolio** marketing home (guests). Signed-in users → `/dashboard` |
+| `/` | **BuildMyFolio** marketing home (guests). Signed-in users → `/dashboard` |
 | `/try` | Guest editor (session draft; cleared on refresh) |
 | `/try/preview` | Full theme preview of the guest draft (new tab) |
 | `/examples` | Published portfolio gallery |
@@ -61,7 +61,7 @@ Seed credentials (dev only, from `npm run seed`):
 | `/platform` | Platform admin |
 | `/platform/try-demo` | Edit the shared public `/try` demo seed |
 
-Publish at `makemyfolio.ai/{slug}` in production (path-based).
+Publish at `https://{slug}.buildmyfolio.com` in production (subdomain).
 
 ## Guest funnel
 
@@ -98,7 +98,7 @@ Copy examples only — never commit real `.env` files.
 
 ```
 portfolio/
-├── client/          # React + MakeMyFolio marketing + dashboard
+├── client/          # React + BuildMyFolio marketing + dashboard
 │   └── src/brand/   # Logo + brand constants
 ├── server/          # Express API
 └── README.md

@@ -9,7 +9,7 @@ type LogoProps = {
   size?: number;
 };
 
-/** MakeMyFolio mark — folio fold, works at 16–64px */
+/** BuildMyFolio mark — folio fold, works at 16–64px */
 export function BrandMark({ className, size = 32 }: { className?: string; size?: number }) {
   return (
     <svg
@@ -46,7 +46,7 @@ export function BrandMark({ className, size = 32 }: { className?: string; size?:
 export function BrandWordmark({ className }: { className?: string }) {
   return (
     <span className={cn('font-semibold tracking-tight text-primary', className)}>
-      Make<span className="text-accent">My</span>
+      Build<span className="text-accent">My</span>
       <span className="font-bold">Folio</span>
     </span>
   );

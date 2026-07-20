@@ -92,7 +92,7 @@ export function getDefaultTryDemoSeed(): TryDemoSeedPayload {
       name: 'Alex Rivera',
       title: 'Product Designer & Frontend Engineer',
       tagline: 'I design and ship interfaces people enjoy using.',
-      bio: 'Edit this guest draft to see how MakeMyFolio feels — create an account to save and publish. Passionate about design systems, performance, and accessible UX. I turn messy product ideas into calm, fast experiences.',
+      bio: 'Edit this guest draft to see how BuildMyFolio feels — create an account to save and publish. Passionate about design systems, performance, and accessible UX. I turn messy product ideas into calm, fast experiences.',
       location: 'Bengaluru, India',
       email: 'alex@example.com',
       phone: '+91 98765 43210',

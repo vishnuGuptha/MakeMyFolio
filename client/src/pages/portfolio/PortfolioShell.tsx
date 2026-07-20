@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useParams, useLocation } from 'react-router-dom';
 import { publicApi, userApi } from '@/api';
-import { applyPortfolioTheme } from '@/lib/theme';
 import { PortfolioProvider } from '@/context/PortfolioContext';
 import { PortfolioThemeProvider } from '@/context/PortfolioThemeContext';
 import type { PortfolioData } from '@/types';
@@ -45,7 +44,6 @@ export default function PortfolioShell({
     load
       .then((d) => {
         setData(d);
-        applyPortfolioTheme(d.settings ?? undefined);
         if (d.settings?.siteTitle) {
           document.title = isPreview ? `[Preview] ${d.settings.siteTitle}` : d.settings.siteTitle;
         }
@@ -64,8 +62,10 @@ export default function PortfolioShell({
   }, [fetchKey, isPreview]);
 
   useEffect(() => {
-    if (data?.settings) applyPortfolioTheme(data.settings);
-  }, [data, location.pathname]);
+    if (data?.settings?.siteTitle) {
+      document.title = isPreview ? `[Preview] ${data.settings.siteTitle}` : data.settings.siteTitle;
+    }
+  }, [data, location.pathname, isPreview]);
 
   if (loading) return <PortfolioSkeleton />;
   if (error || !data?.content) return <NotFoundPage />;
@@ -79,7 +79,7 @@ export default function PortfolioShell({
 
   return (
     <PortfolioProvider data={data} basePath={basePath} isPreview={isPreview}>
-      <PortfolioThemeProvider themeId={portfolioTheme}>
+      <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {isPreview && (
             <div className="sticky top-0 z-50 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-center text-xs font-medium text-amber-100 backdrop-blur">

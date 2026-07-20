@@ -14,7 +14,8 @@ import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
 import { AdminListSkeleton } from '@/components/admin/AdminEmptyState';
 import { errorMessage } from '@/lib/apiError';
-import { getPortfolioViewUrl } from '@/lib/utils';
+import { getPortfolioViewUrl, getPublicPortfolioLabel } from '@/lib/utils';
+import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -166,7 +167,7 @@ export default function AdminDashboardPage() {
             size="sm"
             variant="outline"
             type="button"
-            onClick={() => toast.message('Pro waitlist — billing is coming soon on MakeMyFolio.')}
+            onClick={() => toast.message(`Pro waitlist — billing is coming soon on ${BRAND.name}.`)}
           >
             Explore Pro
           </Button>
@@ -182,7 +183,7 @@ export default function AdminDashboardPage() {
                   <p className="text-sm font-medium text-primary">
                     {isPublished ? 'Your portfolio is live' : 'This portfolio is a draft'}
                   </p>
-                  <p className="text-xs text-subtle font-mono mt-1">/{slug}</p>
+                  <p className="text-xs text-subtle font-mono mt-1">{slug ? getPublicPortfolioLabel(slug) : ''}</p>
                   <p className="text-xs text-subtle mt-2">
                     {doneCount}/{CHECKLIST.length} checklist items complete
                     {missing.length > 0 && !isPublished

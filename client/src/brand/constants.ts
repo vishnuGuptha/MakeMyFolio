@@ -1,6 +1,6 @@
-/** Official MakeMyFolio brand constants */
+/** Official BuildMyFolio brand constants */
 export const BRAND = {
-  name: 'MakeMyFolio',
+  name: 'BuildMyFolio',
   domain: import.meta.env.VITE_APP_DOMAIN || 'buildmyfolio.com',
   url: `https://${import.meta.env.VITE_APP_DOMAIN || 'buildmyfolio.com'}`,
   tagline: 'Turn a resume into a polished live portfolio — minutes, not weeks.',

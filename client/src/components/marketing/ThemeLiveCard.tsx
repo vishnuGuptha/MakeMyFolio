@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import type { PortfolioThemeId } from '@/themes/types';
 
-/** Live scaled iframe of real theme UI (demo data) for marketing theme cards. */
+/** Static preview card — SVG screenshots (no live iframes; keeps marketing scroll smooth). */
 export function ThemeLiveCard({
   themeId,
   name,
@@ -17,25 +16,6 @@ export function ThemeLiveCard({
   className?: string;
   href?: string;
 }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(false);
-
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setActive(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: '120px', threshold: 0.05 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
     <Link
       to={href}
@@ -44,26 +24,16 @@ export function ThemeLiveCard({
         className
       )}
     >
-      <div ref={rootRef} className="relative aspect-[16/10] overflow-hidden bg-elevated">
-        {active ? (
-          <iframe
-            title={`${name} theme preview`}
-            src={`/theme-demo/${themeId}`}
-            loading="lazy"
-            tabIndex={-1}
-            className="pointer-events-none absolute left-0 top-0 border-0"
-            style={{
-              width: '360%',
-              height: '360%',
-              transform: 'scale(0.278)',
-              transformOrigin: 'top left',
-            }}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-[11px] text-subtle">
-            Loading {name}…
-          </div>
-        )}
+      <div className="relative aspect-[16/10] overflow-hidden bg-elevated [contain:paint]">
+        <img
+          src={`/theme-previews/${themeId}.svg`}
+          alt={`${name} theme preview`}
+          width={640}
+          height={400}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover object-top"
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-base/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
       <div className="border-t border-border px-3 py-2.5">
@@ -74,7 +44,7 @@ export function ThemeLiveCard({
   );
 }
 
-/** Compact live frame for hero mock window */
+/** Compact static frame for hero mock window */
 export function ThemeLiveHeroFrame({
   themeId = 'studio',
   className,
@@ -83,19 +53,15 @@ export function ThemeLiveHeroFrame({
   className?: string;
 }) {
   return (
-    <div className={cn('relative aspect-[16/11] overflow-hidden rounded-lg bg-base', className)}>
-      <iframe
-        title="Theme demo preview"
-        src={`/theme-demo/${themeId}`}
+    <div className={cn('relative aspect-[16/11] overflow-hidden rounded-lg bg-base [contain:paint]', className)}>
+      <img
+        src={`/theme-previews/${themeId}.svg`}
+        alt="Theme demo preview"
+        width={640}
+        height={440}
         loading="lazy"
-        tabIndex={-1}
-        className="pointer-events-none absolute left-0 top-0 border-0"
-        style={{
-          width: '320%',
-          height: '320%',
-          transform: 'scale(0.3125)',
-          transformOrigin: 'top left',
-        }}
+        decoding="async"
+        className="h-full w-full object-cover object-top"
       />
     </div>
   );

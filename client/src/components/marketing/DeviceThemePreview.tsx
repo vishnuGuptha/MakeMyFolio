@@ -51,7 +51,7 @@ export function DeviceThemePreview({
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
     iframe.contentWindow.postMessage(
-      { type: 'makemyfolio-guest-refresh' },
+      { type: 'buildmyfolio-guest-refresh' },
       window.location.origin
     );
   }, [draft.updatedAt, draft.themeId, device]);

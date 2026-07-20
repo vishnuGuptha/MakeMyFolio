@@ -1,3 +1,5 @@
+import { RESERVED_APP_PATHS } from '@/brand/constants';
+
 /** Apex domain for the app (marketing, dashboard). */
 export function getAppDomain(): string {
   return import.meta.env.VITE_APP_DOMAIN || 'buildmyfolio.com';
@@ -11,7 +13,7 @@ export function usesSubdomainPortfolios(): boolean {
   return import.meta.env.VITE_PORTFOLIO_URL_MODE !== 'path';
 }
 
-/** Subdomains that must never map to a portfolio slug. */
+/** Subdomains / slugs that must never map to a portfolio. */
 export const RESERVED_SUBDOMAINS = [
   'www',
   'api',
@@ -20,6 +22,9 @@ export const RESERVED_SUBDOMAINS = [
   'cdn',
   'static',
   'mail',
+  'privacy',
+  'terms',
+  ...RESERVED_APP_PATHS,
 ] as const;
 
 export function getPublicSiteOrigin(): string {
