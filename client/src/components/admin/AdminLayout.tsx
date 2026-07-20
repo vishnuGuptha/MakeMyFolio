@@ -84,7 +84,7 @@ function NavItemLink({
           'group relative flex items-center rounded-lg text-sm transition-all duration-200',
           collapsed ? 'justify-center px-0 py-2.5 mx-auto w-10' : 'gap-3 px-3 py-2',
           isActive
-            ? 'bg-accent/15 text-accent ring-1 ring-inset ring-accent/20'
+            ? 'bg-[#0066FF]/12 text-[#0066FF] ring-1 ring-inset ring-[#0066FF]/20'
             : 'text-secondary hover:bg-muted/80 hover:text-primary'
         )
       }
@@ -92,7 +92,7 @@ function NavItemLink({
       {({ isActive }) => (
         <>
           {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-accent" />
+            <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[#0066FF]" />
           )}
           <item.icon
             className={cn(
@@ -123,7 +123,7 @@ function NavSection({
       {collapsed ? (
         <div className="mx-auto my-1.5 h-px w-5 bg-border/60" aria-hidden />
       ) : (
-        <p className="px-3 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-subtle/90 transition-opacity duration-200">
+        <p className="px-3 pb-1.5 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]/80 transition-opacity duration-200">
           {title}
         </p>
       )}
@@ -236,7 +236,7 @@ export default function AdminLayout() {
     <>
       <div
         className={cn(
-          'h-14 shrink-0 border-b border-border/80 flex items-center gap-2',
+          'h-14 shrink-0 border-b border-[#0066FF]/10 flex items-center gap-2 dark:border-white/10',
           opts.collapsed ? 'justify-center px-2' : 'justify-between px-3'
         )}
       >
@@ -298,7 +298,7 @@ export default function AdminLayout() {
 
       <div
         className={cn(
-          'shrink-0 border-t border-border/80 p-2',
+          'shrink-0 border-t border-[#0066FF]/10 p-2 dark:border-white/10',
           opts.collapsed ? 'flex justify-center' : ''
         )}
       >
@@ -319,12 +319,12 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="h-svh overflow-hidden bg-base flex">
+    <div className="dashboard-shell flex h-svh overflow-hidden bg-base text-primary">
       {/* Mobile overlay */}
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] md:hidden transition-opacity duration-300',
-          mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          'fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px] transition-opacity duration-300 md:hidden',
+          mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         )}
         onClick={closeMobile}
         aria-hidden={!mobileOpen}
@@ -333,7 +333,7 @@ export default function AdminLayout() {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-elevated shadow-2xl md:hidden',
+          'dashboard-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col shadow-2xl md:hidden',
           'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
@@ -344,8 +344,8 @@ export default function AdminLayout() {
       {/* Desktop sidebar — fixed height, never scrolls with page */}
       <aside
         className={cn(
-          'relative hidden md:flex h-svh shrink-0 flex-col border-r border-border/80 bg-elevated/95',
-          'backdrop-blur-sm transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          'dashboard-sidebar relative hidden h-svh shrink-0 flex-col md:flex',
+          'transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           collapsed ? 'w-[4.25rem]' : 'w-60'
         )}
       >
@@ -353,11 +353,11 @@ export default function AdminLayout() {
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="relative z-[70] h-14 shrink-0 border-b border-border bg-elevated/90 backdrop-blur-sm flex items-center justify-between px-4 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="dashboard-header relative z-[70] flex h-14 shrink-0 items-center justify-between gap-4 px-4">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+              className="rounded-lg p-2 transition-colors hover:bg-muted md:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
             >
@@ -367,7 +367,7 @@ export default function AdminLayout() {
             {collapsed && (
               <button
                 type="button"
-                className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg border border-border text-subtle hover:bg-muted hover:text-primary transition-colors"
+                className="hidden h-9 w-9 items-center justify-center rounded-lg border border-[#0066FF]/15 text-subtle transition-colors hover:bg-muted hover:text-primary md:flex"
                 onClick={() => setCollapsed(false)}
                 aria-label="Expand sidebar"
                 title="Expand sidebar"
@@ -383,11 +383,11 @@ export default function AdminLayout() {
                 onClick={() => setSwitcherOpen((open) => !open)}
                 aria-expanded={switcherOpen}
                 aria-haspopup="listbox"
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-[#0066FF]/15 bg-elevated/70 px-3 py-1.5 text-sm backdrop-blur-sm transition-colors hover:border-[#0066FF]/30 hover:bg-muted dark:border-border"
               >
                 {activeProfile ? (
                   <>
-                    <span className="font-medium truncate max-w-[140px]">{activeProfile.displayName}</span>
+                    <span className="max-w-[140px] truncate font-medium">{activeProfile.displayName}</span>
                     {activeProfile.isPublished && <Badge variant="accent">Live</Badge>}
                     <ChevronDown
                       className={cn(
@@ -411,14 +411,14 @@ export default function AdminLayout() {
                     />
                     <div
                       role="listbox"
-                      className="fixed z-[90] w-72 max-h-[min(20rem,calc(100vh-4.5rem))] overflow-y-auto rounded-xl border border-border bg-elevated shadow-xl p-2"
+                      className="fixed z-[90] max-h-[min(20rem,calc(100vh-4.5rem))] w-72 overflow-y-auto rounded-xl border border-[#0066FF]/14 bg-elevated/95 p-2 shadow-[0_20px_48px_-20px_rgb(0_70_180/0.28)] backdrop-blur-md dark:border-white/10"
                       style={{ top: menuPos.top, left: menuPos.left }}
                     >
                       <input
                         autoFocus
                         placeholder="Search profiles..."
                         value={profileQuery}
-                        className="w-full rounded-lg border border-border bg-base px-3 py-1.5 text-sm mb-2"
+                        className="mb-2 w-full rounded-lg border border-border bg-base px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066FF]/35"
                         onChange={(e) => setProfileQuery(e.target.value)}
                       />
                       {filteredProfiles.map((p) => (
@@ -432,13 +432,13 @@ export default function AdminLayout() {
                             setSwitcherOpen(false);
                           }}
                           className={cn(
-                            'w-full text-left rounded-lg px-3 py-2 text-sm hover:bg-muted flex items-center justify-between transition-colors',
-                            activeProfile?._id === p._id && 'bg-accent/10'
+                            'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted',
+                            activeProfile?._id === p._id && 'bg-[#0066FF]/10'
                           )}
                         >
                           <div className="min-w-0">
-                            <p className="font-medium truncate">{p.displayName}</p>
-                            <p className="text-xs text-subtle font-mono truncate">/{p.slug}</p>
+                            <p className="truncate font-medium">{p.displayName}</p>
+                            <p className="truncate font-mono text-xs text-subtle">/{p.slug}</p>
                           </div>
                           {p.isPublished && <Badge variant="accent">Live</Badge>}
                         </button>
@@ -452,7 +452,7 @@ export default function AdminLayout() {
                           setSwitcherOpen(false);
                           navigate('/dashboard/portfolios');
                         }}
-                        className="w-full mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-accent hover:bg-muted transition-colors"
+                        className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#0066FF] transition-colors hover:bg-muted"
                       >
                         <Plus className="h-4 w-4" /> Create New Profile
                       </button>
@@ -463,19 +463,19 @@ export default function AdminLayout() {
             </div>
 
             {activeProfile && (
-              <p className="hidden lg:block text-xs text-subtle font-mono truncate">
+              <p className="hidden truncate font-mono text-xs text-subtle lg:block">
                 Editing: {activeProfile.displayName} (/{activeProfile.slug})
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             {activeProfile && (
               <>
-                <Button size="sm" variant="outline" onClick={copyLink}>
+                <Button size="sm" variant="outline" className="home-cta-secondary border-[#0066FF]/15" onClick={copyLink}>
                   <Copy className="h-3.5 w-3.5" /> Copy Link
                 </Button>
-                <Button size="sm" variant="outline" asChild>
+                <Button size="sm" variant="outline" className="home-cta-secondary border-[#0066FF]/15" asChild>
                   <a
                     href={getPortfolioViewUrl(activeProfile)}
                     target="_blank"
@@ -487,7 +487,7 @@ export default function AdminLayout() {
                 </Button>
               </>
             )}
-            <span className="hidden sm:block text-xs text-subtle truncate max-w-[10rem]">
+            <span className="hidden max-w-[10rem] truncate text-xs text-subtle sm:block">
               {user?.name || user?.email}
             </span>
             <AppThemeToggle />

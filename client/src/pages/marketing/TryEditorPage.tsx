@@ -54,12 +54,22 @@ export default function TryEditorPage() {
 
   return (
     <main className="relative flex h-[calc(100svh-4rem)] overflow-hidden">
+      {/* Homepage-style atmosphere */}
+      <div className="try-editor-atmosphere" aria-hidden>
+        <div className="home-mesh-gradient absolute inset-0" />
+        <div className="home-mesh-secondary absolute inset-0" />
+        <div className="home-orb home-orb-blue absolute -left-24 top-[8%] h-72 w-72 rounded-full opacity-70" />
+        <div className="home-orb home-orb-cyan absolute -right-20 top-[18%] h-80 w-80 rounded-full opacity-60" />
+        <div className="home-orb home-orb-indigo absolute bottom-[12%] left-[30%] h-56 w-56 rounded-full opacity-50" />
+        <div className="home-scene-vignette absolute inset-0" />
+      </div>
+
       <div
-        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-none px-3 py-3 sm:px-5"
+        className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-none p-3 sm:p-4"
         onWheel={(e) => e.stopPropagation()}
       >
-        <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="try-editor-toolbar mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2.5 sm:px-4">
+          <div className="flex flex-wrap items-center gap-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
               Live preview
             </p>
@@ -132,23 +142,30 @@ export default function TryEditorPage() {
           </div>
         </div>
 
-        <DeviceThemePreview draft={draft} device={device} className="min-h-0 flex-1" />
+        <div className="try-editor-stage relative min-h-0 flex-1">
+          <div className="try-editor-stage-glow" aria-hidden />
+          <div
+            className="pointer-events-none absolute -inset-4 rounded-full bg-gradient-to-br from-[#0066FF]/25 via-indigo-500/15 to-cyan-400/20 blur-3xl opacity-80"
+            aria-hidden
+          />
+          <DeviceThemePreview draft={draft} device={device} className="relative z-10 min-h-0 flex-1 p-3 sm:p-5" />
+        </div>
       </div>
 
       <aside
         className={cn(
-          'try-editor-panel flex h-full shrink-0 flex-col transition-[width] duration-200 ease-out',
-          sidebarOpen ? 'w-[min(100vw,340px)]' : 'w-0 overflow-hidden border-l-0'
+          'relative z-10 flex h-full shrink-0 flex-col py-3 pr-3 transition-[width,opacity] duration-200 ease-out',
+          sidebarOpen ? 'w-[min(100vw,360px)] opacity-100' : 'w-0 overflow-hidden opacity-0'
         )}
         aria-hidden={!sidebarOpen}
       >
         <div
           className={cn(
-            'flex h-full min-h-0 w-[min(100vw,340px)] flex-col',
+            'try-editor-panel-float flex h-full min-h-0 w-[min(100vw,348px)] flex-col overflow-hidden',
             !sidebarOpen && 'pointer-events-none invisible'
           )}
         >
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#0066FF]/12 px-3 py-2.5 dark:border-border">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#0066FF]/12 px-3.5 py-3 dark:border-white/10">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
                 Editor
@@ -169,7 +186,7 @@ export default function TryEditorPage() {
             </Button>
           </div>
 
-          <div className="flex shrink-0 flex-wrap gap-1 border-b border-[#0066FF]/10 px-2 py-1.5 dark:border-border">
+          <div className="flex shrink-0 flex-wrap gap-1 border-b border-[#0066FF]/10 px-2.5 py-2 dark:border-white/10">
             {GUEST_DRAFT_SECTIONS.map((s) => (
               <button
                 key={s.id}
@@ -185,11 +202,11 @@ export default function TryEditorPage() {
             ))}
           </div>
 
-          <div className="try-editor-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3">
+          <div className="try-editor-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3.5">
             <GuestDraftEditorFields draft={draft} setDraft={setDraft} section={section} />
           </div>
 
-          <div className="shrink-0 border-t border-[#0066FF]/10 px-3 py-2.5 text-xs text-subtle dark:border-border">
+          <div className="shrink-0 border-t border-[#0066FF]/10 bg-[#0066FF]/[0.04] px-3.5 py-3 text-xs text-subtle dark:border-white/10 dark:bg-white/[0.03]">
             Guest draft clears on refresh.{' '}
             <button
               type="button"

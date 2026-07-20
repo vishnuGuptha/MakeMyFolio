@@ -98,7 +98,7 @@ export function MarketingChrome({
     <div
       className={cn(
         'marketing-shell bg-base text-primary',
-        !isHome && 'marketing-mesh',
+        !isHome && !isTryWorkspace && 'marketing-mesh',
         isTryWorkspace ? 'flex h-svh flex-col overflow-hidden' : 'min-h-svh'
       )}
     >

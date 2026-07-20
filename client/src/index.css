@@ -45,7 +45,8 @@
 }
 
 /* Marketing shell: product blue as the single primary accent (themes keep mint) */
-.marketing-shell {
+.marketing-shell,
+.dashboard-shell {
   --accent: 0 102 255;
   --primary: 0 102 255;
   --accent-hover: 37 99 235;
@@ -55,7 +56,9 @@
 
 /* Light marketing — cooler tint, richer contrast (less flat gray) */
 .light .marketing-shell,
-.light.marketing-shell {
+.light.marketing-shell,
+.light .dashboard-shell,
+.light.dashboard-shell {
   --bg-base: 236 242 255;
   --bg-elevated: 255 255 255;
   --bg-muted: 224 233 252;
@@ -63,6 +66,183 @@
   --text-secondary: 40 52 78;
   --text-muted: 70 85 115;
   --border-default: 198 214 242;
+  --glass-opacity: 0.88;
+  --glass-border: 0.14;
+}
+
+/* Dashboard app chrome — same visual language as marketing home */
+.dashboard-shell {
+  position: relative;
+}
+.dashboard-shell::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 8% -10%, rgb(0 102 255 / 0.16), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 95% 5%, rgb(99 102 241 / 0.12), transparent 50%),
+    radial-gradient(ellipse 45% 35% at 70% 100%, rgb(6 182 212 / 0.1), transparent 55%);
+}
+.dark .dashboard-shell::before {
+  background:
+    radial-gradient(ellipse 70% 50% at 8% -10%, rgb(0 102 255 / 0.2), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 95% 5%, rgb(99 102 241 / 0.14), transparent 50%),
+    radial-gradient(ellipse 45% 35% at 70% 100%, rgb(6 182 212 / 0.08), transparent 55%);
+}
+.dashboard-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-sidebar {
+  border-right: 1px solid rgb(var(--border-default) / 0.8);
+  background: rgb(var(--bg-elevated) / 0.82);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+.light .dashboard-sidebar {
+  border-right-color: rgb(0 102 255 / 0.12);
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.94) 0%,
+    rgb(240 245 255 / 0.88) 100%
+  );
+  box-shadow: 8px 0 40px -28px rgb(0 70 180 / 0.18);
+}
+.dark .dashboard-sidebar {
+  border-right-color: rgb(255 255 255 / 0.08);
+  background: rgb(var(--bg-elevated) / 0.75);
+}
+
+.dashboard-header {
+  border-bottom: 1px solid rgb(var(--border-default) / 0.8);
+  background: rgb(var(--bg-elevated) / 0.85);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+.light .dashboard-header {
+  border-bottom-color: rgb(0 102 255 / 0.12);
+  background: rgb(242 246 255 / 0.82);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 8px 24px -16px rgb(0 70 180 / 0.12);
+}
+.dark .dashboard-header {
+  border-bottom-color: rgb(255 255 255 / 0.08);
+}
+
+.dashboard-shell .glass-card {
+  border-color: rgb(0 102 255 / 0.1);
+  background: linear-gradient(
+    160deg,
+    rgb(var(--bg-elevated) / 0.95) 0%,
+    rgb(var(--bg-elevated) / 0.8) 100%
+  );
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.5) inset,
+    0 16px 40px -28px rgb(15 23 42 / 0.28);
+}
+.light .dashboard-shell .glass-card {
+  border-color: rgb(0 102 255 / 0.12);
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.97), rgb(240 245 255 / 0.9));
+  box-shadow:
+    0 1px 0 rgb(255 255 255) inset,
+    0 18px 44px -24px rgb(0 70 180 / 0.2);
+}
+.dark .dashboard-shell .glass-card {
+  border-color: rgb(255 255 255 / 0.08);
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.03));
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.05) inset,
+    0 20px 48px -28px rgb(0 0 0 / 0.55);
+}
+
+.dashboard-shell main > .space-y-6 > .flex.justify-between > h1,
+.dashboard-shell main > .space-y-6 > .flex.items-center.justify-between > h1,
+.dashboard-shell main > .space-y-6 > .flex.flex-col > h1,
+.dashboard-shell main h1.text-2xl {
+  letter-spacing: -0.02em;
+}
+
+.dashboard-shell .home-cta-secondary {
+  border-color: rgb(0 102 255 / 0.18);
+}
+
+@keyframes home-cta-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Primary actions in the app chrome match the marketing CTA */
+.dashboard-shell button.bg-accent,
+.dashboard-shell a.bg-accent {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, #0066ff 0%, #4f46e5 55%, #06b6d4 120%);
+  background-size: 160% 160%;
+  animation: home-cta-shift 8s ease infinite;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.18) inset,
+    0 10px 28px -10px rgb(0 102 255 / 0.5),
+    0 0 36px -14px rgb(79 70 229 / 0.4);
+  transition:
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dashboard-shell button.bg-accent:hover,
+.dashboard-shell a.bg-accent:hover {
+  background: linear-gradient(135deg, #0066ff 0%, #4f46e5 55%, #06b6d4 120%);
+  background-size: 160% 160%;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.25) inset,
+    0 16px 40px -8px rgb(0 102 255 / 0.65),
+    0 0 56px -6px rgb(6 182 212 / 0.45);
+}
+.dashboard-shell button.bg-accent::after,
+.dashboard-shell a.bg-accent::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgb(255 255 255 / 0.22) 50%, transparent 70%);
+  transform: translate3d(-120%, 0, 0);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+.dashboard-shell button.bg-accent:hover::after,
+.dashboard-shell a.bg-accent:hover::after {
+  transform: translate3d(120%, 0, 0);
+}
+.dashboard-shell button.bg-accent > *,
+.dashboard-shell a.bg-accent > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-shell input:not([type='checkbox']):not([type='radio']),
+.dashboard-shell select,
+.dashboard-shell textarea {
+  border-color: rgb(0 102 255 / 0.14);
+  background: rgb(var(--bg-elevated) / 0.9);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.45) inset;
+}
+.light .dashboard-shell input:not([type='checkbox']):not([type='radio']),
+.light .dashboard-shell select,
+.light .dashboard-shell textarea {
+  background: rgb(255 255 255 / 0.92);
+}
+.dashboard-shell input:focus-visible,
+.dashboard-shell select:focus-visible,
+.dashboard-shell textarea:focus-visible {
+  border-color: rgb(0 102 255 / 0.35);
+  box-shadow:
+    0 0 0 3px rgb(0 102 255 / 0.12),
+    0 1px 0 rgb(255 255 255 / 0.5) inset;
 }
 
 [data-glass='subtle'] {
@@ -659,28 +839,130 @@ html.marketing-hide-scrollbar body::-webkit-scrollbar {
       0 8px 16px -10px rgb(15 23 42 / 0.08);
   }
 
-  /* Try editor sidebar + chips */
+  /* Try editor — homepage-level chrome */
+  .try-editor-atmosphere {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .try-editor-atmosphere .home-mesh-gradient,
+  .try-editor-atmosphere .home-mesh-secondary {
+    opacity: 0.85;
+  }
+
+  .try-editor-toolbar {
+    border-radius: 1rem;
+    border: 1px solid rgb(255 255 255 / 0.35);
+    background: linear-gradient(
+      145deg,
+      rgb(var(--bg-elevated) / 0.78) 0%,
+      rgb(var(--bg-elevated) / 0.5) 100%
+    );
+    backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.35) inset,
+      0 16px 36px -24px rgb(15 23 42 / 0.35);
+  }
+  .light .try-editor-toolbar {
+    border-color: rgb(0 102 255 / 0.14);
+    background: linear-gradient(145deg, rgb(255 255 255 / 0.92), rgb(240 245 255 / 0.78));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.95) inset,
+      0 18px 40px -22px rgb(0 70 180 / 0.2);
+  }
+  .dark .try-editor-toolbar {
+    border-color: rgb(255 255 255 / 0.08);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.06) inset,
+      0 18px 40px -24px rgb(0 0 0 / 0.55);
+  }
+
+  .try-editor-stage {
+    position: relative;
+    border-radius: 1.5rem;
+    border: 1px solid rgb(255 255 255 / 0.28);
+    background: linear-gradient(
+      160deg,
+      rgb(var(--bg-elevated) / 0.35) 0%,
+      rgb(var(--bg-elevated) / 0.12) 100%
+    );
+    backdrop-filter: blur(12px);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.25) inset,
+      0 24px 56px -28px rgb(15 23 42 / 0.4);
+    overflow: hidden;
+  }
+  .light .try-editor-stage {
+    border-color: rgb(0 102 255 / 0.12);
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.55), rgb(235 242 255 / 0.35));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.85) inset,
+      0 28px 60px -24px rgb(0 70 180 / 0.22);
+  }
+  .dark .try-editor-stage {
+    border-color: rgb(255 255 255 / 0.08);
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02));
+  }
+  .try-editor-stage-glow {
+    pointer-events: none;
+    position: absolute;
+    inset: -10%;
+    background:
+      radial-gradient(ellipse 55% 50% at 55% 45%, rgb(0 102 255 / 0.28), transparent 65%),
+      radial-gradient(ellipse 40% 40% at 75% 30%, rgb(99 102 241 / 0.18), transparent 60%),
+      radial-gradient(ellipse 35% 35% at 30% 70%, rgb(6 182 212 / 0.14), transparent 55%);
+  }
+  .light .try-editor-stage-glow {
+    background:
+      radial-gradient(ellipse 55% 50% at 55% 45%, rgb(0 102 255 / 0.22), transparent 65%),
+      radial-gradient(ellipse 40% 40% at 75% 30%, rgb(99 102 241 / 0.16), transparent 60%),
+      radial-gradient(ellipse 35% 35% at 30% 70%, rgb(6 182 212 / 0.12), transparent 55%);
+  }
+
   .try-editor-panel {
     border-left: 1px solid rgb(var(--border-default) / 0.7);
     background: rgb(var(--bg-elevated) / 0.82);
     backdrop-filter: blur(16px) saturate(1.15);
     box-shadow: -12px 0 40px -28px rgb(15 23 42 / 0.35);
   }
-  .light .try-editor-panel {
-    border-left-color: rgb(0 102 255 / 0.12);
+  .try-editor-panel-float {
+    border: 1px solid rgb(0 102 255 / 0.12);
+    border-radius: 1.25rem;
     background: linear-gradient(
       165deg,
-      rgb(255 255 255 / 0.94) 0%,
+      rgb(var(--bg-elevated) / 0.92) 0%,
+      rgb(var(--bg-elevated) / 0.72) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.25);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.4) inset,
+      0 24px 48px -28px rgb(15 23 42 / 0.4);
+  }
+  .light .try-editor-panel,
+  .light .try-editor-panel-float {
+    border-color: rgb(0 102 255 / 0.14);
+    background: linear-gradient(
+      165deg,
+      rgb(255 255 255 / 0.96) 0%,
       rgb(240 245 255 / 0.88) 100%
     );
     box-shadow:
-      -1px 0 0 rgb(255 255 255 / 0.8) inset,
-      -16px 0 48px -28px rgb(0 70 180 / 0.22);
+      0 1px 0 rgb(255 255 255) inset,
+      0 24px 52px -24px rgb(0 70 180 / 0.26),
+      0 0 0 1px rgb(0 102 255 / 0.06);
   }
   .dark .try-editor-panel {
     border-left-color: rgb(255 255 255 / 0.08);
     background: rgb(var(--bg-elevated) / 0.78);
     box-shadow: -16px 0 48px -28px rgb(0 0 0 / 0.55);
+  }
+  .dark .try-editor-panel-float {
+    border-color: rgb(255 255 255 / 0.1);
+    background: linear-gradient(165deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.03));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.06) inset,
+      0 28px 56px -28px rgb(0 0 0 / 0.65);
   }
 
   .try-editor-chip {

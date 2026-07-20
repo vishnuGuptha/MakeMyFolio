@@ -121,7 +121,7 @@ export function DeviceThemePreview({
       {isMobile ? (
         <div className="shrink-0" style={{ width: shellW }}>
           <div
-            className="relative box-border rounded-[1.65rem] border-solid border-zinc-800 bg-zinc-950 shadow-xl shadow-black/40"
+            className="relative box-border rounded-[1.65rem] border-solid border-zinc-800 bg-zinc-950 shadow-[0_32px_64px_-14px_rgba(0,0,0,0.55),0_0_48px_-14px_rgba(0,102,255,0.4)]"
             style={{
               borderWidth: MOBILE_BORDER,
               padding: MOBILE_PAD,
@@ -154,7 +154,7 @@ export function DeviceThemePreview({
       ) : (
         <div className="shrink-0" style={{ width: shellW }}>
           <div
-            className="overflow-hidden rounded-t-[12px] border border-zinc-500/70 bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-600 shadow-xl shadow-black/35"
+            className="overflow-hidden rounded-t-[12px] border border-white/40 bg-gradient-to-b from-zinc-100 via-zinc-200 to-zinc-300 shadow-[0_40px_80px_-28px_rgba(15,23,42,0.55),0_0_70px_-24px_rgba(0,102,255,0.35)] ring-1 ring-black/5 dark:border-white/10 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800"
             style={{ padding: DESKTOP_PAD }}
           >
             <div

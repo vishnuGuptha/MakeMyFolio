@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Briefcase, Activity, LogOut, Sparkles } from 'l
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
+import { BrandLogo } from '@/brand/logo';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { useEffect } from 'react';
@@ -29,13 +30,16 @@ export default function PlatformLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-base flex">
-      <aside className="w-64 border-r border-border bg-elevated flex flex-col">
-        <div className="p-4 border-b border-border">
-          <span className="font-mono text-sm text-brand-secondary font-semibold">Platform Admin</span>
-          <p className="text-xs text-subtle mt-1">Monitor all users & portfolios</p>
+    <div className="dashboard-shell flex min-h-screen bg-base text-primary">
+      <aside className="dashboard-sidebar flex w-64 shrink-0 flex-col">
+        <div className="border-b border-[#0066FF]/10 p-4 dark:border-white/10">
+          <BrandLogo size={24} />
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
+            Platform Admin
+          </p>
+          <p className="mt-1 text-xs text-subtle">Monitor users & portfolios</p>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 space-y-1 p-3">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -44,7 +48,9 @@ export default function PlatformLayout() {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                  isActive ? 'bg-brand-secondary/15 text-brand-secondary' : 'text-secondary hover:bg-muted'
+                  isActive
+                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF] ring-1 ring-inset ring-[#0066FF]/20'
+                    : 'text-secondary hover:bg-muted hover:text-primary'
                 )
               }
             >
@@ -53,10 +59,20 @@ export default function PlatformLayout() {
             </NavLink>
           ))}
         </nav>
+        <div className="border-t border-[#0066FF]/10 p-2 dark:border-white/10">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-secondary transition-colors hover:bg-muted hover:text-primary"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </div>
       </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 border-b border-border flex items-center justify-between px-6">
-          <p className="text-sm text-subtle font-mono">Platform Control Center</p>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="dashboard-header flex h-14 items-center justify-between px-6">
+          <p className="font-mono text-sm text-subtle">Platform Control Center</p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-subtle">{user?.email}</span>
             <AppThemeToggle />
@@ -65,7 +81,7 @@ export default function PlatformLayout() {
             </Button>
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
