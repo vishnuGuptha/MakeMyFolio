@@ -91,8 +91,16 @@ export function GlassTiltCard({
         rx.set(0);
         ry.set(0);
       }}
-      whileHover={reduceMotion ? undefined : { y: -4 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
+      whileHover={reduceMotion ? undefined : { y: -8, scale: 1.015 }}
+      transition={
+        reduceMotion
+          ? undefined
+          : {
+              y: { duration: 5.5, repeat: Infinity, ease: 'easeInOut' },
+              scale: { type: 'spring', stiffness: 300, damping: 24 },
+            }
+      }
     >
       <div className="home-glass-card-shine pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       {children}
