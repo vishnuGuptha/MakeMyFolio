@@ -31,7 +31,7 @@
   --glass-opacity: 0.12;
   --glass-border: 0.12;
   --portfolio-font: 'DM Sans', system-ui, sans-serif;
-  --marketing-display: 'Instrument Serif', Georgia, serif;
+  --marketing-display: 'DM Sans', system-ui, sans-serif;
 }
 
 .light {
@@ -227,6 +227,8 @@
 
   .font-display {
     font-family: var(--marketing-display);
+    font-weight: 600;
+    letter-spacing: -0.035em;
   }
 
   .marketing-mesh {
@@ -239,9 +241,9 @@
   /* —— Premium home page —— */
   .home-mesh-gradient {
     background:
-      radial-gradient(ellipse 90% 70% at 10% -20%, rgb(99 102 241 / 0.28), transparent 50%),
-      radial-gradient(ellipse 70% 55% at 95% 0%, rgb(0 102 255 / 0.26), transparent 48%),
-      radial-gradient(ellipse 55% 45% at 50% 110%, rgb(16 185 129 / 0.18), transparent 50%);
+      radial-gradient(ellipse 90% 70% at 10% -20%, rgb(99 102 241 / 0.34), transparent 50%),
+      radial-gradient(ellipse 70% 55% at 95% 0%, rgb(0 102 255 / 0.32), transparent 48%),
+      radial-gradient(ellipse 55% 45% at 50% 110%, rgb(16 185 129 / 0.2), transparent 50%);
     animation: home-mesh-shift 16s ease-in-out infinite alternate;
     will-change: transform;
   }
@@ -452,6 +454,12 @@
   .home-float-fast {
     animation: home-float-y 4.5s ease-in-out infinite;
   }
+  .home-float-device {
+    animation: home-float-device 5.5s ease-in-out infinite;
+  }
+  .home-float-device-alt {
+    animation: home-float-device-alt 4.8s ease-in-out infinite;
+  }
   @keyframes home-float-y {
     0%,
     100% {
@@ -459,6 +467,24 @@
     }
     50% {
       transform: translate3d(0, -14px, 0);
+    }
+  }
+  @keyframes home-float-device {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -11px, 0);
+    }
+  }
+  @keyframes home-float-device-alt {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -13px, 0);
     }
   }
   .home-spin-slow {
@@ -580,8 +606,19 @@
   .home-cta-primary:hover {
     box-shadow:
       0 0 0 1px rgb(255 255 255 / 0.25) inset,
-      0 16px 40px -8px rgb(0 102 255 / 0.65),
-      0 0 56px -8px rgb(6 182 212 / 0.5);
+      0 18px 44px -6px rgb(0 102 255 / 0.7),
+      0 0 64px -4px rgb(6 182 212 / 0.55);
+  }
+
+  .home-url-reveal {
+    border-radius: 1rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: linear-gradient(160deg, rgb(15 23 42 / 0.92), rgb(15 23 42 / 0.78));
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.08) inset,
+      0 28px 56px -28px rgb(0 102 255 / 0.45),
+      0 0 60px -30px rgb(0 102 255 / 0.5);
+    overflow: hidden;
   }
   .home-cta-primary::after {
     content: '';
@@ -659,6 +696,8 @@
     .home-float-slow,
     .home-float-med,
     .home-float-fast,
+    .home-float-device,
+    .home-float-device-alt,
     .home-spin-slow,
     .home-spin-rev,
     .home-particle,

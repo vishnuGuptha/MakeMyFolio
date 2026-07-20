@@ -178,50 +178,50 @@ export function HomeLivingScene({ className }: { className?: string }) {
         />
       </ParallaxLayer>
 
-      {/* L3 — glass + rings */}
+      {/* L3 — glass + rings (right / product side only) */}
       <ParallaxLayer x={l3.x} y={l3.y} className="hidden sm:block">
-        <div className="home-float-slow absolute left-[6%] top-[18%]">
+        <div className="home-float-slow absolute right-[4%] top-[14%]">
           <div className="home-glass-slab h-28 w-40 -rotate-12" />
         </div>
-        <div className="home-float-med absolute right-[8%] top-[55%]">
+        <div className="home-float-med absolute right-[10%] top-[58%]">
           <div className="home-glass-slab h-24 w-36 rotate-[8deg]" />
         </div>
-        <div className="absolute left-[42%] top-[8%]">
+        <div className="absolute right-[38%] top-[6%]">
           <div className="home-ring home-spin-slow h-36 w-36" />
         </div>
-        <div className="absolute right-[22%] top-[22%] opacity-70">
+        <div className="absolute right-[18%] top-[28%] opacity-80">
           <div className="home-ring home-ring-cyan home-spin-rev h-28 w-28" />
         </div>
-        <div className="absolute left-[18%] top-[58%] opacity-60">
+        <div className="absolute right-[28%] top-[72%] opacity-70">
           <div className="home-ring home-ring-emerald home-spin-slow h-24 w-24" />
         </div>
       </ParallaxLayer>
 
-      {/* L4 — float cards */}
+      {/* L4 — float cards (right / behind devices only — never under copy) */}
       <ParallaxLayer x={l4.x} y={l4.y} className="hidden md:block">
-        <div className="absolute left-[2%] top-[28%] -rotate-6">
+        <div className="absolute right-[2%] top-[22%] rotate-[7deg]">
           <FloatCard className="relative w-[9.5rem]" title="you.buildmyfolio.com" accent="#0066FF" delay={0} />
         </div>
-        <div className="absolute right-[3%] top-[38%] rotate-[7deg]">
+        <div className="absolute right-[8%] top-[48%] -rotate-6">
           <FloatCard className="relative w-[8.5rem]" title="studio · live" accent="#06b6d4" delay={1.2} />
         </div>
-        <div className="absolute left-[12%] top-[72%] rotate-[4deg] opacity-80">
+        <div className="absolute right-[14%] top-[78%] rotate-[4deg] opacity-85">
           <FloatCard className="relative w-[8rem]" title="import · resume" accent="#10b981" delay={2.1} />
         </div>
       </ParallaxLayer>
 
-      {/* L5 — geometry */}
+      {/* L5 — geometry (product side) */}
       <ParallaxLayer x={l5.x} y={l5.y} className="hidden sm:block">
-        <div className="home-float-med absolute left-[8%] top-[40%]">
+        <div className="home-float-med absolute right-[6%] top-[36%]">
           <div className="home-cube h-14 w-14" />
         </div>
-        <div className="home-float-slow absolute right-[14%] top-[68%]">
+        <div className="home-float-slow absolute right-[22%] top-[68%]">
           <div className="home-sphere h-16 w-16" />
         </div>
-        <div className="home-float-fast absolute right-[28%] top-[12%]">
+        <div className="home-float-fast absolute right-[32%] top-[10%]">
           <div className="home-cube home-cube-cyan h-10 w-10" />
         </div>
-        <div className="home-float-med absolute left-[30%] top-[82%]">
+        <div className="home-float-med absolute right-[40%] top-[82%]">
           <div className="home-prism h-12 w-12" />
         </div>
       </ParallaxLayer>

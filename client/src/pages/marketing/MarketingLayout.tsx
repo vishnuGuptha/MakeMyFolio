@@ -90,28 +90,33 @@ function MarketingChrome() {
         isTryWorkspace ? 'flex h-svh flex-col overflow-hidden' : 'min-h-svh'
       )}
     >
-      <header className="sticky top-0 z-50 shrink-0 border-b border-border/60 bg-base/85 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
-          <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
-            <BrandLogo size={26} />
+      <header className="sticky top-0 z-50 shrink-0 px-3 pt-3 sm:px-4">
+        <div
+          className={cn(
+            'mx-auto flex h-12 max-w-5xl items-center justify-between gap-3 rounded-full border border-border/70 bg-elevated/75 px-3 shadow-[0_8px_32px_-12px_rgb(15_23_42/0.18)] backdrop-blur-xl sm:h-14 sm:px-4',
+            'dark:border-white/10 dark:bg-elevated/70 dark:shadow-[0_8px_32px_-12px_rgb(0_0_0/0.55)]'
+          )}
+        >
+          <Link to="/" className="shrink-0 pl-1" onClick={() => setOpen(false)}>
+            <BrandLogo size={24} />
           </Link>
           <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
             {NAV.map((item) => (
-              <NavItemLink key={item.label} item={item} />
+              <NavItemLink key={item.label} item={item} className="rounded-full px-3.5 py-1.5" />
             ))}
           </nav>
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-1.5 md:flex">
             <AppThemeToggle />
             {user?.role === 'user' ? (
-              <Button size="sm" asChild>
+              <Button size="sm" asChild className="rounded-full">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
               <>
-                <Button size="sm" variant="ghost" asChild>
+                <Button size="sm" variant="ghost" asChild className="rounded-full">
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button size="sm" variant="outline" asChild>
+                <Button size="sm" variant="outline" asChild className="rounded-full">
                   <Link to="/try">Try free</Link>
                 </Button>
               </>
@@ -121,7 +126,7 @@ function MarketingChrome() {
             <AppThemeToggle />
             <button
               type="button"
-              className="rounded-lg p-2 hover:bg-muted"
+              className="rounded-full p-2 hover:bg-muted"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
               aria-expanded={open}
@@ -131,30 +136,30 @@ function MarketingChrome() {
           </div>
         </div>
         {open && (
-          <div className="border-t border-border px-4 py-3 space-y-1 md:hidden">
+          <div className="mx-auto mt-2 max-w-5xl space-y-1 rounded-2xl border border-border/70 bg-elevated/95 px-3 py-3 shadow-lg backdrop-blur-xl md:hidden">
             {NAV.map((item) => (
               <NavItemLink
                 key={item.label}
                 item={item}
                 onNavigate={() => setOpen(false)}
-                className="block"
+                className="block rounded-xl"
               />
             ))}
             <div className="flex gap-2 pt-2">
               {user?.role === 'user' ? (
-                <Button size="sm" className="flex-1" asChild>
+                <Button size="sm" className="flex-1 rounded-full" asChild>
                   <Link to="/dashboard" onClick={() => setOpen(false)}>
                     Dashboard
                   </Link>
                 </Button>
               ) : (
                 <>
-                  <Button size="sm" variant="ghost" className="flex-1" asChild>
+                  <Button size="sm" variant="ghost" className="flex-1 rounded-full" asChild>
                     <Link to="/login" onClick={() => setOpen(false)}>
                       Log in
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1" asChild>
+                  <Button size="sm" variant="outline" className="flex-1 rounded-full" asChild>
                     <Link to="/try" onClick={() => setOpen(false)}>
                       Try free
                     </Link>

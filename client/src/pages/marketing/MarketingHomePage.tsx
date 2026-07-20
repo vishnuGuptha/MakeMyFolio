@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Check, FileUp, Link2, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, Check, FileUp, Link2, Zap } from 'lucide-react';
 import { useRef } from 'react';
 import { BRAND } from '@/brand/constants';
 import { BrandMark } from '@/brand/logo';
@@ -9,6 +9,7 @@ import { HomeLivingScene } from '@/components/marketing/HomeLivingScene';
 import { HeroDeviceShowcase } from '@/components/marketing/HeroDeviceShowcase';
 import { GlassTiltCard, MagneticCta } from '@/components/marketing/HomeInteractions';
 import { Button } from '@/components/ui/Button';
+import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
@@ -47,16 +48,16 @@ const PROOF = [
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
+  hidden: { opacity: 0, y: 24 },
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, delay: 0.07 * i, ease },
+    transition: { duration: 0.5, delay: 0.06 * i, ease },
   }),
 };
 
 const reveal = {
-  hidden: { opacity: 0, y: 32, scale: 0.98 },
+  hidden: { opacity: 0, y: 28, scale: 0.98 },
   show: {
     opacity: 1,
     y: 0,
@@ -65,6 +66,8 @@ const reveal = {
   },
 };
 
+const urlHost = getPortfolioUrlPlaceholder();
+
 export default function MarketingHomePage() {
   const reduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
@@ -72,29 +75,28 @@ export default function MarketingHomePage() {
     target: heroRef,
     offset: ['start start', 'end start'],
   });
-  const heroY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 40]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.9], reduceMotion ? [1, 1] : [1, 0.65]);
+  const heroY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 36]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.9], reduceMotion ? [1, 1] : [1, 0.7]);
 
   return (
     <main className="relative overflow-hidden">
       <HomeLivingScene />
 
-      {/* Hero — badge, H1, tagline, CTAs, floating devices */}
-      <section ref={heroRef} className="relative min-h-[min(90vh,880px)]">
+      {/* Hero */}
+      <section ref={heroRef} className="relative min-h-[min(88vh,860px)]">
         <motion.div
-          className="relative z-10 mx-auto grid max-w-6xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-12 lg:pb-20 lg:pt-16"
+          className="relative z-10 mx-auto grid max-w-6xl gap-8 px-4 pb-14 pt-10 sm:px-6 lg:grid-cols-[0.95fr_1.15fr] lg:items-center lg:gap-10 lg:pb-16 lg:pt-12"
           style={{ y: heroY, opacity: heroOpacity }}
         >
-          <div className="space-y-5 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             <motion.div
               custom={0}
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
-              className="inline-flex items-center gap-2 rounded-full border border-[#0066FF]/20 bg-[#0066FF]/[0.06] px-3 py-1.5 text-xs font-medium text-[#0066FF] shadow-sm backdrop-blur-md dark:border-[#0066FF]/30 dark:bg-[#0066FF]/10"
+              className="inline-flex items-center rounded-full border border-[#0066FF]/25 bg-[#0066FF]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#0066FF] dark:border-[#0066FF]/35 dark:bg-[#0066FF]/15"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Live folio in minutes — try free</span>
+              No signup to try
             </motion.div>
 
             <motion.h1
@@ -102,7 +104,7 @@ export default function MarketingHomePage() {
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
-              className="font-display text-[2.75rem] leading-[1.06] tracking-tight text-primary sm:text-5xl lg:text-[3.5rem]"
+              className="font-display text-[2.65rem] leading-[1.05] text-primary sm:text-5xl lg:text-[3.35rem]"
             >
               A live portfolio from your resume —{' '}
               <span className="bg-gradient-to-r from-[#0066FF] via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
@@ -125,34 +127,54 @@ export default function MarketingHomePage() {
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
-              className="flex flex-wrap items-center gap-3 pt-1"
+              className="space-y-3 pt-0.5"
             >
-              <MagneticCta>
-                <Button
-                  size="lg"
-                  asChild
-                  className={cn('home-cta-primary h-12 border-0 px-6 text-base shadow-none hover:bg-transparent')}
-                >
-                  <Link to="/try">
-                    Try free <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </MagneticCta>
-              <MagneticCta strength={6}>
-                <Button size="lg" variant="ghost" asChild className="h-12 px-5 text-secondary hover:text-primary">
-                  <Link to="/themes">See themes</Link>
-                </Button>
-              </MagneticCta>
+              <div className="flex flex-wrap items-center gap-3">
+                <MagneticCta>
+                  <Button
+                    size="lg"
+                    asChild
+                    className={cn('home-cta-primary h-12 border-0 px-6 text-base shadow-none hover:bg-transparent')}
+                  >
+                    <Link to="/try">
+                      Try free <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </MagneticCta>
+                <MagneticCta strength={6}>
+                  <Button size="lg" variant="ghost" asChild className="h-12 px-4 text-secondary hover:text-primary">
+                    <Link to="/themes">See themes</Link>
+                  </Button>
+                </MagneticCta>
+              </div>
+              <p className="text-xs text-subtle sm:text-[13px]">
+                7 themes · free guest try · your subdomain
+              </p>
             </motion.div>
           </div>
 
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 36, scale: 0.97 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.15, ease }}
+            transition={{ duration: 0.65, delay: 0.12, ease }}
             className="relative min-w-0"
           >
-            <div className="pointer-events-none absolute -inset-10 rounded-full bg-gradient-to-br from-[#0066FF]/30 via-indigo-500/15 to-emerald-400/20 blur-3xl home-breath" />
+            {/* Darker radial behind devices for drama */}
+            <div
+              className="pointer-events-none absolute -inset-6 rounded-[2.5rem] opacity-90"
+              style={{
+                background:
+                  'radial-gradient(ellipse 70% 65% at 55% 45%, rgb(15 23 42 / 0.22), transparent 70%), radial-gradient(ellipse 50% 50% at 70% 30%, rgb(0 102 255 / 0.35), transparent 60%)',
+              }}
+            />
+            <div className="pointer-events-none absolute -inset-8 rounded-full bg-gradient-to-br from-[#0066FF]/35 via-indigo-500/20 to-cyan-400/25 blur-3xl home-breath" />
+            {/* Ambient rings near product */}
+            {!reduceMotion && (
+              <>
+                <div className="home-ring home-spin-slow pointer-events-none absolute -right-2 top-8 h-24 w-24 opacity-50" />
+                <div className="home-ring home-ring-cyan home-spin-rev pointer-events-none absolute bottom-16 left-4 h-16 w-16 opacity-40" />
+              </>
+            )}
             <HeroDeviceShowcase />
           </motion.div>
         </motion.div>
@@ -160,8 +182,8 @@ export default function MarketingHomePage() {
         <div className="home-section-blend home-section-blend-bottom" />
       </section>
 
-      {/* Trust strip — moved out of hero stack */}
-      <section className="relative z-10 border-y border-border/50 bg-elevated/40 backdrop-blur-sm">
+      {/* Trust strip */}
+      <section className="relative z-10 border-y border-border/50 bg-elevated/50 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-10 md:py-7">
           <ul className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-secondary">
             {TRUST.map((item) => (
@@ -184,7 +206,124 @@ export default function MarketingHomePage() {
         </div>
       </section>
 
-      <div className="home-flow-divider relative z-10 mx-auto mt-2 max-w-4xl" />
+      {/* Mid-page beat — URL reveal + theme strip */}
+      <section className="relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 55% 50% at 50% 40%, rgb(0 102 255 / 0.1), transparent 65%)',
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 home-section-pad sm:px-6">
+          <motion.div
+            className="mx-auto max-w-2xl text-center"
+            variants={reveal}
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView="show"
+            viewport={{ once: true, margin: '-80px' }}
+          >
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
+              Your live URL
+            </p>
+            <h2 className="font-display text-3xl text-primary sm:text-4xl">
+              Publish to a link that looks like you
+            </h2>
+            <p className="mt-3 text-base text-subtle">
+              Share a clean subdomain the moment you&apos;re ready — no hosting setup.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="home-url-reveal mx-auto mt-10 max-w-xl"
+            initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.96 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.55, ease }}
+          >
+            <div className="flex items-center gap-2 border-b border-white/15 px-4 py-2.5">
+              <span className="h-2 w-2 rounded-full bg-red-400/90" />
+              <span className="h-2 w-2 rounded-full bg-amber-400/90" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400/90" />
+              <span className="ml-2 font-mono text-[10px] text-zinc-400">HTTPS</span>
+            </div>
+            <p className="px-4 py-5 text-center font-mono text-base tracking-tight text-white sm:text-xl md:text-2xl">
+              <span className="text-[#60a5fa]">https://</span>
+              <motion.span
+                className="inline-block text-white"
+                initial={reduceMotion ? false : { opacity: 0.35 }}
+                whileInView={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        opacity: [0.35, 1, 1],
+                      }
+                }
+                viewport={{ once: true }}
+                transition={{ duration: 1.4, ease }}
+              >
+                {urlHost}
+              </motion.span>
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="mt-14"
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5, ease }}
+          >
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
+                  Themes
+                </p>
+                <h3 className="mt-1 font-display text-xl text-primary sm:text-2xl">
+                  Pick a look, then make it yours
+                </h3>
+              </div>
+              <Link
+                to="/themes"
+                className="hidden text-sm font-medium text-[#0066FF] hover:underline sm:inline"
+              >
+                Browse all
+              </Link>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {PORTFOLIO_THEME_LIST.map((theme, i) => (
+                <motion.div
+                  key={theme.id}
+                  initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.05, ease }}
+                  className="w-[9.5rem] shrink-0 sm:w-[11rem]"
+                >
+                  <Link
+                    to="/themes"
+                    className="group block overflow-hidden rounded-xl border border-border/80 bg-elevated/60 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div className="aspect-[4/3] overflow-hidden bg-muted">
+                      <img
+                        src={`/theme-previews/${theme.id}.svg`}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="truncate px-2.5 py-2 text-xs font-medium text-primary sm:text-sm">
+                      {theme.name}
+                    </p>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="home-flow-divider relative z-10 mx-auto max-w-4xl" />
 
       {/* How it works */}
       <section className="relative">
@@ -202,7 +341,7 @@ export default function MarketingHomePage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
               How it works
             </p>
-            <h2 className="font-display text-3xl tracking-tight text-primary sm:text-4xl lg:text-[2.75rem]">
+            <h2 className="font-display text-3xl text-primary sm:text-4xl lg:text-[2.75rem]">
               From try to live URL
             </h2>
             <p className="mt-3 text-base text-subtle sm:text-lg">
@@ -214,10 +353,10 @@ export default function MarketingHomePage() {
             {STEPS.map((step, i) => (
               <motion.div
                 key={step.n}
-                initial={reduceMotion ? false : { opacity: 0, y: 36, scale: 0.96 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 32, scale: 0.97 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.5, delay: i * 0.1, ease }}
+                transition={{ duration: 0.45, delay: i * 0.09, ease }}
               >
                 <GlassTiltCard>
                   <p className="font-mono text-[11px] font-medium tracking-wide text-[#0066FF]">
@@ -270,12 +409,12 @@ export default function MarketingHomePage() {
           aria-hidden
           style={{
             background:
-              'radial-gradient(ellipse 60% 80% at 90% 50%, rgb(0 102 255 / 0.14), transparent 55%), radial-gradient(ellipse 40% 60% at 0% 80%, rgb(16 185 129 / 0.1), transparent 50%)',
+              'radial-gradient(ellipse 60% 80% at 90% 50%, rgb(0 102 255 / 0.16), transparent 55%), radial-gradient(ellipse 40% 60% at 0% 80%, rgb(16 185 129 / 0.1), transparent 50%)',
           }}
         />
         <motion.div
           className="relative z-10 mx-auto flex max-w-6xl flex-col items-start gap-8 px-4 home-section-pad sm:px-6 md:flex-row md:items-center md:justify-between"
-          initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5, ease }}
@@ -285,7 +424,7 @@ export default function MarketingHomePage() {
               <BrandMark size={44} />
             </div>
             <div>
-              <h2 className="font-display text-2xl tracking-tight text-primary sm:text-3xl lg:text-[2.35rem]">
+              <h2 className="font-display text-2xl text-primary sm:text-3xl lg:text-[2.35rem]">
                 {BRAND.shortTagline}
               </h2>
               <p className="mt-3 max-w-md text-base text-subtle">
