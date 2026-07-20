@@ -19,10 +19,33 @@ import { sendError } from './utils/errors.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+const APP_DOMAIN = process.env.APP_DOMAIN || 'makemyfolio.ai';
+
+function isAllowedCorsOrigin(origin: string | undefined): boolean {
+  if (!origin) return true;
+  if (origin === CLIENT_URL) return true;
+  try {
+    const { hostname, protocol } = new URL(origin);
+    if (protocol !== 'http:' && protocol !== 'https:') return false;
+    if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) return true;
+    if (hostname.endsWith(`.${APP_DOMAIN}`)) return true;
+  } catch {
+    return false;
+  }
+  if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) return true;
+  return false;
+}
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      callback(null, isAllowedCorsOrigin(origin) ? origin : false);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads')));
