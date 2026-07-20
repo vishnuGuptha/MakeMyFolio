@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Palette } from 'lucide-react';
+import { Check, Palette } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
@@ -178,6 +178,7 @@ export default function AdminSettingsPage() {
                   <button
                     key={palette.id}
                     type="button"
+                    aria-pressed={selected}
                     onClick={() =>
                       setForm({
                         ...form,
@@ -186,12 +187,19 @@ export default function AdminSettingsPage() {
                         accentColor: palette.primary,
                       })
                     }
-                    className={`glass-card p-0 overflow-hidden text-left transition-all ${
-                      selected ? 'ring-2 ring-accent border-accent/40' : 'hover:border-white/20'
+                    className={`relative rounded-xl p-0 text-left transition-all border-2 bg-elevated ${
+                      selected
+                        ? 'border-accent shadow-[0_0_0_3px_rgb(var(--accent)/0.25)]'
+                        : 'border-border hover:border-secondary/40'
                     }`}
                   >
+                    {selected && (
+                      <span className="absolute top-2 right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                    )}
                     <div
-                      className="relative h-[4.25rem] p-2"
+                      className="relative h-[4.25rem] overflow-hidden rounded-t-[10px] p-2"
                       style={{
                         background: `radial-gradient(ellipse 90% 80% at 0% 0%, ${palette.primary}40, transparent 55%), ${palette.secondary}`,
                       }}
@@ -207,17 +215,24 @@ export default function AdminSettingsPage() {
                       </div>
                     </div>
                     <div className="px-3 pt-2.5 pb-3">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <span
-                          className="h-3.5 w-3.5 rounded-full border border-black/10"
-                          style={{ background: palette.primary }}
-                          title="Primary"
-                        />
-                        <span
-                          className="h-3.5 w-3.5 rounded-full border border-black/10"
-                          style={{ background: palette.secondary }}
-                          title="Secondary"
-                        />
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-black/10"
+                            style={{ background: palette.primary }}
+                            title="Primary"
+                          />
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-black/10"
+                            style={{ background: palette.secondary }}
+                            title="Secondary"
+                          />
+                        </div>
+                        {selected && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">
+                            Selected
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm font-semibold text-primary leading-tight">{palette.label}</p>
                       <p className="text-[11px] text-subtle mt-1 line-clamp-2 leading-snug">{palette.description}</p>

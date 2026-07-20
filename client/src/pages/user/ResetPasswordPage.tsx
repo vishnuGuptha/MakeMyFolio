@@ -3,11 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { authApi } from '@/api';
 import { errorMessage } from '@/lib/apiError';
+import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Label';
-import { Card } from '@/components/ui/Card';
-import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -40,44 +39,39 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="relative min-h-screen gradient-mesh flex items-center justify-center px-6">
-      <div className="absolute right-4 top-4 z-10">
-        <AppThemeToggle />
-      </div>
-      <Card className="w-full max-w-md glass-panel">
-        <h1 className="text-2xl font-bold text-primary mb-2">Set a new password</h1>
-        <p className="text-sm text-subtle mb-6">Choose a password at least 6 characters long.</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="New password">
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </FormField>
-          <FormField label="Confirm password">
-            <Input
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </FormField>
-          <Button type="submit" className="w-full" disabled={loading || !token}>
-            {loading ? 'Saving…' : 'Update password'}
-          </Button>
-        </form>
-        <p className="text-sm text-subtle mt-6 text-center">
-          <Link to="/login" className="text-accent hover:underline">
-            Back to sign in
-          </Link>
-        </p>
-      </Card>
-    </div>
+    <AuthPageShell meshClassName="gradient-mesh">
+      <h1 className="text-2xl font-bold text-primary mb-2">Set a new password</h1>
+      <p className="text-sm text-subtle mb-6">Choose a password at least 6 characters long.</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormField label="New password">
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </FormField>
+        <FormField label="Confirm password">
+          <Input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </FormField>
+        <Button type="submit" className="w-full" disabled={loading || !token}>
+          {loading ? 'Saving…' : 'Update password'}
+        </Button>
+      </form>
+      <p className="text-sm text-subtle mt-6 text-center">
+        <Link to="/login" className="text-accent hover:underline">
+          Back to sign in
+        </Link>
+      </p>
+    </AuthPageShell>
   );
 }

@@ -5,12 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { startOnboarding } from '@/lib/onboarding';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
 import { BRAND } from '@/brand/constants';
-import { BrandLogo } from '@/brand/logo';
+import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Label';
-import { Card } from '@/components/ui/Card';
-import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import {
   LegalConsentFields,
   canSubmitWithLegalConsent,
@@ -52,56 +50,48 @@ export default function UserRegisterPage() {
   const canSubmit = canSubmitWithLegalConsent(acceptPrivacy, acceptTerms);
 
   return (
-    <div className="relative min-h-screen marketing-mesh flex items-center justify-center px-6">
-      <div className="absolute right-4 top-4 z-10">
-        <AppThemeToggle />
-      </div>
-      <Card className="w-full max-w-md glass-panel">
-        <BrandLogo size={28} className="mb-4" />
-        <h1 className="text-2xl font-bold text-primary mb-2">Create your free account</h1>
-        <p className="text-sm text-subtle mb-6">
-          {claimGuest
-            ? `We'll save your guest draft to ${BRAND.name} after signup.`
-            : BRAND.tagline}
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="Full Name">
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
-          </FormField>
-          <FormField label="Email">
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </FormField>
-          <FormField label="Password">
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </FormField>
-          <LegalConsentFields
-            acceptPrivacy={acceptPrivacy}
-            acceptTerms={acceptTerms}
-            onPrivacyChange={setAcceptPrivacy}
-            onTermsChange={setAcceptTerms}
+    <AuthPageShell>
+      <h1 className="text-2xl font-bold text-primary mb-2">Create your free account</h1>
+      <p className="text-sm text-subtle mb-6">
+        {claimGuest
+          ? `We'll save your guest draft to ${BRAND.name} after signup.`
+          : BRAND.tagline}
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormField label="Full Name">
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
+        </FormField>
+        <FormField label="Email">
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </FormField>
+        <FormField label="Password">
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
           />
-          <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
-            {loading ? 'Creating...' : 'Create Account'}
-          </Button>
-        </form>
-        <p className="text-sm text-subtle mt-6 text-center">
-          Already have an account?{' '}
-          <Link to="/login" className="text-accent hover:underline">
-            Sign in
-          </Link>
-        </p>
-        <p className="text-xs text-subtle mt-3 text-center">
-          <Link to="/try" className="hover:text-accent">
-            ← Back to try mode
-          </Link>
-        </p>
-      </Card>
-    </div>
+        </FormField>
+        <LegalConsentFields
+          acceptPrivacy={acceptPrivacy}
+          acceptTerms={acceptTerms}
+          onPrivacyChange={setAcceptPrivacy}
+          onTermsChange={setAcceptTerms}
+        />
+        <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
+          {loading ? 'Creating...' : 'Create Account'}
+        </Button>
+      </form>
+      <p className="text-sm text-subtle mt-6 text-center">
+        Already have an account?{' '}
+        <Link
+          to={claimGuest ? '/login?claimGuest=1' : '/login'}
+          className="text-accent hover:underline"
+        >
+          Sign in
+        </Link>
+      </p>
+    </AuthPageShell>
   );
 }
