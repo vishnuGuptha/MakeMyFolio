@@ -3,7 +3,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import { ArrowRight, Check, FileUp, Link2, Sparkles, Zap } from 'lucide-react';
 import { useRef } from 'react';
 import { BRAND } from '@/brand/constants';
-import { BrandLogo, BrandMark } from '@/brand/logo';
+import { BrandMark } from '@/brand/logo';
 import { getPortfolioUrlPlaceholder } from '@/lib/domains';
 import { HomeLivingScene } from '@/components/marketing/HomeLivingScene';
 import { HeroDeviceShowcase } from '@/components/marketing/HeroDeviceShowcase';
@@ -38,24 +38,30 @@ const TRUST = [
   'Your own subdomain URL',
 ];
 
+const PROOF = [
+  { label: 'Themes', value: '7+' },
+  { label: 'Guest try', value: 'Free' },
+  { label: 'Publish', value: 'Subdomain URL' },
+];
+
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 28 },
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, delay: 0.08 * i, ease },
+    transition: { duration: 0.55, delay: 0.07 * i, ease },
   }),
 };
 
 const reveal = {
-  hidden: { opacity: 0, y: 36, scale: 0.97 },
+  hidden: { opacity: 0, y: 32, scale: 0.98 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.55, ease },
+    transition: { duration: 0.5, ease },
   },
 };
 
@@ -66,48 +72,37 @@ export default function MarketingHomePage() {
     target: heroRef,
     offset: ['start start', 'end start'],
   });
-  const heroY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 48]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1, 1] : [1, 0.97]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.85], reduceMotion ? [1, 1] : [1, 0.55]);
+  const heroY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 40]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.9], reduceMotion ? [1, 1] : [1, 0.65]);
 
   return (
     <main className="relative overflow-hidden">
-      {/* Continuous living atmosphere across the whole page */}
       <HomeLivingScene />
 
-      {/* Hero */}
-      <section ref={heroRef} className="relative min-h-[min(94vh,960px)]">
+      {/* Hero — badge, H1, tagline, CTAs, floating devices */}
+      <section ref={heroRef} className="relative min-h-[min(90vh,880px)]">
         <motion.div
-          className="relative z-10 mx-auto grid max-w-6xl gap-12 px-4 pb-24 pt-14 sm:px-6 lg:grid-cols-[1fr_1.12fr] lg:items-center lg:gap-14 lg:pb-32 lg:pt-20"
-          style={{ y: heroY, scale: heroScale, opacity: heroOpacity }}
+          className="relative z-10 mx-auto grid max-w-6xl gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-12 lg:pb-20 lg:pt-16"
+          style={{ y: heroY, opacity: heroOpacity }}
         >
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-5 sm:space-y-6">
             <motion.div
               custom={0}
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-elevated/40 px-3 py-1.5 text-xs text-secondary shadow-sm backdrop-blur-md dark:border-white/10"
+              className="inline-flex items-center gap-2 rounded-full border border-[#0066FF]/20 bg-[#0066FF]/[0.06] px-3 py-1.5 text-xs font-medium text-[#0066FF] shadow-sm backdrop-blur-md dark:border-[#0066FF]/30 dark:bg-[#0066FF]/10"
             >
-              <Sparkles className="h-3.5 w-3.5 text-[#0066FF]" />
+              <Sparkles className="h-3.5 w-3.5" />
               <span>Live folio in minutes — try free</span>
             </motion.div>
 
-            <motion.div
+            <motion.h1
               custom={1}
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
-            >
-              <BrandLogo size={40} className="text-lg sm:text-xl" />
-            </motion.div>
-
-            <motion.h1
-              custom={2}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="font-display text-[2.6rem] leading-[1.05] tracking-tight text-primary sm:text-5xl lg:text-[3.4rem]"
+              className="font-display text-[2.75rem] leading-[1.06] tracking-tight text-primary sm:text-5xl lg:text-[3.5rem]"
             >
               A live portfolio from your resume —{' '}
               <span className="bg-gradient-to-r from-[#0066FF] via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
@@ -116,7 +111,7 @@ export default function MarketingHomePage() {
             </motion.h1>
 
             <motion.p
-              custom={3}
+              custom={2}
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
@@ -126,7 +121,7 @@ export default function MarketingHomePage() {
             </motion.p>
 
             <motion.div
-              custom={4}
+              custom={3}
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="show"
@@ -139,53 +134,57 @@ export default function MarketingHomePage() {
                   className={cn('home-cta-primary h-12 border-0 px-6 text-base shadow-none hover:bg-transparent')}
                 >
                   <Link to="/try">
-                    Try without signup <ArrowRight className="h-4 w-4" />
+                    Try free <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
               </MagneticCta>
               <MagneticCta strength={6}>
-                <Button size="lg" variant="outline" asChild className="home-cta-secondary h-12 px-6">
+                <Button size="lg" variant="ghost" asChild className="h-12 px-5 text-secondary hover:text-primary">
                   <Link to="/themes">See themes</Link>
                 </Button>
               </MagneticCta>
             </motion.div>
-
-            <motion.ul
-              custom={5}
-              variants={fadeUp}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="show"
-              className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-xs text-subtle sm:text-[13px]"
-            >
-              {TRUST.map((item) => (
-                <li key={item} className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0066FF]/10 text-[#0066FF]">
-                    <Check className="h-3 w-3" strokeWidth={2.5} />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </motion.ul>
           </div>
 
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.96, rotateX: 8 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-            transition={{ duration: 0.75, delay: 0.2, ease }}
+            initial={reduceMotion ? false : { opacity: 0, y: 36, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.15, ease }}
             className="relative min-w-0"
-            style={{ transformPerspective: 1200 }}
           >
-            <div className="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-gradient-to-br from-[#0066FF]/25 via-indigo-500/12 to-emerald-400/18 blur-3xl home-breath" />
-            <div className="home-device-stage relative">
-              <HeroDeviceShowcase themeId="studio" />
-            </div>
+            <div className="pointer-events-none absolute -inset-10 rounded-full bg-gradient-to-br from-[#0066FF]/30 via-indigo-500/15 to-emerald-400/20 blur-3xl home-breath" />
+            <HeroDeviceShowcase />
           </motion.div>
         </motion.div>
 
         <div className="home-section-blend home-section-blend-bottom" />
       </section>
 
-      <div className="home-flow-divider relative z-10 mx-auto max-w-4xl" />
+      {/* Trust strip — moved out of hero stack */}
+      <section className="relative z-10 border-y border-border/50 bg-elevated/40 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-10 md:py-7">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-secondary">
+            {TRUST.map((item) => (
+              <li key={item} className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0066FF]/12 text-[#0066FF]">
+                  <Check className="h-3 w-3" strokeWidth={2.5} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-6 md:gap-8">
+            {PROOF.map((p) => (
+              <div key={p.label} className="min-w-[4.5rem]">
+                <p className="text-sm font-semibold tracking-tight text-primary">{p.value}</p>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-subtle">{p.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="home-flow-divider relative z-10 mx-auto mt-2 max-w-4xl" />
 
       {/* How it works */}
       <section className="relative">
@@ -215,10 +214,10 @@ export default function MarketingHomePage() {
             {STEPS.map((step, i) => (
               <motion.div
                 key={step.n}
-                initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.94, rotateX: 12 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 36, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.55, delay: i * 0.12, ease }}
+                transition={{ duration: 0.5, delay: i * 0.1, ease }}
               >
                 <GlassTiltCard>
                   <p className="font-mono text-[11px] font-medium tracking-wide text-[#0066FF]">
@@ -238,20 +237,20 @@ export default function MarketingHomePage() {
 
           <motion.div
             className="mt-12 flex flex-wrap gap-3"
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.45, delay: 0.15, ease }}
+            transition={{ duration: 0.4, delay: 0.1, ease }}
           >
             <MagneticCta>
               <Button asChild className="home-cta-primary h-11 border-0 px-5 hover:bg-transparent">
                 <Link to="/try">
-                  Open try editor <ArrowRight className="h-4 w-4" />
+                  Try free <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </MagneticCta>
             <MagneticCta strength={6}>
-              <Button variant="outline" asChild className="home-cta-secondary h-11 px-5">
+              <Button variant="ghost" asChild className="h-11 px-5 text-secondary">
                 <Link to="/pricing">View pricing</Link>
               </Button>
             </MagneticCta>
@@ -276,19 +275,15 @@ export default function MarketingHomePage() {
         />
         <motion.div
           className="relative z-10 mx-auto flex max-w-6xl flex-col items-start gap-8 px-4 home-section-pad sm:px-6 md:flex-row md:items-center md:justify-between"
-          initial={reduceMotion ? false : { opacity: 0, y: 32, scale: 0.98 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.55, ease }}
+          transition={{ duration: 0.5, ease }}
         >
           <div className="flex items-start gap-5">
-            <motion.div
-              className="home-glass-card !p-3 shrink-0"
-              animate={reduceMotion ? undefined : { y: [0, -6, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <div className="home-glass-card !p-3 shrink-0">
               <BrandMark size={44} />
-            </motion.div>
+            </div>
             <div>
               <h2 className="font-display text-2xl tracking-tight text-primary sm:text-3xl lg:text-[2.35rem]">
                 {BRAND.shortTagline}
@@ -305,7 +300,7 @@ export default function MarketingHomePage() {
               className="home-cta-primary h-12 border-0 px-7 text-base hover:bg-transparent"
             >
               <Link to="/try">
-                Try {BRAND.name} <ArrowRight className="h-4 w-4" />
+                Try free <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </MagneticCta>

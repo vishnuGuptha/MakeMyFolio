@@ -250,13 +250,13 @@ export function HomeLivingScene({ className }: { className?: string }) {
           </>
         )}
         <div
-          className="absolute inset-0 opacity-70"
+          className="absolute inset-0 opacity-90"
           style={{
             background:
-              'radial-gradient(520px circle at var(--spot-x) var(--spot-y), rgb(0 102 255 / 0.13), transparent 55%)',
+              'radial-gradient(560px circle at var(--spot-x) var(--spot-y), rgb(0 102 255 / 0.18), transparent 55%)',
           }}
         />
-        <div className="home-grid-fade absolute inset-0 opacity-[0.28] dark:opacity-[0.16]" />
+        <div className="home-grid-fade absolute inset-0 opacity-[0.35] dark:opacity-[0.18]" />
       </ParallaxLayer>
 
       <div className="home-scene-vignette absolute inset-0" />

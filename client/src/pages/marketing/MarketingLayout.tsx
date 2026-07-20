@@ -80,10 +80,13 @@ function MarketingChrome() {
     setOpen(false);
   }, [pathname]);
 
+  const isHome = pathname === '/';
+
   return (
     <div
       className={cn(
-        'bg-base text-primary marketing-mesh',
+        'marketing-shell bg-base text-primary',
+        !isHome && 'marketing-mesh',
         isTryWorkspace ? 'flex h-svh flex-col overflow-hidden' : 'min-h-svh'
       )}
     >
@@ -108,7 +111,7 @@ function MarketingChrome() {
                 <Button size="sm" variant="ghost" asChild>
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button size="sm" asChild>
+                <Button size="sm" variant="outline" asChild>
                   <Link to="/try">Try free</Link>
                 </Button>
               </>
@@ -146,12 +149,12 @@ function MarketingChrome() {
                 </Button>
               ) : (
                 <>
-                  <Button size="sm" variant="outline" className="flex-1" asChild>
+                  <Button size="sm" variant="ghost" className="flex-1" asChild>
                     <Link to="/login" onClick={() => setOpen(false)}>
                       Log in
                     </Link>
                   </Button>
-                  <Button size="sm" className="flex-1" asChild>
+                  <Button size="sm" variant="outline" className="flex-1" asChild>
                     <Link to="/try" onClick={() => setOpen(false)}>
                       Try free
                     </Link>

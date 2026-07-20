@@ -12,15 +12,14 @@ import { cn } from '@/lib/utils';
 const DESKTOP_IMG = '/marketing/hero-desktop.png';
 const MOBILE_IMG = '/marketing/hero-mobile.png';
 
-/** Mac screen size — matches desktop screenshot aspect (~1024×448) */
-const MAC_W = 420;
-const MAC_H = 184;
-const DESKTOP_PAD = 10;
-const DESKTOP_CAMERA = 12;
+/** Taller Mac viewport (~16:10) — short screenshot fills via object-cover */
+const MAC_W = 480;
+const MAC_H = 300;
+const DESKTOP_PAD = 8;
+const DESKTOP_CAMERA = 10;
 
-/** Phone screen — matches mobile screenshot aspect (~473×1024) */
-const PHONE_W = 132;
-const PHONE_H = 286;
+const PHONE_W = 140;
+const PHONE_H = 304;
 const MOBILE_BORDER = 3;
 const MOBILE_PAD = 3;
 
@@ -29,8 +28,8 @@ function MacFrame({ urlLabel }: { urlLabel: string }) {
 
   return (
     <div className="relative shrink-0" style={{ width: shellW }}>
-      <div className="overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-b from-zinc-100 via-zinc-200 to-zinc-300 shadow-[0_28px_60px_-28px_rgba(15,23,42,0.55)] ring-1 ring-black/5 dark:border-white/10 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800 dark:ring-white/5">
-        <div className="flex items-center gap-2 border-b border-black/5 bg-white/70 px-3 py-2.5 backdrop-blur-md dark:border-white/10 dark:bg-zinc-800/80">
+      <div className="overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-b from-zinc-100 via-zinc-200 to-zinc-300 shadow-[0_36px_72px_-28px_rgba(15,23,42,0.55),0_0_60px_-28px_rgba(0,102,255,0.35)] ring-1 ring-black/5 dark:border-white/10 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800 dark:ring-white/5 dark:shadow-[0_36px_72px_-28px_rgba(0,0,0,0.75),0_0_60px_-24px_rgba(0,102,255,0.4)]">
+        <div className="flex items-center gap-2 border-b border-black/5 bg-white/70 px-3 py-2 backdrop-blur-md dark:border-white/10 dark:bg-zinc-800/80">
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/90 shadow-sm" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400/90 shadow-sm" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/90 shadow-sm" />
@@ -38,7 +37,7 @@ function MacFrame({ urlLabel }: { urlLabel: string }) {
             {urlLabel}
           </span>
         </div>
-        <div className="p-2.5">
+        <div className="p-2">
           <div
             className="relative isolate overflow-hidden rounded-lg bg-black ring-1 ring-black/40"
             style={{ width: MAC_W, height: MAC_H + DESKTOP_CAMERA }}
@@ -72,11 +71,11 @@ function PhoneFrame() {
   return (
     <div className="relative shrink-0" style={{ width: shellW }}>
       <div
-        className="relative box-border rounded-[1.75rem] border-solid border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/50"
+        className="relative box-border rounded-[1.85rem] border-solid border-zinc-800 bg-zinc-950 shadow-[0_28px_56px_-16px_rgba(0,0,0,0.55),0_0_40px_-18px_rgba(0,102,255,0.35)]"
         style={{ borderWidth: MOBILE_BORDER, padding: MOBILE_PAD }}
       >
         <div
-          className="relative isolate overflow-hidden rounded-[1.4rem] bg-black"
+          className="relative isolate overflow-hidden rounded-[1.45rem] bg-black"
           style={{ width: PHONE_W, height: PHONE_H }}
         >
           <img
@@ -109,37 +108,39 @@ export function HeroDeviceShowcase({ className }: { className?: string; themeId?
     offset: ['start end', 'end start'],
   });
   const smooth = useSpring(scrollYProgress, { stiffness: 80, damping: 28 });
-  const macY = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [28, -36]);
-  const macRot = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [4, -3]);
-  const phoneY = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [48, -20]);
-  const phoneRot = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [-5, 4]);
+  const macY = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [24, -32]);
+  const macRot = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [3, -2.5]);
+  const phoneY = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [40, -16]);
+  const phoneRot = useTransform(smooth, [0, 1], reduceMotion ? [0, 0] : [-4, 3]);
 
   return (
     <div
       ref={rootRef}
-      className={cn('relative mx-auto w-full max-w-[640px] perspective-[1400px]', className)}
+      className={cn('relative mx-auto w-full max-w-[680px] perspective-[1400px]', className)}
     >
-      <div className="relative flex min-h-[240px] flex-col items-center justify-end gap-6 pb-2 pt-4 sm:min-h-[340px] sm:pb-4 sm:pt-6 md:min-h-[380px]">
+      <div className="relative flex min-h-[280px] flex-col items-center justify-end gap-4 pb-2 pt-2 sm:min-h-[380px] sm:pb-3 sm:pt-4 md:min-h-[420px]">
         <motion.div
           className="relative z-10 flex w-full origin-bottom justify-center"
           style={reduceMotion ? undefined : { y: macY, rotateY: macRot, rotateX: 2 }}
-          initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.96 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 36, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="origin-top scale-[0.85] sm:scale-100">
+          <div className={cn('origin-top scale-[0.78] sm:scale-[0.92] lg:scale-100', !reduceMotion && 'home-float-slow')}>
             <MacFrame urlLabel={urlLabel} />
           </div>
         </motion.div>
 
         <motion.div
-          className="relative z-20 origin-bottom sm:absolute sm:bottom-0 sm:right-0 md:right-[-2%]"
-          style={reduceMotion ? undefined : { y: phoneY, rotateY: phoneRot }}
-          initial={reduceMotion ? false : { opacity: 0, y: 60, x: 12 }}
+          className="relative z-20 origin-bottom sm:absolute sm:bottom-2 sm:right-0 md:right-[-4%] lg:right-[-6%]"
+          style={reduceMotion ? undefined : { y: phoneY, rotateY: phoneRot, rotateZ: -2 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 48, x: 10 }}
           animate={{ opacity: 1, y: 0, x: 0 }}
-          transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          <PhoneFrame />
+          <div className={cn('scale-[0.92] sm:scale-100', !reduceMotion && 'home-float-med')}>
+            <PhoneFrame />
+          </div>
         </motion.div>
       </div>
     </div>
