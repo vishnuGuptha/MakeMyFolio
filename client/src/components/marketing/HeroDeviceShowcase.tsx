@@ -62,19 +62,18 @@ function MacFrame({ src, urlLabel }: { src: string; urlLabel: string }) {
 
   return (
     <div className="relative shrink-0" style={{ width: shellW }} onWheel={(e) => e.stopPropagation()}>
-      <div className="overflow-hidden rounded-t-xl border border-zinc-500/60 bg-gradient-to-b from-zinc-300 via-zinc-400 to-zinc-500 shadow-2xl shadow-black/30 dark:from-zinc-500 dark:via-zinc-600 dark:to-zinc-700">
-        {/* Browser chrome */}
-        <div className="flex items-center gap-2 border-b border-black/10 bg-zinc-200/90 px-3 py-2 dark:bg-zinc-700/90">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-400/90" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/90" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/90" />
-          <span className="ml-2 min-w-0 flex-1 truncate rounded-md bg-white/70 px-2 py-0.5 font-mono text-[9px] text-zinc-600 dark:bg-zinc-900/50 dark:text-zinc-300">
+      <div className="overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-b from-zinc-100 via-zinc-200 to-zinc-300 shadow-[0_28px_60px_-28px_rgba(15,23,42,0.55)] ring-1 ring-black/5 dark:border-white/10 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800 dark:ring-white/5">
+        <div className="flex items-center gap-2 border-b border-black/5 bg-white/70 px-3 py-2.5 backdrop-blur-md dark:border-white/10 dark:bg-zinc-800/80">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400/90 shadow-sm" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/90 shadow-sm" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/90 shadow-sm" />
+          <span className="ml-2 min-w-0 flex-1 truncate rounded-lg bg-zinc-100/90 px-2.5 py-1 font-mono text-[9px] text-zinc-500 ring-1 ring-black/5 dark:bg-zinc-900/60 dark:text-zinc-300 dark:ring-white/5">
             {urlLabel}
           </span>
         </div>
         <div className="p-2.5">
           <div
-            className="relative isolate overflow-hidden rounded-[4px] bg-black ring-1 ring-black/50"
+            className="relative isolate overflow-hidden rounded-lg bg-black ring-1 ring-black/40"
             style={{
               width: displayW,
               height: displayH + DESKTOP_CAMERA,
@@ -100,10 +99,8 @@ function MacFrame({ src, urlLabel }: { src: string; urlLabel: string }) {
           </div>
         </div>
       </div>
-      <div className="relative z-10 mx-auto h-2 w-[102%] -translate-x-[1%] bg-gradient-to-b from-zinc-400 to-zinc-600 dark:from-zinc-600 dark:to-zinc-800">
-        <div className="absolute inset-x-[28%] top-0 h-full rounded-b-sm bg-zinc-500/90 dark:bg-zinc-700/90" />
-      </div>
-      <div className="relative mx-auto h-2.5 w-[112%] -translate-x-[6%] rounded-b-xl bg-gradient-to-b from-zinc-500 via-zinc-600 to-zinc-800 shadow-lg dark:from-zinc-700 dark:via-zinc-800 dark:to-zinc-950" />
+      <div className="relative z-10 mx-auto h-1.5 w-[101%] -translate-x-[0.5%] bg-gradient-to-b from-zinc-300 to-zinc-400 dark:from-zinc-600 dark:to-zinc-700" />
+      <div className="relative mx-auto h-2.5 w-[110%] -translate-x-[5%] rounded-b-2xl bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-700 shadow-lg dark:from-zinc-700 dark:via-zinc-800 dark:to-zinc-950" />
     </div>
   );
 }

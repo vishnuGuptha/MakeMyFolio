@@ -13,8 +13,8 @@ type AuthPageShellProps = {
 };
 
 /**
- * Standard SaaS auth layout: fixed viewport, centered card.
- * Scrolls from the top when content is taller than the viewport (no clipped headings).
+ * Standard SaaS auth layout: fixed viewport, centered card, scroll only if the form overflows.
+ * Uses my-auto (not items-center) so tall forms scroll from the top without clipping the heading.
  */
 export function AuthPageShell({
   children,
@@ -42,12 +42,10 @@ export function AuthPageShell({
         </div>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex min-h-full w-full max-w-md items-center px-4 py-4 sm:px-6">
-          <div className={cn('w-full', className)}>
-            <Card className="glass-panel p-4 sm:p-5">{children}</Card>
-            {footer}
-          </div>
+      <main className="flex min-h-0 flex-1 justify-center overflow-y-auto px-4 py-4 sm:px-6">
+        <div className={cn('my-auto w-full max-w-md', className)}>
+          <Card className="glass-panel p-4 sm:p-5">{children}</Card>
+          {footer}
         </div>
       </main>
     </div>
