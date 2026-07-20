@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { getVisibleNavSections } from '@/lib/theme';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import type { NavbarProps } from '../types';
 
 /** Reference-style nav shows a short set on single-page; full list still available in mobile. */
@@ -16,6 +17,7 @@ export default function BentoNavbar({
   basePath: basePathProp,
   layoutMode,
   sectionVisibility,
+  profileImageUrl,
 }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -71,12 +73,18 @@ export default function BentoNavbar({
     >
       <div className="bento-container flex h-16 md:h-[4.25rem] items-center justify-between gap-4">
         {isMultiPage ? (
-          <Link to={basePath} className="bento-brand truncate">
-            {name}
+          <Link to={basePath} className="bento-brand truncate inline-flex items-center gap-2.5 min-w-0">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="truncate">{name}</span>
           </Link>
         ) : (
-          <button type="button" onClick={() => scrollTo('home')} className="bento-brand truncate text-left">
-            {name}
+          <button
+            type="button"
+            onClick={() => scrollTo('home')}
+            className="bento-brand truncate text-left inline-flex items-center gap-2.5 min-w-0"
+          >
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="truncate">{name}</span>
           </button>
         )}
 

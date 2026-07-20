@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Download, User } from 'lucide-react';
+import { Menu, X, Sun, Moon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
 import { publicApi } from '@/api';
 import { SpotlightContainer } from './layout/SpotlightSection';
 import { getVisibleNavSections } from '@/lib/theme';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import type { NavbarProps } from '../types';
 
 export default function SpotlightNavbar({
@@ -88,28 +89,16 @@ export default function SpotlightNavbar({
       <SpotlightContainer className="flex h-16 items-center gap-3 min-w-0">
         <div className="shrink-0 min-w-0">
         {isMultiPage ? (
-          <Link to={basePath} className="flex items-center gap-2 shrink-0">
-            {profileImageUrl ? (
-              <img src={profileImageUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-accent/50" />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-accent" />
-              </div>
-            )}
-            <span className="font-semibold text-sm">
+          <Link to={basePath} className="flex items-center gap-2 shrink-0 min-w-0">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="font-semibold text-sm truncate">
               {firstName}<span className="text-accent">.dev</span>
             </span>
           </Link>
         ) : (
-          <button onClick={() => scrollTo('home')} className="flex items-center gap-2 shrink-0">
-            {profileImageUrl ? (
-              <img src={profileImageUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-accent/50" />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-accent" />
-              </div>
-            )}
-            <span className="font-semibold text-sm">
+          <button type="button" onClick={() => scrollTo('home')} className="flex items-center gap-2 shrink-0 min-w-0">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="font-semibold text-sm truncate">
               {firstName}<span className="text-accent">.dev</span>
             </span>
           </button>

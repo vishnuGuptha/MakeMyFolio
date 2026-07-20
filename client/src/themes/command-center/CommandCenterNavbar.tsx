@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { publicApi } from '@/api';
 import { getVisibleNavSections } from '@/lib/theme';
 import { CommandCenterContainer } from './layout/CommandCenterSection';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import type { NavbarProps } from '../types';
 
 export default function CommandCenterNavbar({
@@ -14,6 +15,7 @@ export default function CommandCenterNavbar({
   layoutMode,
   sectionVisibility,
   resumeUrl,
+  profileImageUrl,
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState('');
@@ -73,9 +75,12 @@ export default function CommandCenterNavbar({
     <header className="fixed top-4 left-0 right-0 z-50 px-4">
       <CommandCenterContainer className="max-w-5xl">
         <div className="cc-nav-pill flex min-h-14 items-center gap-3 px-4 py-1 min-w-0">
-          <div className="shrink-0 font-bold text-sm tracking-wide">
-            <span className="text-primary">{firstName}</span>
-            <span className="text-accent ml-1">DEV</span>
+          <div className="shrink-0 flex items-center gap-2 font-bold text-sm tracking-wide min-w-0">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={28} />
+            <span className="truncate">
+              <span className="text-primary">{firstName}</span>
+              <span className="text-accent ml-1">DEV</span>
+            </span>
           </div>
 
           <nav className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-1 cc-nav-scroll">

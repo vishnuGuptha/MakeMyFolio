@@ -198,6 +198,8 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     height: 100%;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     scrollbar-width: none;
     -ms-overflow-style: none;
     /* Avoid white page flash / corner bleed inside device frames */

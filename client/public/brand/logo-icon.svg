@@ -1,9 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <g transform="translate(3 4) scale(0.5)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <!-- BuildMyFolio growth mark: bars + rising arrow (transparent bg) -->
+  <g transform="translate(6 8)">
+    <!-- bars (parallelograms) -->
     <path d="M4 44 L14 44 L22 18 L12 18 Z" fill="#22B450"/>
     <path d="M18 44 L28 44 L36 12 L26 12 Z" fill="#0066FF"/>
     <path d="M32 44 L42 44 L50 8 L40 8 Z" fill="#0066FF"/>
+    <!-- arrow shaft -->
     <path d="M2 30 L38 8 L41 13 L5 35 Z" fill="#0066FF"/>
+    <!-- arrow head -->
     <path d="M34 4 L52 2 L46 18 Z" fill="#0066FF"/>
   </g>
 </svg>

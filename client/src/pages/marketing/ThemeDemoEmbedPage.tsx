@@ -46,9 +46,14 @@ export default function ThemeDemoEmbedPage() {
   useEffect(() => {
     document.documentElement.classList.add('guest-preview-embed');
     document.body.classList.add('guest-preview-embed');
+    // Ensure iframe document can scroll the portfolio body
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
     return () => {
       document.documentElement.classList.remove('guest-preview-embed');
       document.body.classList.remove('guest-preview-embed');
+      document.documentElement.style.height = '';
+      document.body.style.height = '';
     };
   }, []);
 

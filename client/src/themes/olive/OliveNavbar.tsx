@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import { getVisibleNavSections } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { NavbarProps } from '../types';
@@ -21,7 +22,14 @@ const LABEL: Record<string, string> = {
 const TOP_THRESHOLD = 24;
 const HIDE_DELTA = 8;
 
-export default function OliveNavbar({ slug, basePath: basePathProp, layoutMode, sectionVisibility }: NavbarProps) {
+export default function OliveNavbar({
+  name,
+  slug,
+  basePath: basePathProp,
+  layoutMode,
+  sectionVisibility,
+  profileImageUrl,
+}: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState('home');
   const [navHidden, setNavHidden] = useState(false);
@@ -119,6 +127,21 @@ export default function OliveNavbar({ slug, basePath: basePathProp, layoutMode, 
       aria-hidden={navHidden && !mobileOpen}
     >
       <div className="olive-nav-bar">
+        {isMultiPage ? (
+          <Link to={basePath} className="flex shrink-0 items-center gap-2 min-w-0 mr-2">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="hidden sm:inline truncate text-sm font-semibold max-w-[8rem]">{name}</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => scrollTo('home')}
+            className="flex shrink-0 items-center gap-2 min-w-0 mr-2"
+          >
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="hidden sm:inline truncate text-sm font-semibold max-w-[8rem]">{name}</span>
+          </button>
+        )}
         <div className="olive-nav-links">
           {renderLink('home', 'Home')}
           {ordered.map((item) => renderLink(item.id, LABEL[item.id] || item.label))}

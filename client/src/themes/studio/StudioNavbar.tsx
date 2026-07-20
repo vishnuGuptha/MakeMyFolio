@@ -4,6 +4,7 @@ import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import { getVisibleNavSections } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { NavbarProps } from '../types';
@@ -23,10 +24,12 @@ const TOP_THRESHOLD = 24;
 const HIDE_DELTA = 8;
 
 export default function StudioNavbar({
+  name,
   slug,
   basePath: basePathProp,
   layoutMode,
   sectionVisibility,
+  profileImageUrl,
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState('home');
@@ -134,6 +137,25 @@ export default function StudioNavbar({
       aria-hidden={navHidden && !mobileOpen}
     >
       <div className="studio-nav-bar">
+        {isMultiPage ? (
+          <Link to={basePath} className="flex shrink-0 items-center gap-2 min-w-0 mr-2">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="hidden sm:inline truncate text-sm font-semibold text-primary max-w-[8rem]">
+              {name}
+            </span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => scrollTo('home')}
+            className="flex shrink-0 items-center gap-2 min-w-0 mr-2"
+          >
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="hidden sm:inline truncate text-sm font-semibold text-primary max-w-[8rem]">
+              {name}
+            </span>
+          </button>
+        )}
         <div className="studio-nav-links">
           {renderLink('home', 'Home')}
           {ordered.map((item) => renderLink(item.id, LABEL[item.id] || item.label))}

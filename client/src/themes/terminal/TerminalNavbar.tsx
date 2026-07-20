@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { publicApi } from '@/api';
 import { TerminalContainer } from './layout/TerminalSection';
 import { getVisibleNavSections } from '@/lib/theme';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import type { NavbarProps } from '../types';
 
 export default function TerminalNavbar({
@@ -15,6 +16,7 @@ export default function TerminalNavbar({
   layoutMode,
   sectionVisibility,
   resumeUrl,
+  profileImageUrl,
 }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -78,9 +80,12 @@ export default function TerminalNavbar({
       )}
     >
       <TerminalContainer className="flex h-14 md:h-16 items-center gap-3 min-w-0">
-        <div className="shrink-0 min-w-0 text-xs sm:text-sm truncate">
-          <span className="text-accent font-semibold">{firstName}</span>
-          <span className="text-subtle hidden sm:inline"> · Portfolio</span>
+        <div className="shrink-0 min-w-0 flex items-center gap-2 text-xs sm:text-sm truncate">
+          <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={28} />
+          <span className="truncate">
+            <span className="text-accent font-semibold">{firstName}</span>
+            <span className="text-subtle hidden sm:inline"> · Portfolio</span>
+          </span>
         </div>
 
         <nav className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-0.5 overflow-x-auto terminal-nav-scroll px-1">

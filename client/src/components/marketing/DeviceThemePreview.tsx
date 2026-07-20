@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import { writeGuestPreviewSnapshot, type GuestDraft } from '@/context/GuestDraftContext';
 
-type DeviceMode = 'desktop' | 'mobile';
+export type DeviceMode = 'desktop' | 'mobile';
 
 /** Logical viewport so theme media queries match desktop (keep ≥900px). */
-const DESKTOP_VW = 1080;
-const DESKTOP_VH = 680;
-const MOBILE_VW = 390;
-const MOBILE_VH = 780;
+export const DESKTOP_VW = 1080;
+export const DESKTOP_VH = 680;
+export const MOBILE_VW = 390;
+export const MOBILE_VH = 780;
 
 /** Phone chrome — thin bezel; home indicator is overlaid on the screen. */
 const MOBILE_BORDER = 3;
@@ -19,14 +19,22 @@ const MOBILE_HOME = 0;
 const DESKTOP_PAD = 10;
 const DESKTOP_CAMERA = 14;
 
+const DEFAULT_SRC = '/try/preview?embed=1';
+
 export function DeviceThemePreview({
   draft,
   device,
   className,
+  /** Override iframe URL (marketing uses `/theme-demo/:id`) */
+  src = DEFAULT_SRC,
+  /** When true, skip writing guest draft snapshot (static embed URLs) */
+  skipDraftSync = false,
 }: {
-  draft: GuestDraft;
+  draft?: GuestDraft;
   device: DeviceMode;
   className?: string;
+  src?: string;
+  skipDraftSync?: boolean;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -44,17 +52,19 @@ export function DeviceThemePreview({
     : DESKTOP_PAD * 2 + DESKTOP_CAMERA;
 
   useEffect(() => {
+    if (skipDraftSync || !draft) return;
     writeGuestPreviewSnapshot(draft);
-  }, [draft]);
+  }, [draft, skipDraftSync]);
 
   useEffect(() => {
+    if (skipDraftSync || !draft) return;
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
     iframe.contentWindow.postMessage(
       { type: 'buildmyfolio-guest-refresh' },
       window.location.origin
     );
-  }, [draft.updatedAt, draft.themeId, device]);
+  }, [draft?.updatedAt, draft?.themeId, device, skipDraftSync, draft]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -87,7 +97,6 @@ export function DeviceThemePreview({
     return () => stage.removeEventListener('wheel', onWheel);
   }, [device]);
 
-  // Keep screen aperture and scaled iframe in exact sync (no Math.round drift).
   const displayW = vw * scale;
   const displayH = vh * scale;
   const shellW = displayW + chromeW;
@@ -111,7 +120,6 @@ export function DeviceThemePreview({
     >
       {isMobile ? (
         <div className="shrink-0" style={{ width: shellW }}>
-          {/* Phone shell — width fully accounted for by chromeW */}
           <div
             className="relative box-border rounded-[1.65rem] border-solid border-zinc-800 bg-zinc-950 shadow-xl shadow-black/40"
             style={{
@@ -119,7 +127,6 @@ export function DeviceThemePreview({
               padding: MOBILE_PAD,
             }}
           >
-            {/* Screen aperture — exact scaled iframe size */}
             <div
               className="relative isolate overflow-hidden rounded-[1.35rem] bg-black"
               style={{
@@ -130,14 +137,13 @@ export function DeviceThemePreview({
               }}
             >
               <iframe
-                key="mobile"
+                key={`mobile-${src}`}
                 ref={iframeRef}
                 title="Mobile theme preview"
-                src="/try/preview?embed=1"
+                src={src}
                 className="absolute left-0 top-0 block border-0"
                 style={iframeStyle}
               />
-              {/* Home indicator overlaid on screen (no extra black chrome below) */}
               <div
                 className="pointer-events-none absolute bottom-1.5 left-1/2 z-10 h-1 w-[28%] max-w-[100px] -translate-x-1/2 rounded-full bg-zinc-900/35"
                 aria-hidden
@@ -168,10 +174,10 @@ export function DeviceThemePreview({
                 style={{ top: DESKTOP_CAMERA, width: displayW, height: displayH }}
               >
                 <iframe
-                  key="desktop"
+                  key={`desktop-${src}`}
                   ref={iframeRef}
                   title="Desktop theme preview"
-                  src="/try/preview?embed=1"
+                  src={src}
                   className="absolute left-0 top-0 block border-0"
                   style={iframeStyle}
                 />

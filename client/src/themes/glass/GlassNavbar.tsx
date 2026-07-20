@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Home } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
 import { Container } from '@/components/layout/Section';
 import { getVisibleNavSections } from '@/lib/theme';
+import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
 import type { NavbarProps } from '../types';
 
-export default function GlassNavbar({ name, slug, basePath: basePathProp, layoutMode, sectionVisibility }: NavbarProps) {
+export default function GlassNavbar({
+  name,
+  slug,
+  basePath: basePathProp,
+  layoutMode,
+  sectionVisibility,
+  profileImageUrl,
+}: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState('');
@@ -64,16 +72,18 @@ export default function GlassNavbar({ name, slug, basePath: basePathProp, layout
     >
       <Container className="flex h-16 items-center justify-between">
         {isMultiPage ? (
-          <Link to={basePath} className="font-mono text-sm font-medium text-accent hover:text-accent-hover flex items-center gap-1.5">
-            <Home className="h-3.5 w-3.5" />
-            {name.split(' ')[0].toLowerCase()}.
+          <Link to={basePath} className="flex min-w-0 items-center gap-2.5 text-accent hover:text-accent-hover">
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="truncate font-mono text-sm font-medium">{name}</span>
           </Link>
         ) : (
           <button
+            type="button"
             onClick={() => scrollTo('hero')}
-            className="font-mono text-sm font-medium text-accent hover:text-accent-hover"
+            className="flex min-w-0 items-center gap-2.5 text-accent hover:text-accent-hover"
           >
-            {name.split(' ')[0].toLowerCase()}.
+            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+            <span className="truncate font-mono text-sm font-medium">{name}</span>
           </button>
         )}
 
