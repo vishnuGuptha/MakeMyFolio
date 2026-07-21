@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 const TONES = ['orange', 'blue', 'green', 'pink'] as const;
 export type StudioTagTone = (typeof TONES)[number];
@@ -20,8 +21,8 @@ export default function StudioTag({
 }) {
   const resolved = tone || toneFromSeed(label);
   return (
-    <span className={cn('studio-tag', `studio-tag-${resolved}`)} title={title || label}>
-      {label}
-    </span>
+    <Tooltip content={title || label}>
+      <span className={cn('studio-tag', `studio-tag-${resolved}`)}>{label}</span>
+    </Tooltip>
   );
 }

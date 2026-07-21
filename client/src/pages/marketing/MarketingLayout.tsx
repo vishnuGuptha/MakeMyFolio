@@ -8,6 +8,7 @@ import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { useAuth } from '@/context/AuthContext';
+import { cartCount, subscribeCart } from '@/lib/planCheckout';
 
 /** Lazy — pulls GuestDraft + theme registry only on /try */
 const TryGuestShell = lazy(() => import('./TryGuestShell'));
@@ -16,9 +17,10 @@ type AuthGateReason = 'import' | 'publish' | 'persist';
 
 type NavItem = { to: string; label: string; hash?: boolean };
 
-const NAV: NavItem[] = [
+/** Logged-out marketing only — after login use dashboard shell */
+const GUEST_NAV: NavItem[] = [
   { to: '/', label: 'Home' },
-  { to: '/try', label: 'Try' },
+  { to: '/try', label: 'Playground' },
   { to: '/themes', label: 'Themes' },
   { to: '/pricing', label: 'Pricing' },
 ];
@@ -75,9 +77,16 @@ export function MarketingChrome({
   closeAuthGate?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [cartItems, setCartItems] = useState(() => cartCount());
   const { user } = useAuth();
   const { pathname } = useLocation();
   const isTryWorkspace = pathname === '/try';
+  const isLoggedIn = user?.role === 'user';
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    return subscribeCart(() => setCartItems(cartCount()));
+  }, [isLoggedIn]);
 
   useEffect(() => {
     resetDocumentThemeForAdmin();
@@ -93,6 +102,7 @@ export function MarketingChrome({
   }, []);
 
   const isHome = pathname === '/';
+  const logoTo = isLoggedIn ? '/dashboard' : '/';
 
   return (
     <div
@@ -104,18 +114,22 @@ export function MarketingChrome({
     >
       <header className="sticky top-0 z-50 shrink-0 border-b border-border/60 bg-base/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
-          <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
+          <Link to={logoTo} className="shrink-0" onClick={() => setOpen(false)}>
             <BrandLogo size={26} />
           </Link>
-          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary">
-            {NAV.map((item) => (
-              <NavItemLink key={item.label} item={item} />
-            ))}
-          </nav>
+          {!isLoggedIn ? (
+            <nav className="hidden items-center gap-2 md:flex" aria-label="Primary">
+              {GUEST_NAV.map((item) => (
+                <NavItemLink key={item.label} item={item} />
+              ))}
+            </nav>
+          ) : (
+            <div className="hidden flex-1 md:block" />
+          )}
           <div className="hidden items-center gap-2 md:flex">
             <AppThemeToggle />
-            {user?.role === 'user' ? (
-              <Button size="sm" asChild className={cn(isTryWorkspace && 'home-cta-secondary')}>
+            {isLoggedIn ? (
+              <Button size="sm" asChild>
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
@@ -129,7 +143,7 @@ export function MarketingChrome({
                   asChild
                   className={cn(isTryWorkspace && 'home-cta-secondary')}
                 >
-                  <Link to="/try">Try free</Link>
+                  <Link to="/try">Open playground</Link>
                 </Button>
               </>
             )}
@@ -149,27 +163,23 @@ export function MarketingChrome({
         </div>
         {open && (
           <div className="space-y-1 border-t border-border px-4 py-3 md:hidden">
-            {NAV.map((item) => (
-              <NavItemLink
-                key={item.label}
-                item={item}
-                onNavigate={() => setOpen(false)}
-                className="block"
-              />
-            ))}
-            <div className="flex gap-2 pt-2">
-              {user?.role === 'user' ? (
-                <Button
-                  size="sm"
-                  className={cn('flex-1', isTryWorkspace && 'home-cta-secondary')}
-                  asChild
-                >
-                  <Link to="/dashboard" onClick={() => setOpen(false)}>
-                    Dashboard
-                  </Link>
-                </Button>
-              ) : (
-                <>
+            {isLoggedIn ? (
+              <Button size="sm" className="w-full" asChild>
+                <Link to="/dashboard" onClick={() => setOpen(false)}>
+                  Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                {GUEST_NAV.map((item) => (
+                  <NavItemLink
+                    key={item.label}
+                    item={item}
+                    onNavigate={() => setOpen(false)}
+                    className="block"
+                  />
+                ))}
+                <div className="flex gap-2 pt-2">
                   <Button size="sm" variant="ghost" className="flex-1" asChild>
                     <Link to="/login" onClick={() => setOpen(false)}>
                       Log in
@@ -182,12 +192,12 @@ export function MarketingChrome({
                     asChild
                   >
                     <Link to="/try" onClick={() => setOpen(false)}>
-                      Try free
+                      Open playground
                     </Link>
                   </Button>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </header>
@@ -202,24 +212,48 @@ export function MarketingChrome({
             <div className="grid gap-8 text-sm sm:grid-cols-3">
               <div className="space-y-2">
                 <p className="font-medium text-primary">Product</p>
-                <Link to="/try" className="block text-subtle hover:text-accent">
-                  Try editor
-                </Link>
-                <Link to="/themes" className="block text-subtle hover:text-accent">
-                  Themes
-                </Link>
-                <Link to="/pricing" className="block text-subtle hover:text-accent">
-                  Pricing
-                </Link>
+                {isLoggedIn ? (
+                  <Link to="/dashboard" className="block text-subtle hover:text-accent">
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/try" className="block text-subtle hover:text-accent">
+                      Playground
+                    </Link>
+                    <Link to="/themes" className="block text-subtle hover:text-accent">
+                      Themes
+                    </Link>
+                    <Link to="/pricing" className="block text-subtle hover:text-accent">
+                      Pricing &amp; plans
+                    </Link>
+                  </>
+                )}
               </div>
               <div className="space-y-2">
                 <p className="font-medium text-primary">Account</p>
-                <Link to="/login" className="block text-subtle hover:text-accent">
-                  Log in
-                </Link>
-                <Link to="/register" className="block text-subtle hover:text-accent">
-                  Sign up
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link to="/dashboard" className="block text-subtle hover:text-accent">
+                      Dashboard
+                    </Link>
+                    <Link to="/dashboard/pricing" className="block text-subtle hover:text-accent">
+                      Pricing
+                    </Link>
+                    <Link to="/dashboard/cart" className="block text-subtle hover:text-accent">
+                      Cart{cartItems > 0 ? ` (${cartItems})` : ''}
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="block text-subtle hover:text-accent">
+                      Log in
+                    </Link>
+                    <Link to="/register" className="block text-subtle hover:text-accent">
+                      Sign up
+                    </Link>
+                  </>
+                )}
               </div>
               <div className="space-y-2">
                 <p className="font-medium text-primary">Legal</p>
@@ -252,7 +286,6 @@ const LazyAuthGate = lazy(() => import('@/components/auth/AuthGateModal'));
 export default function MarketingLayout() {
   const { pathname } = useLocation();
 
-  // Guest draft + theme registry only on /try — keep them out of the home chunk
   if (pathname === '/try') {
     return (
       <Suspense fallback={<MarketingChrome />}>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Loader2, ArrowRight, Sun, Moon, UserRound } from 'lucide-react';
+import { Check, ArrowRight, Sun, Moon, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
@@ -11,6 +11,7 @@ import type { SiteSettings } from '@/types';
 import ThemePreviewMini from '@/components/admin/ThemePreviewMini';
 import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
+import { PageLoader, InlineSpinner } from '@/components/ui/PageLoader';
 
 const FEATURED_ID: PortfolioThemeId = 'olive';
 
@@ -82,14 +83,7 @@ function AddThemePageInner() {
   };
 
   if (loading) {
-    return (
-      <div className="olive-add-theme flex min-h-[60vh] items-center justify-center bg-[#0d0d0d]">
-        <div className="flex flex-col items-center gap-3 text-[#a0a0a0]">
-          <Loader2 className="h-6 w-6 animate-spin text-[#5F8A4A]" />
-          <p className="text-xs">Loading themes…</p>
-        </div>
-      </div>
-    );
+    return <PageLoader variant="inline" label="Loading themes" className="min-h-[60vh]" />;
   }
 
   return (
@@ -227,7 +221,7 @@ function AddThemePageInner() {
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Applying…
+                <InlineSpinner className="border-white/40 border-t-white" /> Applying…
               </>
             ) : (
               <>

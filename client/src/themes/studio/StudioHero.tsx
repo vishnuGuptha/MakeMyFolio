@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import StudioGlowButton from './components/StudioGlowButton';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { Tooltip } from '@/components/ui/Tooltip';
 import type { HeroProps } from '../types';
 
 function initials(name: string) {
@@ -82,9 +83,11 @@ export default function StudioHero({ content, slug, basePath: basePathProp }: He
           ) : (
             <div className="studio-logo-row">
               {companies.map((c) => (
-                <span key={c.name} className="studio-logo-chip" title={c.name}>
-                  {c.logoUrl ? <img src={c.logoUrl} alt={c.name} /> : c.name}
-                </span>
+                <Tooltip key={c.name} content={c.name}>
+                  <span className="studio-logo-chip">
+                    {c.logoUrl ? <img src={c.logoUrl} alt={c.name} /> : c.name}
+                  </span>
+                </Tooltip>
               ))}
             </div>
           )}

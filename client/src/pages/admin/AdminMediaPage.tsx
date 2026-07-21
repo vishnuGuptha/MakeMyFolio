@@ -53,9 +53,12 @@ export default function AdminMediaPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Media Library</h1>
+      <div className="mx-auto max-w-6xl space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Media Library</h1>
+            <p className="mt-0.5 text-sm text-subtle">Images and files for your portfolio.</p>
+          </div>
           <label>
             <Button asChild>
               <span>

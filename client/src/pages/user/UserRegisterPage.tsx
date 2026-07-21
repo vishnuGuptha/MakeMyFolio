@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { startOnboarding } from '@/lib/onboarding';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
+import { buildAuthPath, readCheckoutIntent } from '@/lib/planCheckout';
 import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
@@ -29,7 +30,13 @@ export default function UserRegisterPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const claimGuest = params.get('claimGuest') === '1';
-  const next = params.get('next') || '/dashboard/onboarding';
+  const nextParam = params.get('next');
+  const pendingPlan = readCheckoutIntent();
+  const next = nextParam || (pendingPlan ? '/dashboard/pricing' : '/dashboard/onboarding');
+  const loginHref = buildAuthPath('/login', {
+    claimGuest,
+    next: nextParam || (pendingPlan ? '/dashboard/pricing' : undefined),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +49,12 @@ export default function UserRegisterPage() {
       await userRegister(name, email, password);
       if (claimGuest) await claimGuestDraftIfAny();
       startOnboarding();
-      toast.success(`Welcome to ${BRAND.name}! Let’s finish setup.`);
+      const goingToCheckout = next.startsWith('/dashboard/pricing') || next.startsWith('/pricing');
+      toast.success(
+        goingToCheckout
+          ? `Welcome to ${BRAND.name}! Opening checkout…`
+          : `Welcome to ${BRAND.name}! Let’s finish setup.`
+      );
       navigate(next.startsWith('/') ? next : '/dashboard/onboarding');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed');
@@ -66,7 +78,11 @@ export default function UserRegisterPage() {
     >
       <h1 className="font-display text-xl text-primary">Create account</h1>
       <p className="mt-1 text-xs text-subtle">
-        {claimGuest ? 'Save your guest draft permanently.' : BRAND.shortTagline}
+        {claimGuest
+          ? 'Save your guest draft permanently.'
+          : pendingPlan
+            ? `Create an account to checkout ${pendingPlan.planId === 'pro' ? 'Pro' : pendingPlan.planId === 'premium' ? 'Premium' : 'Custom domain'}.`
+            : BRAND.shortTagline}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-3.5 space-y-2">
@@ -112,18 +128,16 @@ export default function UserRegisterPage() {
         <Button
           type="submit"
           className="home-cta-primary h-9 w-full border-0 text-sm hover:bg-transparent"
-          disabled={loading || !canSubmit}
+          loading={loading}
+          disabled={!canSubmit}
         >
-          {loading ? 'Creating...' : 'Create account'}
+          {loading ? 'Creating…' : 'Create account'}
         </Button>
       </form>
 
       <p className="mt-3 text-center text-xs text-subtle">
         Already have an account?{' '}
-        <Link
-          to={claimGuest ? '/login?claimGuest=1' : '/login'}
-          className="font-medium text-[#0066FF] hover:underline"
-        >
+        <Link to={loginHref} className="font-medium text-[#0066FF] hover:underline">
           Sign in
         </Link>
       </p>

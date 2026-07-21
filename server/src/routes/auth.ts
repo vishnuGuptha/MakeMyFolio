@@ -8,6 +8,7 @@ import { createEmptyProfileContent } from '../services/portfolio.js';
 import { PortfolioProfile } from '../models/index.js';
 import { generateSlug, ensureUniqueSlug } from '../utils/slug.js';
 import { ownerSlugTaken } from '../utils/slugAvailability.js';
+import { getPlanLimits, normalizePlanId } from '../lib/plans.js';
 
 const router = Router();
 
@@ -17,6 +18,36 @@ function cookieOpts() {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
+function userPublicPayload(user: {
+  email: string;
+  name: string;
+  plan?: string;
+  planBilling?: string | null;
+  planCurrency?: string | null;
+  resumeImportUsed?: boolean;
+}) {
+  const plan = normalizePlanId(user.plan);
+  const limits = getPlanLimits(plan);
+  return {
+    email: user.email,
+    name: user.name,
+    role: 'user' as const,
+    plan,
+    planBilling:
+      user.planBilling === 'monthly' || user.planBilling === 'yearly' ? user.planBilling : null,
+    planCurrency: user.planCurrency === 'usd' || user.planCurrency === 'inr' ? user.planCurrency : null,
+    resumeImportUsed: !!user.resumeImportUsed,
+    limits: {
+      maxPortfolios: limits.maxPortfolios,
+      canPublish: limits.canPublish,
+      maxResumeImports: Number.isFinite(limits.maxResumeImports)
+        ? limits.maxResumeImports
+        : null,
+      customDomain: limits.customDomain,
+    },
   };
 }
 
@@ -34,7 +65,13 @@ router.post('/user/register', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ email, passwordHash, name });
+    const user = await User.create({
+      email,
+      passwordHash,
+      name,
+      plan: 'free',
+      resumeImportUsed: false,
+    });
 
     const baseSlug = await ensureUniqueSlug(generateSlug(name), async (s) =>
       ownerSlugTaken(user._id, s)
@@ -53,9 +90,7 @@ router.post('/user/register', async (req, res) => {
     res.cookie('token', token, cookieOpts());
 
     res.status(201).json({
-      email: user.email,
-      name: user.name,
-      role: 'user',
+      ...userPublicPayload(user),
       profile: { id: profile._id, slug: profile.slug },
       onboarding: true,
     });
@@ -73,7 +108,7 @@ router.post('/user/login', async (req, res) => {
     }
     const token = signToken({ id: user._id.toString(), email: user.email, role: 'user', name: user.name });
     res.cookie('token', token, cookieOpts());
-    res.json({ email: user.email, name: user.name, role: 'user' });
+    res.json(userPublicPayload(user));
   } catch (err) {
     sendError(res, err);
   }
@@ -102,7 +137,7 @@ router.post('/login', async (req, res) => {
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
       const token = signToken({ id: user._id.toString(), email: user.email, role: 'user', name: user.name });
       res.cookie('token', token, cookieOpts());
-      return res.json({ email: user.email, role: 'user', name: user.name });
+      return res.json(userPublicPayload(user));
     }
     const admin = await AdminUser.findOne({ email });
     if (admin && (await bcrypt.compare(password, admin.passwordHash))) {
@@ -121,8 +156,19 @@ router.post('/logout', (_req, res) => {
   res.json({ ok: true });
 });
 
-router.get('/me', requireAuth, (req: AuthRequest, res) => {
-  res.json(req.auth);
+router.get('/me', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    if (req.auth?.role === 'user') {
+      const user = await User.findById(req.auth.id).select(
+        'email name plan planBilling planCurrency resumeImportUsed'
+      );
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      return res.json(userPublicPayload(user));
+    }
+    res.json(req.auth);
+  } catch (err) {
+    sendError(res, err);
+  }
 });
 
 /** Authenticated password change */

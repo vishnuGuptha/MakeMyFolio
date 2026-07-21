@@ -20,7 +20,7 @@ type AuthPageShellProps = {
 };
 
 const DEFAULT_HIGHLIGHTS = [
-  'Try free — no card required',
+  'Open playground — no card required',
   `Publish at ${getPortfolioUrlPlaceholder()}`,
   'Import a resume when ready',
 ];
@@ -81,7 +81,7 @@ export function AuthPageShell({
               <Link to="/">Home</Link>
             </Button>
             <Button size="sm" variant="outline" asChild className="h-8">
-              <Link to="/try">Try free</Link>
+              <Link to="/try">Open playground</Link>
             </Button>
             <AppThemeToggle />
           </div>

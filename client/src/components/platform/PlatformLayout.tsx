@@ -1,18 +1,17 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Briefcase, Activity, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, Activity, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
 import { BrandLogo } from '@/brand/logo';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
 import { useEffect } from 'react';
+import { AccountMenu } from '@/components/admin/AccountMenu';
 
 const NAV = [
   { to: '/platform', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/platform/users', label: 'Users', icon: Users },
   { to: '/platform/portfolios', label: 'Portfolios', icon: Briefcase },
-  { to: '/platform/try-demo', label: 'Try demo', icon: Sparkles },
+  { to: '/platform/try-demo', label: 'Playground seed', icon: Sparkles },
   { to: '/platform/activity', label: 'Activity', icon: Activity },
 ];
 
@@ -49,7 +48,7 @@ export default function PlatformLayout() {
                 cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
                   isActive
-                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF] ring-1 ring-inset ring-[#0066FF]/20'
+                    ? 'bg-[#0066FF]/12 font-medium text-[#0066FF]'
                     : 'text-secondary hover:bg-muted hover:text-primary'
                 )
               }
@@ -59,27 +58,20 @@ export default function PlatformLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-[#0066FF]/10 p-2 dark:border-white/10">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-secondary transition-colors hover:bg-muted hover:text-primary"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
-        </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="dashboard-header flex h-14 items-center justify-between px-6">
-          <p className="font-mono text-sm text-subtle">Platform Control Center</p>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-subtle">{user?.email}</span>
-            <AppThemeToggle />
-            <Button size="sm" variant="ghost" onClick={handleLogout}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+        <header className="dashboard-header flex h-14 items-center justify-between gap-3 px-5">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0066FF]/80">
+              Platform
+            </p>
+            <p className="truncate text-sm font-medium text-primary">Control center</p>
           </div>
+          <AccountMenu
+            name={user?.name}
+            email={user?.email}
+            onSignOut={() => void handleLogout()}
+          />
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />

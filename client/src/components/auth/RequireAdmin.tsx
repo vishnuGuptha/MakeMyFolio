@@ -1,15 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 export default function RequireAdmin({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-base">
-        <div className="animate-pulse text-subtle font-mono text-sm">Loading...</div>
-      </div>
-    );
+    return <PageLoader variant="page" label="Checking your session" />;
   }
 
   if (!user || user.role !== 'user') return <Navigate to="/login" replace />;

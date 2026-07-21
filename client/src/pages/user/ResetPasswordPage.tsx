@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
             autoComplete="new-password"
           />
         </FormField>
-        <Button type="submit" className="w-full" disabled={loading || !token}>
+        <Button type="submit" className="w-full" disabled={loading || !token} loading={loading}>
           {loading ? 'Saving…' : 'Update password'}
         </Button>
       </form>

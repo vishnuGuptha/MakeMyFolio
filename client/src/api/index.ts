@@ -40,6 +40,16 @@ export interface AuthUser {
   email: string;
   name?: string;
   role: AuthRole;
+  plan?: import('@/lib/plans').PlanId;
+  planBilling?: import('@/lib/plans').BillingInterval | null;
+  planCurrency?: import('@/lib/plans').PricingCurrency | null;
+  resumeImportUsed?: boolean;
+  limits?: {
+    maxPortfolios: number;
+    canPublish: boolean;
+    maxResumeImports: number | null;
+    customDomain: boolean;
+  };
 }
 
 // Auth API
@@ -243,11 +253,30 @@ export const userApi = {
 
   getContactMessages: (profileId: string) =>
     request<import('@/types').ContactMessage[]>(userPath(profileId, '/contact-messages')),
+  getUnreadContactCount: (profileId: string) =>
+    request<{ count: number }>(userPath(profileId, '/contact-messages/unread-count')),
   updateContactMessage: (profileId: string, id: string, data: Partial<import('@/types').ContactMessage>) =>
-    request(userPath(profileId, `/contact-messages/${id}`), {
+    request<import('@/types').ContactMessage>(userPath(profileId, `/contact-messages/${id}`), {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+  updateContactConversation: (
+    profileId: string,
+    data: {
+      email: string;
+      read?: boolean;
+      archived?: boolean;
+      pinned?: boolean;
+      contacted?: boolean;
+    }
+  ) =>
+    request<{ modified: number; messages: import('@/types').ContactMessage[] }>(
+      userPath(profileId, '/contact-conversations'),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    ),
 
   getMedia: (profileId: string) =>
     request<import('@/types').MediaAsset[]>(userPath(profileId, '/media')),
@@ -283,9 +312,31 @@ export const platformApi = {
     _id: string;
     name: string;
     email: string;
+    plan: 'free' | 'pro' | 'premium' | 'domain';
+    planBilling: 'monthly' | 'yearly' | null;
+    planCurrency: 'usd' | 'inr' | null;
+    planActivatedAt: string | null;
     createdAt: string;
     portfolios: { _id: string; slug: string; displayName: string; isPublished: boolean }[];
   }[]>('/api/platform/users'),
+  setUserPlan: (
+    id: string,
+    body: {
+      plan: 'free' | 'pro' | 'premium';
+      planBilling?: 'monthly' | 'yearly' | null;
+      planCurrency?: 'usd' | 'inr' | null;
+    }
+  ) =>
+    request<{
+      _id: string;
+      plan: string;
+      planBilling: 'monthly' | 'yearly' | null;
+      planCurrency: 'usd' | 'inr' | null;
+      planActivatedAt: string | null;
+    }>(`/api/platform/users/${id}/plan`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
   getProfiles: () => request<(import('@/types').PortfolioProfile & { owner?: { name: string; email: string } })[]>('/api/platform/profiles'),
   publishProfile: (id: string, isPublished: boolean) =>
     request(`/api/platform/profiles/${id}/publish`, {
@@ -304,5 +355,62 @@ export const platformApi = {
   resetTryDemo: () =>
     request<import('@/context/GuestDraftContext').GuestDraft>('/api/platform/try-demo/reset', {
       method: 'POST',
+    }),
+};
+
+export type BillingCheckoutRequest = {
+  planId: 'pro' | 'premium' | 'domain';
+  billing: 'monthly' | 'yearly';
+  currency: 'usd' | 'inr';
+};
+
+export type StripeCheckoutResponse = {
+  provider: 'stripe';
+  orderId: string;
+  url: string;
+};
+
+export type RazorpayCheckoutResponse = {
+  provider: 'razorpay';
+  orderId: string;
+  keyId: string;
+  razorpayOrderId: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  prefill: { name: string; email: string };
+};
+
+export type BillingCheckoutResponse = StripeCheckoutResponse | RazorpayCheckoutResponse;
+
+export const billingApi = {
+  status: () => request<{ stripe: boolean; razorpay: boolean }>('/api/billing/status'),
+  getCart: () =>
+    request<{ items: import('@/lib/planCheckout').CartItem[] }>('/api/billing/cart'),
+  saveCart: (items: import('@/lib/planCheckout').CartItem[]) =>
+    request<{ items: import('@/lib/planCheckout').CartItem[] }>('/api/billing/cart', {
+      method: 'PUT',
+      body: JSON.stringify({ items }),
+    }),
+  checkout: (body: BillingCheckoutRequest) =>
+    request<BillingCheckoutResponse>('/api/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  confirmStripe: (sessionId: string) =>
+    request<{ ok: boolean; plan?: string }>('/api/billing/stripe/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    }),
+  verifyRazorpay: (body: {
+    orderId: string;
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) =>
+    request<{ ok: boolean; plan?: string }>('/api/billing/razorpay/verify', {
+      method: 'POST',
+      body: JSON.stringify(body),
     }),
 };

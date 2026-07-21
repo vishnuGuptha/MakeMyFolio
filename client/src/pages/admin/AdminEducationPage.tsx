@@ -154,7 +154,7 @@ export default function AdminEducationPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-12">
+      <div className="mx-auto max-w-6xl space-y-8">
         {loading && <AdminListSkeleton rows={4} />}
 
         {!loading && editEdu && (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Eye, Download, FileText, Trash2, Upload, Sparkles } from 'lucide-react';
+import { ChevronDown, Eye, Download, FileText, Trash2, Upload, Sparkles } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
@@ -12,8 +12,12 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { FormField } from '@/components/ui/Label';
 import { Card } from '@/components/ui/Card';
-import { GenerateWithAiButton, AiFieldLabel } from '@/components/admin/GenerateWithAiButton';
+import { GenerateWithAiButton } from '@/components/admin/GenerateWithAiButton';
 import { MediaPickerField } from '@/components/admin/MediaPickerField';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { useAuth } from '@/context/AuthContext';
+import { FREE_IMPORT_USED_MESSAGE } from '@/lib/plans';
+import { Link } from 'react-router-dom';
 import type { ProfileContent } from '@/types';
 
 const empty: ProfileContent = {
@@ -23,8 +27,28 @@ const empty: ProfileContent = {
   workedWith: [], testimonials: [],
 };
 
+function SectionHeading({
+  title,
+  hint,
+}: {
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <div className="mb-3">
+      <h2 className="text-sm font-semibold tracking-tight text-primary">{title}</h2>
+      {hint ? <p className="mt-0.5 text-xs text-subtle">{hint}</p> : null}
+    </div>
+  );
+}
+
 export default function AdminContentPage() {
   const { activeProfile, refreshProfiles } = useAdminProfile();
+  const { user, refreshUser } = useAuth();
+  const importLocked =
+    user?.role === 'user' &&
+    (user.plan === 'free' || !user.plan) &&
+    !!user.resumeImportUsed;
   const [form, setForm] = useState<ProfileContent>(empty);
   const [saving, setSaving] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -114,6 +138,11 @@ export default function AdminContentPage() {
   const handleImportFromResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeProfile) return;
+    if (importLocked) {
+      toast.error(FREE_IMPORT_USED_MESSAGE);
+      e.target.value = '';
+      return;
+    }
     if (
       !confirm(
         'This will use Gemini AI to extract data from your resume and replace your current profile, skills, experience, projects, education, and certifications. Continue?'
@@ -131,9 +160,15 @@ export default function AdminContentPage() {
       setAiToolsStr(tools);
       commitBaseline({ form: next, aiToolsStr: tools });
       await refreshProfiles();
+      await refreshUser();
       toast.success(
         `Portfolio filled with exact resume text! ${result.summary.skills} skill categories, ${result.summary.experiences} experiences, ${result.summary.projects} projects. Use Generate with AI on any field to improve.`
       );
+      if (user?.plan === 'free' || !user?.plan) {
+        toast.message('Free import used', {
+          description: 'Resume import is now locked on Free. Upgrade for unlimited imports.',
+        });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Resume import failed');
     } finally {
@@ -142,346 +177,487 @@ export default function AdminContentPage() {
     }
   };
 
+  const workedCount = form.workedWith?.length ?? 0;
+  const testimonialCount = form.testimonials?.length ?? 0;
+
   return (
     <RequireActiveProfile>
-      <div className="space-y-6 max-w-3xl">
+      <div className="mx-auto max-w-6xl space-y-5">
         <UnsavedChangesBar
           isDirty={isDirty}
           saving={saving}
           lastSavedAt={lastSavedAt}
           onSave={handleSave}
         />
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary">Profile & Hero</h1>
-          <Button onClick={handleSave} disabled={saving || !isDirty}>
-            {saving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Profile & Hero</h1>
+            <p className="mt-0.5 text-sm text-subtle">What visitors see first on your portfolio.</p>
+          </div>
+          <Button onClick={handleSave} disabled={saving || !isDirty} loading={saving}>
+            {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
           </Button>
         </div>
 
-        <Card className="p-5 border-accent/30 bg-accent/5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-accent/15 p-2">
-              <Sparkles className="h-5 w-5 text-accent" />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-semibold text-primary">Import from Resume</h2>
-              <p className="text-sm text-subtle mt-1">
-                Upload PDF or DOCX to fill all fields with <strong className="text-secondary">exact wording</strong> from your document (no AI rewriting). After import, use <strong className="text-secondary">Generate with AI</strong> on individual fields to improve any section.
+        <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+          {/* Identity rail — not sticky; avoids jump when right column expands */}
+          <aside className="space-y-3 [overflow-anchor:none]">
+            <Card className="flex flex-col gap-3 !p-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0066FF]/80">
+                Identity
               </p>
-              <label className="inline-block mt-3">
-                <Button size="sm" disabled={importingResume} asChild>
-                  <span>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {importingResume ? 'Extracting text & parsing with Gemini...' : 'Import & Auto-fill from Resume'}
-                  </span>
-                </Button>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
-                  onChange={handleImportFromResume}
-                  disabled={importingResume}
+              {form.profileImageUrl ? (
+                <img
+                  src={form.profileImageUrl}
+                  alt={form.name || 'Profile'}
+                  className="aspect-square w-full rounded-xl object-cover ring-1 ring-[#0066FF]/15"
                 />
-              </label>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <FormField label="Name"><Input value={form.name} onChange={(e) => update('name', e.target.value)} /></FormField>
-            <div>
-              <AiFieldLabel label="Title">
-                {activeProfile && (
-                  <GenerateWithAiButton
-                    profileId={activeProfile._id}
-                    section="title"
-                    context={{ name: form.name, title: form.title, yearsExperience: form.yearsExperience }}
-                    onResult={(r) => update('title', r as string)}
-                  />
-                )}
-              </AiFieldLabel>
-              <Input value={form.title} onChange={(e) => update('title', e.target.value)} />
-            </div>
-            <FormField label="Location"><Input value={form.location} onChange={(e) => update('location', e.target.value)} /></FormField>
-            <FormField label="Years Experience"><Input value={form.yearsExperience} onChange={(e) => update('yearsExperience', e.target.value)} /></FormField>
-            <FormField label="Phone"><Input value={form.phone} onChange={(e) => update('phone', e.target.value)} /></FormField>
-            <FormField label="Email"><Input value={form.email} onChange={(e) => update('email', e.target.value)} /></FormField>
-            <FormField label="LinkedIn"><Input value={form.linkedin} onChange={(e) => update('linkedin', e.target.value)} /></FormField>
-            <FormField label="GitHub"><Input value={form.github} onChange={(e) => update('github', e.target.value)} /></FormField>
-          </div>
-          <div>
-            <AiFieldLabel label="Tagline">
-              {activeProfile && (
-                <GenerateWithAiButton
-                  profileId={activeProfile._id}
-                  section="tagline"
-                  context={{ name: form.name, title: form.title, tagline: form.tagline, yearsExperience: form.yearsExperience }}
-                  onResult={(r) => update('tagline', r as string)}
-                />
-              )}
-            </AiFieldLabel>
-            <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
-          </div>
-          <div>
-            <AiFieldLabel label="Bio">
-              {activeProfile && (
-                <GenerateWithAiButton
-                  profileId={activeProfile._id}
-                  section="bio"
-                  context={{
-                    name: form.name,
-                    title: form.title,
-                    bio: form.bio,
-                    yearsExperience: form.yearsExperience,
-                    educationHighlight: form.educationHighlight,
-                    aiTools: aiToolsStr,
-                  }}
-                  onResult={(r) => update('bio', r as string)}
-                />
-              )}
-            </AiFieldLabel>
-            <p className="text-xs text-subtle mb-2">Imported text stays as-is from your resume. Click Generate with AI above to rewrite in first person for HR.</p>
-            <Textarea value={form.bio} onChange={(e) => update('bio', e.target.value)} className="min-h-[150px]" />
-          </div>
-          <div>
-            <AiFieldLabel label="Education Highlight">
-              {activeProfile && (
-                <GenerateWithAiButton
-                  profileId={activeProfile._id}
-                  section="educationHighlight"
-                  context={{ educationHighlight: form.educationHighlight, name: form.name }}
-                  onResult={(r) => update('educationHighlight', r as string)}
-                />
-              )}
-            </AiFieldLabel>
-            <Input value={form.educationHighlight} onChange={(e) => update('educationHighlight', e.target.value)} />
-          </div>
-          <FormField label="AI Tools (comma-separated)"><Input value={aiToolsStr} onChange={(e) => setAiToolsStr(e.target.value)} /></FormField>
-
-          <div className="space-y-3 rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <p className="text-sm font-semibold text-primary">Worked with</p>
-                <p className="text-xs text-subtle">Shown on Studio Portfolio hero. Logo URL optional.</p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setForm((f) => ({
-                    ...f,
-                    workedWith: [...(f.workedWith || []), { name: '', logoUrl: '' }],
-                  }))
-                }
-              >
-                Add company
-              </Button>
-            </div>
-            {(form.workedWith || []).length === 0 && (
-              <p className="text-xs text-subtle font-mono">No entries — experience companies are used as fallback.</p>
-            )}
-            {(form.workedWith || []).map((row, idx) => (
-              <div key={idx} className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
-                <Input
-                  placeholder="Company name"
-                  value={row.name}
-                  onChange={(e) =>
-                    setForm((f) => {
-                      const next = [...(f.workedWith || [])];
-                      next[idx] = { ...next[idx], name: e.target.value };
-                      return { ...f, workedWith: next };
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Logo URL (optional)"
-                  value={row.logoUrl || ''}
-                  onChange={(e) =>
-                    setForm((f) => {
-                      const next = [...(f.workedWith || [])];
-                      next[idx] = { ...next[idx], logoUrl: e.target.value };
-                      return { ...f, workedWith: next };
-                    })
-                  }
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="danger"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      workedWith: (f.workedWith || []).filter((_, i) => i !== idx),
-                    }))
-                  }
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-3 rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <p className="text-sm font-semibold text-primary">Testimonials</p>
-                <p className="text-xs text-subtle">Used by Studio Portfolio. Enable Show Testimonials in Personalization.</p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setForm((f) => ({
-                    ...f,
-                    testimonials: [
-                      ...(f.testimonials || []),
-                      { quote: '', clientName: '', avatarUrl: '', role: '', order: (f.testimonials || []).length },
-                    ],
-                  }))
-                }
-              >
-                Add quote
-              </Button>
-            </div>
-            {(form.testimonials || []).length === 0 && (
-              <p className="text-xs text-subtle font-mono">No testimonials yet.</p>
-            )}
-            {(form.testimonials || []).map((row, idx) => (
-              <div key={idx} className="space-y-2 rounded-lg border border-border/70 p-3">
-                <Textarea
-                  placeholder="Quote"
-                  value={row.quote}
-                  onChange={(e) =>
-                    setForm((f) => {
-                      const next = [...(f.testimonials || [])];
-                      next[idx] = { ...next[idx], quote: e.target.value };
-                      return { ...f, testimonials: next };
-                    })
-                  }
-                  className="min-h-[80px]"
-                />
-                <div className="grid gap-2 md:grid-cols-3">
-                  <Input
-                    placeholder="Client name"
-                    value={row.clientName}
-                    onChange={(e) =>
-                      setForm((f) => {
-                        const next = [...(f.testimonials || [])];
-                        next[idx] = { ...next[idx], clientName: e.target.value };
-                        return { ...f, testimonials: next };
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Role (optional)"
-                    value={row.role || ''}
-                    onChange={(e) =>
-                      setForm((f) => {
-                        const next = [...(f.testimonials || [])];
-                        next[idx] = { ...next[idx], role: e.target.value };
-                        return { ...f, testimonials: next };
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Avatar URL"
-                    value={row.avatarUrl || ''}
-                    onChange={(e) =>
-                      setForm((f) => {
-                        const next = [...(f.testimonials || [])];
-                        next[idx] = { ...next[idx], avatarUrl: e.target.value };
-                        return { ...f, testimonials: next };
-                      })
-                    }
-                  />
+              ) : (
+                <div className="grid aspect-square w-full place-items-center rounded-xl bg-muted text-sm text-subtle ring-1 ring-border">
+                  No photo yet
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="danger"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      testimonials: (f.testimonials || []).filter((_, i) => i !== idx),
-                    }))
-                  }
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Remove
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+              )}
               <MediaPickerField
                 label="Profile image"
                 value={form.profileImageUrl}
                 onChange={(url) => update('profileImageUrl', url)}
+                compact
               />
-              <label className="inline-flex">
-                <Button size="sm" variant="outline" asChild>
+              <label className="block w-full">
+                <Button size="sm" variant="outline" className="w-full" asChild>
                   <span>
                     <Upload className="h-3.5 w-3.5" /> Upload new
                   </span>
                 </Button>
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               </label>
-            </div>
-            <FormField label="Resume (PDF / DOCX)">
-              <Card className="p-4 space-y-3 bg-muted/30">
-                {form.resumeUrl ? (
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-accent/10 p-2">
-                      <FileText className="h-6 w-6 text-accent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-primary">Resume uploaded</p>
-                      <p className="text-xs text-subtle mt-0.5">PDF or DOCX · visible on your live portfolio</p>
-                      {activeProfile && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={adminApi.getResumeUrl(activeProfile._id)} target="_blank" rel="noopener noreferrer">
-                              <Eye className="h-3.5 w-3.5" /> View
-                            </a>
-                          </Button>
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={adminApi.getResumeUrl(activeProfile._id, true)} download>
-                              <Download className="h-3.5 w-3.5" /> Download
-                            </a>
-                          </Button>
-                          <Button size="sm" variant="danger" onClick={handleRemoveResume}>
-                            <Trash2 className="h-3.5 w-3.5" /> Remove
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+            </Card>
+
+            <Card className="flex flex-col gap-3 !p-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0066FF]/80">
+                Resume
+              </p>
+              {form.resumeUrl ? (
+                <div className="flex items-center gap-2.5 rounded-lg border border-border/80 bg-muted/30 px-2.5 py-2">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-accent/10">
+                    <FileText className="h-4 w-4 text-accent" />
                   </div>
-                ) : (
-                  <p className="text-sm text-subtle">No resume uploaded yet.</p>
-                )}
-                <label className="block">
-                  <Button size="sm" variant="outline" asChild disabled={uploadingResume}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-primary">Uploaded</p>
+                    <p className="truncate text-[11px] text-subtle">Visible on your live site</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border/80 px-2.5 py-3 text-center text-xs text-subtle">
+                  No resume yet
+                </div>
+              )}
+              {activeProfile && form.resumeUrl ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <Tooltip content="View resume">
+                    <Button size="sm" variant="outline" className="w-full" asChild>
+                      <a href={adminApi.getResumeUrl(activeProfile._id)} target="_blank" rel="noopener noreferrer">
+                        <Eye className="h-3.5 w-3.5" />
+                        View
+                      </a>
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Download resume">
+                    <Button size="sm" variant="outline" className="w-full" asChild>
+                      <a href={adminApi.getResumeUrl(activeProfile._id, true)} download>
+                        <Download className="h-3.5 w-3.5" />
+                        Save
+                      </a>
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Remove resume">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-red-500/30 text-red-600 hover:bg-red-500/10 hover:border-red-500/40 dark:text-red-400"
+                      onClick={handleRemoveResume}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Remove
+                    </Button>
+                  </Tooltip>
+                </div>
+              ) : null}
+              <label className="block w-full">
+                <Button size="sm" variant="outline" className="w-full" asChild disabled={uploadingResume}>
+                  <span>
+                    <Upload className="h-3.5 w-3.5" />
+                    {uploadingResume ? 'Uploading…' : form.resumeUrl ? 'Replace' : 'Upload PDF / DOCX'}
+                  </span>
+                </Button>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
+                  onChange={handleResumeUpload}
+                  disabled={uploadingResume}
+                />
+              </label>
+            </Card>
+          </aside>
+
+          {/* Form column */}
+          <div className="min-w-0 space-y-3">
+            <Card className="flex flex-col gap-2.5 border-accent/25 bg-accent/5 !p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="rounded-lg bg-accent/15 p-1.5">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-primary">Import from resume</p>
+                  <p className="text-xs text-subtle">
+                    {importLocked
+                      ? FREE_IMPORT_USED_MESSAGE
+                      : 'Exact wording from PDF/DOCX — Free includes 1 import.'}
+                  </p>
+                  {importLocked ? (
+                    <Link to="/dashboard/pricing" className="mt-1 inline-block text-xs font-medium text-[#0066FF] hover:underline">
+                      Upgrade for unlimited imports
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+              <label className="shrink-0">
+                <Button size="sm" disabled={importingResume || importLocked} asChild={!importLocked}>
+                  {importLocked ? (
                     <span>
-                      <Upload className="h-3.5 w-3.5" />
-                      {uploadingResume ? 'Uploading...' : form.resumeUrl ? 'Replace Resume' : 'Upload Resume'}
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Import used
                     </span>
-                  </Button>
+                  ) : (
+                    <span>
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {importingResume ? 'Importing…' : 'Import & auto-fill'}
+                    </span>
+                  )}
+                </Button>
+                {!importLocked ? (
                   <input
                     type="file"
                     className="hidden"
                     accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
-                    onChange={handleResumeUpload}
-                    disabled={uploadingResume}
+                    onChange={handleImportFromResume}
+                    disabled={importingResume}
                   />
-                </label>
-              </Card>
-            </FormField>
+                ) : null}
+              </label>
+            </Card>
+
+            <Card className="space-y-3 !p-4">
+              <SectionHeading title="Basics" hint="Name and role shown in the hero." />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
+                <FormField label="Name">
+                  <Input value={form.name} onChange={(e) => update('name', e.target.value)} />
+                </FormField>
+                <FormField
+                  label="Title"
+                  action={
+                    activeProfile ? (
+                      <GenerateWithAiButton
+                        profileId={activeProfile._id}
+                        section="title"
+                        context={{ name: form.name, title: form.title, yearsExperience: form.yearsExperience }}
+                        onResult={(r) => update('title', r as string)}
+                      />
+                    ) : null
+                  }
+                >
+                  <Input value={form.title} onChange={(e) => update('title', e.target.value)} />
+                </FormField>
+                <FormField label="Location">
+                  <Input value={form.location} onChange={(e) => update('location', e.target.value)} />
+                </FormField>
+                <FormField label="Years experience">
+                  <Input
+                    value={form.yearsExperience}
+                    onChange={(e) => update('yearsExperience', e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </Card>
+
+            <Card className="space-y-3 !p-4">
+              <SectionHeading title="Contact & links" hint="How people reach you." />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))] xl:[grid-template-columns:repeat(4,minmax(0,1fr))]">
+                <FormField label="Phone">
+                  <Input value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+                </FormField>
+                <FormField label="Email">
+                  <Input value={form.email} onChange={(e) => update('email', e.target.value)} />
+                </FormField>
+                <FormField label="LinkedIn">
+                  <Input value={form.linkedin} onChange={(e) => update('linkedin', e.target.value)} />
+                </FormField>
+                <FormField label="GitHub">
+                  <Input value={form.github} onChange={(e) => update('github', e.target.value)} />
+                </FormField>
+              </div>
+            </Card>
+
+            <Card className="space-y-3 !p-4">
+              <SectionHeading title="Story" hint="Tagline and bio for the hero and about sections." />
+              <FormField
+                label="Tagline"
+                action={
+                  activeProfile ? (
+                    <GenerateWithAiButton
+                      profileId={activeProfile._id}
+                      section="tagline"
+                      context={{
+                        name: form.name,
+                        title: form.title,
+                        tagline: form.tagline,
+                        yearsExperience: form.yearsExperience,
+                      }}
+                      onResult={(r) => update('tagline', r as string)}
+                    />
+                  ) : null
+                }
+              >
+                <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
+              </FormField>
+              <div>
+                <FormField
+                  label="Bio"
+                  action={
+                    activeProfile ? (
+                      <GenerateWithAiButton
+                        profileId={activeProfile._id}
+                        section="bio"
+                        context={{
+                          name: form.name,
+                          title: form.title,
+                          bio: form.bio,
+                          yearsExperience: form.yearsExperience,
+                          educationHighlight: form.educationHighlight,
+                          aiTools: aiToolsStr,
+                        }}
+                        onResult={(r) => update('bio', r as string)}
+                      />
+                    ) : null
+                  }
+                >
+                  <p className="-mt-1 mb-1.5 text-[11px] text-subtle">
+                    Imported text stays as-is. Use AI to rewrite in first person.
+                  </p>
+                  <Textarea
+                    value={form.bio}
+                    onChange={(e) => update('bio', e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </FormField>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
+                <FormField
+                  label="Education highlight"
+                  action={
+                    activeProfile ? (
+                      <GenerateWithAiButton
+                        profileId={activeProfile._id}
+                        section="educationHighlight"
+                        context={{ educationHighlight: form.educationHighlight, name: form.name }}
+                        onResult={(r) => update('educationHighlight', r as string)}
+                      />
+                    ) : null
+                  }
+                >
+                  <Input
+                    value={form.educationHighlight}
+                    onChange={(e) => update('educationHighlight', e.target.value)}
+                  />
+                </FormField>
+                <FormField label="AI tools (comma-separated)">
+                  <Input value={aiToolsStr} onChange={(e) => setAiToolsStr(e.target.value)} />
+                </FormField>
+              </div>
+            </Card>
+
+            <details className="group rounded-xl border border-[#0066FF]/12 bg-elevated/60 open:bg-elevated/80 [overflow-anchor:none]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+                <div>
+                  <p className="text-sm font-semibold text-primary">Studio extras</p>
+                  <p className="text-xs text-subtle">
+                    Worked with & testimonials
+                    {workedCount + testimonialCount > 0
+                      ? ` · ${workedCount} companies, ${testimonialCount} quotes`
+                      : ' · optional'}
+                  </p>
+                </div>
+                <ChevronDown className="h-4 w-4 shrink-0 text-subtle transition-transform group-open:rotate-180" />
+              </summary>
+
+              <div className="space-y-4 border-t border-[#0066FF]/10 px-4 py-4 sm:px-5">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-primary">Worked with</p>
+                      <p className="text-xs text-subtle">Studio hero logos. Logo URL optional.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          workedWith: [...(f.workedWith || []), { name: '', logoUrl: '' }],
+                        }))
+                      }
+                    >
+                      Add company
+                    </Button>
+                  </div>
+                  {(form.workedWith || []).length === 0 && (
+                    <p className="text-xs text-subtle">No entries — experience companies are used as fallback.</p>
+                  )}
+                  {(form.workedWith || []).map((row, idx) => (
+                    <div key={idx} className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+                      <Input
+                        placeholder="Company name"
+                        value={row.name}
+                        onChange={(e) =>
+                          setForm((f) => {
+                            const next = [...(f.workedWith || [])];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            return { ...f, workedWith: next };
+                          })
+                        }
+                      />
+                      <Input
+                        placeholder="Logo URL (optional)"
+                        value={row.logoUrl || ''}
+                        onChange={(e) =>
+                          setForm((f) => {
+                            const next = [...(f.workedWith || [])];
+                            next[idx] = { ...next[idx], logoUrl: e.target.value };
+                            return { ...f, workedWith: next };
+                          })
+                        }
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            workedWith: (f.workedWith || []).filter((_, i) => i !== idx),
+                          }))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3 border-t border-border/60 pt-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-primary">Testimonials</p>
+                      <p className="text-xs text-subtle">Enable in Personalization for Studio.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          testimonials: [
+                            ...(f.testimonials || []),
+                            {
+                              quote: '',
+                              clientName: '',
+                              avatarUrl: '',
+                              role: '',
+                              order: (f.testimonials || []).length,
+                            },
+                          ],
+                        }))
+                      }
+                    >
+                      Add quote
+                    </Button>
+                  </div>
+                  {(form.testimonials || []).length === 0 && (
+                    <p className="text-xs text-subtle">No testimonials yet.</p>
+                  )}
+                  {(form.testimonials || []).map((row, idx) => (
+                    <div key={idx} className="space-y-2 rounded-lg border border-border/70 p-3">
+                      <Textarea
+                        placeholder="Quote"
+                        value={row.quote}
+                        onChange={(e) =>
+                          setForm((f) => {
+                            const next = [...(f.testimonials || [])];
+                            next[idx] = { ...next[idx], quote: e.target.value };
+                            return { ...f, testimonials: next };
+                          })
+                        }
+                        className="min-h-[72px]"
+                      />
+                      <div className="grid gap-2 md:grid-cols-3">
+                        <Input
+                          placeholder="Client name"
+                          value={row.clientName}
+                          onChange={(e) =>
+                            setForm((f) => {
+                              const next = [...(f.testimonials || [])];
+                              next[idx] = { ...next[idx], clientName: e.target.value };
+                              return { ...f, testimonials: next };
+                            })
+                          }
+                        />
+                        <Input
+                          placeholder="Role (optional)"
+                          value={row.role || ''}
+                          onChange={(e) =>
+                            setForm((f) => {
+                              const next = [...(f.testimonials || [])];
+                              next[idx] = { ...next[idx], role: e.target.value };
+                              return { ...f, testimonials: next };
+                            })
+                          }
+                        />
+                        <Input
+                          placeholder="Avatar URL"
+                          value={row.avatarUrl || ''}
+                          onChange={(e) =>
+                            setForm((f) => {
+                              const next = [...(f.testimonials || [])];
+                              next[idx] = { ...next[idx], avatarUrl: e.target.value };
+                              return { ...f, testimonials: next };
+                            })
+                          }
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            testimonials: (f.testimonials || []).filter((_, i) => i !== idx),
+                          }))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </details>
           </div>
-        </Card>
+        </div>
       </div>
     </RequireActiveProfile>
   );

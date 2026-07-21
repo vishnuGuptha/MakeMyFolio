@@ -59,7 +59,7 @@ export default function PlatformTryDemoPage() {
     try {
       const saved = await platformApi.saveTryDemo(draft);
       setDraftState(saved);
-      setMessage('Saved. Fresh /try visits and theme demos will use this seed.');
+      setMessage('Saved. Fresh playground visits and theme demos will use this seed.');
     } catch (err) {
       setError(errorMessage(err, 'Save failed'));
     } finally {
@@ -68,7 +68,7 @@ export default function PlatformTryDemoPage() {
   };
 
   const handleReset = async () => {
-    if (!window.confirm('Reset the public /try demo to the default Alex Rivera seed?')) return;
+    if (!window.confirm('Reset the public playground to the default Alex Rivera seed?')) return;
     setSaving(true);
     setMessage(null);
     setError(null);
@@ -91,11 +91,11 @@ export default function PlatformTryDemoPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Try demo seed</h1>
+          <h1 className="text-2xl font-bold text-primary">Playground seed</h1>
           <p className="mt-1 text-sm text-subtle">
-            Content shown on public{' '}
+            Content shown on the public{' '}
             <Link to="/try" className="text-accent hover:underline">
-              /try
+              playground
             </Link>{' '}
             and marketing theme cards. Visitors still edit their own local copy until they claim.
           </p>
@@ -103,7 +103,7 @@ export default function PlatformTryDemoPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
             <a href="/try" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" /> Open /try
+              <ExternalLink className="h-3.5 w-3.5" /> Open playground
             </a>
           </Button>
           <Button variant="outline" size="sm" disabled={saving} onClick={handleReset}>

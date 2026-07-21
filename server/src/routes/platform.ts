@@ -10,6 +10,7 @@ import {
   resetTryDemoSeed,
   saveTryDemoSeed,
 } from '../services/tryDemoSeed.js';
+import { normalizePlanId } from '../lib/plans.js';
 
 const router = Router();
 router.use(requirePlatformAdmin);
@@ -90,6 +91,10 @@ router.get('/users', async (_req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      plan: normalizePlanId(user.plan),
+      planBilling: user.planBilling ?? null,
+      planCurrency: user.planCurrency ?? null,
+      planActivatedAt: user.planActivatedAt ?? null,
       createdAt: user.createdAt,
       portfolios: profiles
         .filter((p) => p.ownerId?.toString() === user._id.toString())
@@ -103,6 +108,67 @@ router.get('/users', async (_req, res) => {
     }));
 
     res.json(result);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.patch('/users/:userId/plan', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const planRaw = typeof req.body?.plan === 'string' ? req.body.plan : '';
+    if (planRaw !== 'free' && planRaw !== 'pro' && planRaw !== 'premium') {
+      return res.status(400).json({ error: 'Plan must be free, pro, or premium' });
+    }
+    const plan = planRaw;
+
+    const billingRaw = req.body?.planBilling;
+    const currencyRaw = req.body?.planCurrency;
+
+    let planBilling: 'monthly' | 'yearly' | null = null;
+    let planCurrency: 'usd' | 'inr' | null = null;
+    let planActivatedAt: Date | null = null;
+
+    if (plan === 'free') {
+      planBilling = null;
+      planCurrency = null;
+      planActivatedAt = null;
+    } else {
+      if (billingRaw !== 'monthly' && billingRaw !== 'yearly') {
+        return res.status(400).json({ error: 'planBilling must be monthly or yearly' });
+      }
+      planBilling = billingRaw;
+      if (currencyRaw === 'usd' || currencyRaw === 'inr') {
+        planCurrency = currencyRaw;
+      } else if (user.planCurrency === 'usd' || user.planCurrency === 'inr') {
+        planCurrency = user.planCurrency;
+      } else {
+        planCurrency = 'usd';
+      }
+      planActivatedAt = new Date();
+    }
+
+    user.plan = plan;
+    user.planBilling = planBilling;
+    user.planCurrency = planCurrency;
+    user.planActivatedAt = planActivatedAt;
+    await user.save();
+
+    await ActivityLog.create({
+      action: 'update',
+      entity: 'user-plan',
+      entityId: `${user._id.toString()}:${plan}:${planBilling ?? 'none'}`,
+    });
+
+    res.json({
+      _id: user._id,
+      plan,
+      planBilling,
+      planCurrency,
+      planActivatedAt,
+    });
   } catch (err) {
     sendError(res, err);
   }

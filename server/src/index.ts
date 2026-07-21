@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import platformRoutes from './routes/platform.js';
+import billingRoutes, { stripeWebhookHandler } from './routes/billing.js';
 import { PortfolioProfile } from './models/index.js';
 import { getJwtSecret } from './config/jwt.js';
 import { getStorageProvider } from './services/storage.js';
@@ -46,6 +47,14 @@ app.use(
     credentials: true,
   })
 );
+
+/** Stripe webhooks need the raw body for signature verification */
+app.post(
+  '/api/billing/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  stripeWebhookHandler
+);
+
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads')));
@@ -74,6 +83,7 @@ app.use('/api/auth/platform/login', authLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/billing', billingRoutes);
 app.use('/api/user/profiles/:profileId/resume/import', resumeImportLimiter);
 app.use('/api/user/profiles/:profileId/ai/enhance', aiEnhanceLimiter);
 app.use('/api/user', adminRoutes);
@@ -88,14 +98,12 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 });
 
 async function start() {
-  // Fail fast in production if JWT is misconfigured
   getJwtSecret();
   console.log(`Media storage provider: ${getStorageProvider()}`);
 
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/portfolio-cms';
   await mongoose.connect(uri);
   console.log('Connected to MongoDB');
-  // Drop legacy global unique on slug; apply per-owner + published-only uniqueness.
   await PortfolioProfile.syncIndexes();
   await ensureTryDemoSeed();
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

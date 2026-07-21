@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api';
 import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export type AiEnhanceSection =
   | 'tagline'
@@ -42,17 +43,19 @@ export function GenerateWithAiButton({
   };
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      onClick={handleClick}
-      disabled={disabled || loading}
-      className="text-accent border-accent/30 hover:bg-accent/10"
-    >
-      <Sparkles className="h-3.5 w-3.5" />
-      {loading ? 'Generating...' : 'Generate with AI'}
-    </Button>
+    <Tooltip content={loading ? 'Generating…' : 'Generate with AI'}>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={handleClick}
+        disabled={disabled || loading}
+        className="h-7 gap-1 border-accent/30 px-2 text-[11px] font-medium text-accent hover:bg-accent/10"
+      >
+        <Sparkles className="h-3 w-3" />
+        {loading ? '…' : 'AI'}
+      </Button>
+    </Tooltip>
   );
 }
 
@@ -64,9 +67,9 @@ export function AiFieldLabel({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 mb-1.5">
-      <span className="text-sm font-medium text-primary">{label}</span>
-      {children}
+    <div className="mb-1.5 flex min-h-7 items-center justify-between gap-2">
+      <span className="text-sm font-medium leading-none text-secondary">{label}</span>
+      {children ? <div className="shrink-0">{children}</div> : null}
     </div>
   );
 }

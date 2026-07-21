@@ -1,5 +1,6 @@
 import { Github, Linkedin, Mail, Globe, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 import type { ProfileContent } from '@/types';
 
 export type SocialLinkItem = {
@@ -82,21 +83,21 @@ export default function SocialIconLinks({
       {links.map((link) => {
         const Icon = ICONS[link.id];
         return (
-          <a
-            key={link.id}
-            href={link.href}
-            target={link.external ? '_blank' : undefined}
-            rel={link.external ? 'noopener noreferrer' : undefined}
-            aria-label={link.label}
-            title={link.label}
-            className={cn(
-              'inline-flex items-center justify-center rounded-full transition-colors',
-              dims.wrap,
-              linkClassName
-            )}
-          >
-            <Icon className={dims.icon} aria-hidden />
-          </a>
+          <Tooltip key={link.id} content={link.label}>
+            <a
+              href={link.href}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noopener noreferrer' : undefined}
+              aria-label={link.label}
+              className={cn(
+                'inline-flex items-center justify-center rounded-full transition-colors',
+                dims.wrap,
+                linkClassName
+              )}
+            >
+              <Icon className={dims.icon} aria-hidden />
+            </a>
+          </Tooltip>
         );
       })}
     </nav>

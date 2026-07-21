@@ -100,17 +100,20 @@ export default function AdminExperiencePage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6">
-        <div className="flex justify-between">
-          <h1 className="text-2xl font-bold text-primary">Experience & Internships</h1>
+      <div className="mx-auto max-w-6xl space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Experience & Internships</h1>
+            <p className="mt-0.5 text-sm text-subtle">Roles shown on your portfolio.</p>
+          </div>
           <Button onClick={() => setEditing({ ...emptyExp })}>
             <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
 
         {editing && (
-          <Card className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+          <Card className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <FormField label="Type">
                 <select
                   className="w-full rounded-lg border border-border bg-elevated px-3 py-2 text-sm"

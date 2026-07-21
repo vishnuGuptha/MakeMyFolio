@@ -13,9 +13,10 @@ import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
 import { AdminListSkeleton } from '@/components/admin/AdminEmptyState';
+import { useAuth } from '@/context/AuthContext';
 import { errorMessage } from '@/lib/apiError';
+import { FREE_PUBLISH_MESSAGE, getPlan, normalizePlanId } from '@/lib/plans';
 import { getPortfolioViewUrl, getPublicPortfolioLabel } from '@/lib/utils';
-import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -80,11 +81,65 @@ const CHECKLIST: ChecklistItem[] = [
 ];
 
 export default function AdminDashboardPage() {
-  const { activeProfile, refreshProfiles } = useAdminProfile();
+  const { activeProfile, profiles, refreshProfiles } = useAdminProfile();
+  const { user } = useAuth();
+  const canPublish = Boolean(user?.limits?.canPublish);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const navigate = useNavigate();
+
+  const planId = normalizePlanId(user?.plan);
+  const planName = getPlan(planId).name;
+  const maxPortfolios = user?.limits?.maxPortfolios ?? 1;
+  const folioCount = profiles?.length ?? 0;
+  const isFreePlan = planId === 'free';
+  const isPaidPlan = planId === 'pro' || planId === 'premium' || planId === 'domain';
+
+  const planUsageLine = useMemo(() => {
+    const parts: string[] = [
+      `${folioCount} / ${maxPortfolios} portfolio${maxPortfolios === 1 ? '' : 's'}`,
+    ];
+    if (isFreePlan) {
+      parts.push(canPublish ? 'publish unlocked' : 'draft only');
+      const importLimit = user?.limits?.maxResumeImports;
+      if (importLimit === 1) {
+        parts.push(user?.resumeImportUsed ? 'resume import used' : '1 resume import left');
+      }
+    } else if (isPaidPlan) {
+      parts.push(canPublish ? 'publish unlocked' : 'publish locked');
+      if (user?.planBilling) {
+        parts.push(user.planBilling === 'yearly' ? 'yearly' : 'monthly');
+      }
+      if (user?.limits?.customDomain) {
+        parts.push('custom domain');
+      } else if (planId === 'pro' || planId === 'premium') {
+        parts.push('subdomain');
+      }
+    }
+    return parts.join(' · ');
+  }, [
+    folioCount,
+    maxPortfolios,
+    isFreePlan,
+    isPaidPlan,
+    canPublish,
+    user?.limits?.maxResumeImports,
+    user?.limits?.customDomain,
+    user?.resumeImportUsed,
+    user?.planBilling,
+    planId,
+  ]);
+
+  const planCta = useMemo(() => {
+    if (planId === 'premium' || planId === 'domain') {
+      return { label: 'View plans', to: '/dashboard/pricing' as const };
+    }
+    if (planId === 'pro') {
+      return { label: 'Upgrade to Premium', to: '/dashboard/pricing' as const };
+    }
+    return { label: 'Upgrade plan', to: '/dashboard/pricing' as const };
+  }, [planId]);
 
   const load = () => {
     if (!activeProfile) return;
@@ -122,6 +177,12 @@ export default function AdminDashboardPage() {
   const togglePublish = async () => {
     if (!activeProfile) return;
     const next = !isPublished;
+    if (next && !canPublish) {
+      toast.error(FREE_PUBLISH_MESSAGE, {
+        action: { label: 'View plans', onClick: () => navigate('/dashboard/pricing') },
+      });
+      return;
+    }
     if (!next && !confirm(`Unpublish “${activeProfile.displayName}”? Visitors will lose the live page.`)) {
       return;
     }
@@ -140,7 +201,7 @@ export default function AdminDashboardPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6 max-w-4xl">
+      <div className="mx-auto max-w-6xl space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
@@ -157,19 +218,34 @@ export default function AdminDashboardPage() {
         </div>
 
         <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-accent/25 bg-accent/5">
-          <div>
-            <p className="text-sm font-medium text-primary">You&apos;re on the Free plan</p>
-            <p className="text-xs text-subtle mt-0.5">
-              1 folio · core themes · upgrade for more portfolios &amp; Pro themes (billing soon).
-            </p>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-primary">
+                {isFreePlan
+                  ? 'You’re on the Basic (Free) plan'
+                  : `You’re on the ${planName} plan`}
+              </p>
+              <Badge variant={isFreePlan ? 'outline' : 'accent'} className="text-[10px]">
+                Current plan
+              </Badge>
+            </div>
+            <p className="mt-0.5 text-xs text-subtle">{planUsageLine}</p>
+            {isFreePlan ? (
+              <p className="mt-1 text-xs text-subtle">
+                Upgrade to Pro or Premium for more portfolios and live publishing.
+              </p>
+            ) : folioCount >= maxPortfolios ? (
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Portfolio limit reached
+                {planId === 'pro' ? ' — upgrade to Premium for more.' : '.'}
+              </p>
+            ) : null}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            type="button"
-            onClick={() => toast.message(`Pro waitlist — billing is coming soon on ${BRAND.name}.`)}
-          >
-            Explore Pro
+          <Button size="sm" variant="outline" asChild className="shrink-0">
+            <Link to={planCta.to}>
+              {planCta.label}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </Button>
         </Card>
 
@@ -198,7 +274,12 @@ export default function AdminDashboardPage() {
                       {isPublished ? 'View live' : 'Preview'}
                     </a>
                   </Button>
-                  <Button size="sm" disabled={publishing} onClick={togglePublish}>
+                  <Button
+                    size="sm"
+                    disabled={publishing || (!isPublished && !canPublish)}
+                    onClick={togglePublish}
+                    title={!isPublished && !canPublish ? FREE_PUBLISH_MESSAGE : undefined}
+                  >
                     {isPublished ? (
                       <>
                         <EyeOff className="h-3.5 w-3.5" />
@@ -207,12 +288,20 @@ export default function AdminDashboardPage() {
                     ) : (
                       <>
                         <Globe className="h-3.5 w-3.5" />
-                        {publishing ? 'Publishing…' : 'Publish'}
+                        {publishing ? 'Publishing…' : canPublish ? 'Publish' : 'Publish locked'}
                       </>
                     )}
                   </Button>
                 </div>
               </div>
+              {!canPublish && !isPublished ? (
+                <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                  {FREE_PUBLISH_MESSAGE}{' '}
+                  <Link to="/dashboard/pricing" className="font-semibold text-[#0066FF] hover:underline">
+                    View Pro & Premium
+                  </Link>
+                </p>
+              ) : null}
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full rounded-full bg-accent transition-all"

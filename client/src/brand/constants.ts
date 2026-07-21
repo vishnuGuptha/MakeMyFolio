@@ -12,6 +12,7 @@ export const RESERVED_APP_PATHS = [
   'try',
   'themes',
   'pricing',
+  'cart',
   'examples',
   'login',
   'register',

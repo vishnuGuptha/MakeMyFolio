@@ -157,6 +157,9 @@ export interface ContactMessage {
   message: string;
   read: boolean;
   archived: boolean;
+  pinned?: boolean;
+  pinnedAt?: string | null;
+  contacted?: boolean;
   createdAt: string;
 }
 

@@ -44,8 +44,8 @@ export default function PlatformLoginPage() {
           <FormField label="Password">
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </FormField>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In to Platform'}
+          <Button type="submit" className="w-full" loading={loading}>
+            {loading ? 'Signing in…' : 'Sign In to Platform'}
           </Button>
         </form>
       </Card>

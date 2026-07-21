@@ -12,6 +12,8 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import type { PortfolioThemeId } from '@/themes/types';
 import { cn } from '@/lib/utils';
 import { isPortfolioSubdomainHost, usesSubdomainPortfolios } from '@/lib/domains';
+import { restoreDocumentFavicon, setDocumentFavicon } from '@/lib/favicon';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 type ShellMode = 'public' | 'preview';
 
@@ -47,6 +49,7 @@ export default function PortfolioShell({
         if (d.settings?.siteTitle) {
           document.title = isPreview ? `[Preview] ${d.settings.siteTitle}` : d.settings.siteTitle;
         }
+        setDocumentFavicon(d.content?.profileImageUrl, d.settings?.primaryColor);
         if (d.settings?.metaDescription) {
           let meta = document.querySelector('meta[name="description"]');
           if (!meta) {
@@ -65,7 +68,14 @@ export default function PortfolioShell({
     if (data?.settings?.siteTitle) {
       document.title = isPreview ? `[Preview] ${data.settings.siteTitle}` : data.settings.siteTitle;
     }
+    setDocumentFavicon(data?.content?.profileImageUrl, data?.settings?.primaryColor);
   }, [data, location.pathname, isPreview]);
+
+  useEffect(() => {
+    return () => {
+      restoreDocumentFavicon();
+    };
+  }, []);
 
   if (loading) return <PortfolioSkeleton />;
   if (error || !data?.content) return <NotFoundPage />;
@@ -82,13 +92,14 @@ export default function PortfolioShell({
       <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {isPreview && (
-            <Link
-              to="/dashboard"
-              className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
-              title="Back to dashboard — only you can see this draft"
-            >
-              Draft
-            </Link>
+            <Tooltip content="Back to dashboard — only you can see this draft">
+              <Link
+                to="/dashboard"
+                className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
+              >
+                Draft
+              </Link>
+            </Tooltip>
           )}
           <ThemeNavbar
             name={data.content.name}

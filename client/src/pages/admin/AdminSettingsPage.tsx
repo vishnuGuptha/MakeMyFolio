@@ -15,6 +15,7 @@ import { FormField } from '@/components/ui/Label';
 import { Card } from '@/components/ui/Card';
 import { GenerateWithAiButton, AiFieldLabel } from '@/components/admin/GenerateWithAiButton';
 import { Badge } from '@/components/ui/Badge';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { FONT_OPTIONS, PORTFOLIO_NAV_SECTIONS, COLOR_PALETTE_OPTIONS, findMatchingColorPalette } from '@/lib/theme';
 import { getPortfolioTheme } from '@/themes/registry';
 import { CURSOR_EFFECT_OPTIONS } from '@/themes/shared/cursorEffects';
@@ -95,22 +96,22 @@ export default function AdminSettingsPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6 max-w-3xl">
+      <div className="mx-auto max-w-6xl space-y-5">
         <UnsavedChangesBar
           isDirty={isDirty}
           saving={saving}
           lastSavedAt={lastSavedAt}
           onSave={save}
         />
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Personalization & Settings</h1>
-            <p className="text-sm text-subtle mt-1">
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Personalization & Settings</h1>
+            <p className="mt-0.5 text-sm text-subtle">
               Theme and layout for <span className="text-accent">{activeProfile?.displayName}</span>
             </p>
           </div>
-          <Button onClick={save} disabled={saving || !isDirty}>
-            {saving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}
+          <Button onClick={save} disabled={saving || !isDirty} loading={saving}>
+            {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
           </Button>
         </div>
 
@@ -217,16 +218,18 @@ export default function AdminSettingsPage() {
                     <div className="px-3 pt-2.5 pb-3">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span
-                            className="h-3.5 w-3.5 rounded-full border border-black/10"
-                            style={{ background: palette.primary }}
-                            title="Primary"
-                          />
-                          <span
-                            className="h-3.5 w-3.5 rounded-full border border-black/10"
-                            style={{ background: palette.secondary }}
-                            title="Secondary"
-                          />
+                          <Tooltip content="Primary">
+                            <span
+                              className="h-3.5 w-3.5 rounded-full border border-black/10"
+                              style={{ background: palette.primary }}
+                            />
+                          </Tooltip>
+                          <Tooltip content="Secondary">
+                            <span
+                              className="h-3.5 w-3.5 rounded-full border border-black/10"
+                              style={{ background: palette.secondary }}
+                            />
+                          </Tooltip>
                         </div>
                         {selected && (
                           <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">

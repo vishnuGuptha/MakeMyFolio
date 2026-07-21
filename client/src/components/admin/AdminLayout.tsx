@@ -16,14 +16,14 @@ import {
   X,
   ExternalLink,
   Copy,
-  LogOut,
   ChevronDown,
   ChevronLeft,
   PanelLeft,
   Plus,
   Palette,
-  KeyRound,
   ListChecks,
+  Tag,
+  ShoppingCart,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
@@ -35,20 +35,36 @@ import { cn, getPortfolioViewUrl, getPublicPortfolioUrl } from '@/lib/utils';
 import { BrandLogo, BrandMark } from '@/brand/logo';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { AppThemeToggle } from '@/components/ui/AppThemeToggle';
+import { PageLoader } from '@/components/ui/PageLoader';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { AccountMenu } from '@/components/admin/AccountMenu';
+import { UnreadMessagesProvider, useUnreadMessages } from '@/context/UnreadMessagesContext';
+import { cartCount, subscribeCart } from '@/lib/planCheckout';
 
 const COLLAPSE_KEY = 'portfolio-sidebar-collapsed';
+
+function userInitials(name?: string | null, email?: string | null) {
+  const source = (name || email || '?').trim();
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
 
 type NavItem = {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   end?: boolean;
+  /** Show a notification indicator (e.g. unread messages) */
+  showDot?: boolean;
+  /** Numeric badge (e.g. cart count) */
+  badge?: number;
 };
 
 const GLOBAL_NAV: NavItem[] = [
   { to: '/dashboard/portfolios', label: 'Portfolios', icon: Users },
-  { to: '/dashboard/account', label: 'Account', icon: KeyRound },
+  { to: '/dashboard/pricing', label: 'Pricing', icon: Tag },
+  { to: '/dashboard/cart', label: 'Cart', icon: ShoppingCart },
 ];
 
 const PORTFOLIO_NAV: NavItem[] = [
@@ -73,18 +89,17 @@ function NavItemLink({
   collapsed: boolean;
   onNavigate: (e: React.MouseEvent) => void;
 }) {
-  return (
+  const link = (
     <NavLink
       to={item.to}
       end={item.end}
-      title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'group relative flex items-center rounded-lg text-sm transition-all duration-200',
-          collapsed ? 'justify-center px-0 py-2.5 mx-auto w-10' : 'gap-3 px-3 py-2',
+          'group relative flex items-center rounded-lg text-sm transition-colors duration-200',
+          collapsed ? 'h-9 w-9 justify-center' : 'gap-3 px-3 py-2',
           isActive
-            ? 'bg-[#0066FF]/12 text-[#0066FF] ring-1 ring-inset ring-[#0066FF]/20'
+            ? 'bg-[#0066FF]/12 text-[#0066FF]'
             : 'text-secondary hover:bg-muted/80 hover:text-primary'
         )
       }
@@ -92,18 +107,45 @@ function NavItemLink({
       {({ isActive }) => (
         <>
           {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[#0066FF]" />
+            <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-[#0066FF]" />
           )}
-          <item.icon
-            className={cn(
-              'h-4 w-4 shrink-0 transition-transform duration-200',
-              isActive ? 'scale-105' : 'group-hover:scale-105'
-            )}
-          />
-          {!collapsed && <span className="truncate">{item.label}</span>}
+          <span className="relative shrink-0">
+            <item.icon className="h-4 w-4" />
+            {item.showDot && collapsed ? (
+              <span
+                className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[rgb(var(--bg-elevated))]"
+                aria-label="Unread"
+              />
+            ) : null}
+          </span>
+          {!collapsed && (
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="truncate">{item.label}</span>
+              {item.badge && item.badge > 0 ? (
+                <span className="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0066FF] px-1 text-[10px] font-semibold text-white">
+                  {item.badge}
+                </span>
+              ) : item.showDot ? (
+                <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-red-500" aria-hidden />
+              ) : null}
+            </span>
+          )}
+          {collapsed && item.badge && item.badge > 0 ? (
+            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#0066FF] px-0.5 text-[8px] font-bold text-white">
+              {item.badge > 9 ? '9+' : item.badge}
+            </span>
+          ) : null}
         </>
       )}
     </NavLink>
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip content={item.showDot ? `${item.label} · Unread` : item.label} side="right">
+      <span className="mx-auto flex w-full justify-center">{link}</span>
+    </Tooltip>
   );
 }
 
@@ -112,18 +154,24 @@ function NavSection({
   items,
   collapsed,
   onNavigate,
+  showDivider = true,
 }: {
   title: string;
   items: NavItem[];
   collapsed: boolean;
   onNavigate: (e: React.MouseEvent) => void;
+  showDivider?: boolean;
 }) {
   return (
-    <div className="space-y-0.5">
+    <div className={cn('flex flex-col', collapsed ? 'items-stretch gap-1' : 'gap-0.5')}>
       {collapsed ? (
-        <div className="mx-auto my-1.5 h-px w-5 bg-border/60" aria-hidden />
+        showDivider ? (
+          <div className="mx-auto my-1.5 h-px w-6 bg-[#0066FF]/15 dark:bg-white/10" aria-hidden />
+        ) : (
+          <div className="h-0.5" aria-hidden />
+        )
       ) : (
-        <p className="px-3 pb-1.5 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]/80 transition-opacity duration-200">
+        <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]/75">
           {title}
         </p>
       )}
@@ -131,6 +179,56 @@ function NavSection({
         <NavItemLink key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
       ))}
     </div>
+  );
+}
+
+function SidebarNav({
+  collapsed,
+  onboarding,
+  onNavClick,
+}: {
+  collapsed: boolean;
+  onboarding: boolean;
+  onNavClick: (e: React.MouseEvent) => void;
+}) {
+  const { unreadCount } = useUnreadMessages();
+  const [cartItems, setCartItems] = useState(() => cartCount());
+  useEffect(() => subscribeCart(() => setCartItems(cartCount())), []);
+
+  const portfolioNav = PORTFOLIO_NAV.map((item) =>
+    item.to === '/dashboard/messages' ? { ...item, showDot: unreadCount > 0 } : item
+  );
+  const globalNav = GLOBAL_NAV.map((item) =>
+    item.to === '/dashboard/cart' ? { ...item, badge: cartItems } : item
+  );
+
+  return (
+    <nav className="admin-sidebar-nav min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-2 py-3">
+      {onboarding && (
+        <NavItemLink
+          item={{
+            to: '/dashboard/onboarding',
+            label: 'Setup checklist',
+            icon: ListChecks,
+          }}
+          collapsed={collapsed}
+          onNavigate={onNavClick}
+        />
+      )}
+      <NavSection
+        title="Global"
+        items={globalNav}
+        collapsed={collapsed}
+        onNavigate={onNavClick}
+        showDivider={Boolean(onboarding)}
+      />
+      <NavSection
+        title="This portfolio"
+        items={portfolioNav}
+        collapsed={collapsed}
+        onNavigate={onNavClick}
+      />
+    </nav>
   );
 }
 
@@ -208,7 +306,7 @@ export default function AdminLayout() {
     if (!activeProfile) return;
     if (!activeProfile.isPublished) {
       navigator.clipboard.writeText(getPortfolioViewUrl(activeProfile));
-      toast.success('Preview link copied (login required)');
+      toast.success('Preview link copied');
       return;
     }
     navigator.clipboard.writeText(getPublicPortfolioUrl(activeProfile.slug));
@@ -263,62 +361,25 @@ export default function AdminLayout() {
           </button>
         )}
         {!opts.showCloseMobile && !opts.collapsed && (
-          <button
-            type="button"
-            className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-subtle hover:bg-muted hover:text-primary transition-colors"
-            onClick={() => setCollapsed(true)}
-            aria-label="Collapse sidebar"
-            title="Collapse"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip content="Collapse sidebar">
+            <button
+              type="button"
+              className="hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-subtle hover:bg-muted hover:text-primary transition-colors"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
         )}
       </div>
 
-      <nav className="admin-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-1">
-        {onboarding && (
-          <NavItemLink
-            item={{
-              to: '/dashboard/onboarding',
-              label: 'Setup checklist',
-              icon: ListChecks,
-            }}
-            collapsed={opts.collapsed}
-            onNavigate={onNavClick}
-          />
-        )}
-        <NavSection title="Global" items={GLOBAL_NAV} collapsed={opts.collapsed} onNavigate={onNavClick} />
-        <NavSection
-          title="This portfolio"
-          items={PORTFOLIO_NAV}
-          collapsed={opts.collapsed}
-          onNavigate={onNavClick}
-        />
-      </nav>
-
-      <div
-        className={cn(
-          'shrink-0 border-t border-[#0066FF]/10 p-2 dark:border-white/10',
-          opts.collapsed ? 'flex justify-center' : ''
-        )}
-      >
-        <button
-          type="button"
-          onClick={handleLogout}
-          title="Sign out"
-          className={cn(
-            'flex items-center rounded-lg text-sm text-secondary transition-colors hover:bg-muted hover:text-primary',
-            opts.collapsed ? 'justify-center w-10 h-10' : 'w-full gap-3 px-3 py-2'
-          )}
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {!opts.collapsed && <span>Sign out</span>}
-        </button>
-      </div>
+      <SidebarNav collapsed={opts.collapsed} onboarding={onboarding} onNavClick={onNavClick} />
     </>
   );
 
   return (
+    <UnreadMessagesProvider>
     <div className="dashboard-shell flex h-svh overflow-hidden bg-base text-primary">
       {/* Mobile overlay */}
       <div
@@ -344,7 +405,7 @@ export default function AdminLayout() {
       {/* Desktop sidebar — fixed height, never scrolls with page */}
       <aside
         className={cn(
-          'dashboard-sidebar relative hidden h-svh shrink-0 flex-col md:flex',
+          'dashboard-sidebar relative hidden h-svh min-h-0 shrink-0 flex-col md:flex',
           'transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           collapsed ? 'w-[4.25rem]' : 'w-60'
         )}
@@ -353,51 +414,76 @@ export default function AdminLayout() {
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="dashboard-header relative z-[70] flex h-14 shrink-0 items-center justify-between gap-4 px-4">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="dashboard-header relative z-[70] flex h-14 shrink-0 items-center gap-3 px-3 sm:px-5">
+          {/* Left: nav + portfolio context */}
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
             <button
               type="button"
-              className="rounded-lg p-2 transition-colors hover:bg-muted md:hidden"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#0066FF]/12 text-secondary transition-colors hover:bg-muted hover:text-primary md:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
 
             {collapsed && (
-              <button
-                type="button"
-                className="hidden h-9 w-9 items-center justify-center rounded-lg border border-[#0066FF]/15 text-subtle transition-colors hover:bg-muted hover:text-primary md:flex"
-                onClick={() => setCollapsed(false)}
-                aria-label="Expand sidebar"
-                title="Expand sidebar"
-              >
-                <PanelLeft className="h-4 w-4" />
-              </button>
+              <Tooltip content="Expand sidebar">
+                <button
+                  type="button"
+                  className="hidden h-8 w-8 items-center justify-center rounded-lg border border-[#0066FF]/12 text-subtle transition-colors hover:bg-muted hover:text-primary md:inline-flex"
+                  onClick={() => setCollapsed(false)}
+                  aria-label="Expand sidebar"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </button>
+              </Tooltip>
             )}
 
-            <div className="relative">
+            <div className="relative min-w-0">
               <button
                 ref={switcherBtnRef}
                 type="button"
                 onClick={() => setSwitcherOpen((open) => !open)}
                 aria-expanded={switcherOpen}
                 aria-haspopup="listbox"
-                className="flex items-center gap-2 rounded-lg border border-[#0066FF]/15 bg-elevated/70 px-3 py-1.5 text-sm backdrop-blur-sm transition-colors hover:border-[#0066FF]/30 hover:bg-muted dark:border-border"
+                className={cn(
+                  'flex h-8 max-w-full items-center gap-2 rounded-lg border px-2.5 text-sm transition-colors',
+                  'border-[#0066FF]/15 bg-elevated/80 hover:border-[#0066FF]/30 hover:bg-muted dark:border-border',
+                  switcherOpen && 'border-[#0066FF]/35 ring-2 ring-[#0066FF]/15'
+                )}
               >
                 {activeProfile ? (
                   <>
-                    <span className="max-w-[140px] truncate font-medium">{activeProfile.displayName}</span>
-                    {activeProfile.isPublished && <Badge variant="accent">Live</Badge>}
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#0066FF]/12 text-[9px] font-bold text-[#0066FF]">
+                      {userInitials(activeProfile.displayName)}
+                    </span>
+                    <span className="min-w-0 max-w-[7.5rem] truncate font-medium text-primary sm:max-w-[11rem]">
+                      {activeProfile.displayName}
+                    </span>
+                    {activeProfile.isPublished ? (
+                      <Badge
+                        variant="accent"
+                        className="hidden font-sans text-[9px] uppercase tracking-[0.08em] sm:inline-flex"
+                      >
+                        Live
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="hidden font-sans text-[9px] uppercase tracking-[0.08em] sm:inline-flex"
+                      >
+                        Draft
+                      </Badge>
+                    )}
                     <ChevronDown
                       className={cn(
-                        'h-4 w-4 text-subtle transition-transform duration-200',
+                        'ml-0.5 h-3.5 w-3.5 shrink-0 text-subtle transition-transform duration-200',
                         switcherOpen && 'rotate-180'
                       )}
                     />
                   </>
                 ) : (
-                  <span className="text-subtle">Select profile</span>
+                  <span className="text-subtle">Select portfolio</span>
                 )}
               </button>
 
@@ -416,7 +502,7 @@ export default function AdminLayout() {
                     >
                       <input
                         autoFocus
-                        placeholder="Search profiles..."
+                        placeholder="Search portfolios…"
                         value={profileQuery}
                         className="mb-2 w-full rounded-lg border border-border bg-base px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066FF]/35"
                         onChange={(e) => setProfileQuery(e.target.value)}
@@ -438,13 +524,21 @@ export default function AdminLayout() {
                         >
                           <div className="min-w-0">
                             <p className="truncate font-medium">{p.displayName}</p>
-                            <p className="truncate font-mono text-xs text-subtle">/{p.slug}</p>
+                            <p className="truncate text-[11px] text-subtle">/{p.slug}</p>
                           </div>
-                          {p.isPublished && <Badge variant="accent">Live</Badge>}
+                          {p.isPublished ? (
+                            <Badge variant="accent" className="font-sans text-[9px] uppercase tracking-wide">
+                              Live
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="font-sans text-[9px] uppercase tracking-wide">
+                              Draft
+                            </Badge>
+                          )}
                         </button>
                       ))}
                       {!filteredProfiles.length && (
-                        <p className="px-3 py-2 text-xs text-subtle">No profiles match.</p>
+                        <p className="px-3 py-2 text-xs text-subtle">No portfolios match.</p>
                       )}
                       <button
                         type="button"
@@ -454,7 +548,7 @@ export default function AdminLayout() {
                         }}
                         className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#0066FF] transition-colors hover:bg-muted"
                       >
-                        <Plus className="h-4 w-4" /> Create New Profile
+                        <Plus className="h-4 w-4" /> Create new portfolio
                       </button>
                     </div>
                   </>,
@@ -462,46 +556,64 @@ export default function AdminLayout() {
                 )}
             </div>
 
-            {activeProfile && (
-              <p className="hidden truncate font-mono text-xs text-subtle lg:block">
-                Editing: {activeProfile.displayName} (/{activeProfile.slug})
-              </p>
-            )}
+            {activeProfile ? (
+              <Tooltip content={`Public path /${activeProfile.slug}`}>
+                <span className="hidden min-w-0 items-center gap-1 rounded-md bg-muted/60 px-2 py-1 text-[11px] text-subtle lg:inline-flex">
+                  <span className="text-[#0066FF]/50">/</span>
+                  <span className="max-w-[10rem] truncate">{activeProfile.slug}</span>
+                </span>
+              </Tooltip>
+            ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {activeProfile && (
+          {/* Right: actions + account */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {activeProfile ? (
               <>
-                <Button size="sm" variant="outline" className="home-cta-secondary border-[#0066FF]/15" onClick={copyLink}>
-                  <Copy className="h-3.5 w-3.5" /> Copy Link
-                </Button>
-                <Button size="sm" variant="outline" className="home-cta-secondary border-[#0066FF]/15" asChild>
-                  <a
-                    href={getPortfolioViewUrl(activeProfile)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <Tooltip content="Copy public link">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5 border-[#0066FF]/15 px-2.5"
+                    onClick={copyLink}
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    {activeProfile.isPublished ? 'View Live' : 'Preview'}
-                  </a>
-                </Button>
+                    <Copy className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Copy</span>
+                  </Button>
+                </Tooltip>
+                <Tooltip content={activeProfile.isPublished ? 'Open live site' : 'Open draft preview'}>
+                  <Button size="sm" className="h-8 gap-1.5 px-2.5 sm:px-3" asChild>
+                    <a
+                      href={getPortfolioViewUrl(activeProfile)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">
+                        {activeProfile.isPublished ? 'View live' : 'Preview'}
+                      </span>
+                    </a>
+                  </Button>
+                </Tooltip>
+                <span className="mx-0.5 hidden h-5 w-px bg-[#0066FF]/15 sm:block dark:bg-white/10" aria-hidden />
               </>
-            )}
-            <span className="hidden max-w-[10rem] truncate text-xs text-subtle sm:block">
-              {user?.name || user?.email}
-            </span>
-            <AppThemeToggle />
-            <Button size="sm" variant="ghost" onClick={handleLogout} className="md:hidden">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            ) : null}
+
+            <AccountMenu
+              name={user?.name}
+              email={user?.email}
+              accountPath="/dashboard/account"
+              onSignOut={() => void handleLogout()}
+            />
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto p-6">
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">
           <Outlet />
         </main>
       </div>
     </div>
+    </UnreadMessagesProvider>
   );
 }
 
@@ -515,7 +627,7 @@ export function RequireActiveProfile({ children }: { children: React.ReactNode }
     }
   }, [loading, activeProfile, navigate]);
 
-  if (loading) return <div className="text-subtle font-mono text-sm">Loading...</div>;
+  if (loading) return <PageLoader variant="inline" label="Loading portfolio" />;
   if (!activeProfile) return null;
   return <>{children}</>;
 }

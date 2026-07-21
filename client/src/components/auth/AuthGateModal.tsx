@@ -21,15 +21,9 @@ import {
 import { cn } from '@/lib/utils';
 
 const REASON_COPY: Record<AuthGateReason, string> = {
-  import: `Create a free account to import your resume and keep your work.`,
-  publish: `Create a free account to publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
-  persist: `Create a free account to save your draft permanently.`,
-};
-
-const REASON_EYEBROW: Record<AuthGateReason, string> = {
-  import: 'Import',
-  publish: 'Publish',
-  persist: 'Save',
+  import: 'Import your resume and keep your work forever.',
+  publish: `Publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
+  persist: 'Save your draft permanently to your account.',
 };
 
 export default function AuthGateModal({
@@ -87,10 +81,10 @@ export default function AuthGateModal({
   const canRegister = canSubmitWithLegalConsent(acceptPrivacy, acceptTerms);
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4" role="presentation">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="presentation">
       <button
         type="button"
-        className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
         aria-label="Close"
         onClick={onClose}
       />
@@ -98,125 +92,151 @@ export default function AuthGateModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-gate-title"
-        className="marketing-auth-card relative w-full max-w-sm rounded-2xl border border-[#0066FF]/14 bg-elevated p-4 shadow-2xl dark:border-white/10 dark:bg-elevated/90"
+        className="marketing-auth-card relative w-full max-w-[22rem] overflow-hidden rounded-2xl border border-[#0066FF]/16 bg-elevated shadow-2xl dark:border-white/10 dark:bg-elevated/95"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          className="absolute right-2 top-2 rounded-md p-1 text-subtle hover:bg-muted hover:text-primary"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0066FF]">
-          {REASON_EYEBROW[reason]}
-        </p>
-        <BrandLogo size={22} className="mb-2.5" />
-        <h2 id="auth-gate-title" className="pr-7 text-base font-semibold text-primary">
-          {mode === 'register' ? 'Create your free account' : 'Welcome back'}
-        </h2>
-        <p className="mt-1 text-xs leading-snug text-subtle">{REASON_COPY[reason]}</p>
+        {/* Top accent */}
+        <div
+          className="h-1 w-full bg-gradient-to-r from-[#0066FF] via-[#3b82f6] to-[#06b6d4]"
+          aria-hidden
+        />
 
-        <div className="try-editor-device-shell mt-3 w-full">
-          <button
-            type="button"
-            className={cn(
-              'try-editor-chip flex-1 px-2.5 py-1.5 text-center text-xs',
-              mode === 'register' && 'try-editor-chip-active'
-            )}
-            onClick={() => setMode('register')}
-          >
-            Create account
-          </button>
-          <button
-            type="button"
-            className={cn(
-              'try-editor-chip flex-1 px-2.5 py-1.5 text-center text-xs',
-              mode === 'login' && 'try-editor-chip-active'
-            )}
-            onClick={() => setMode('login')}
-          >
-            Sign in
-          </button>
-        </div>
+        <div className="p-5 pt-4">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <BrandLogo size={24} className="min-w-0" />
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-muted hover:text-primary"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-        <form onSubmit={onSubmit} className="mt-3.5 space-y-2.5">
-          {mode === 'register' && (
-            <FormField label="Name" className="space-y-1 [&_label]:text-xs">
+          <h2 id="auth-gate-title" className="text-lg font-semibold tracking-tight text-primary">
+            {mode === 'register' ? 'Create your free account' : 'Welcome back'}
+          </h2>
+          <p className="mt-1 text-sm leading-relaxed text-subtle">{REASON_COPY[reason]}</p>
+
+          {/* Mode switch */}
+          <div
+            className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-muted/60 p-1 dark:bg-muted/40"
+            role="tablist"
+            aria-label="Account mode"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'register'}
+              className={cn(
+                'rounded-lg px-3 py-2 text-center text-xs font-medium transition-colors',
+                mode === 'register'
+                  ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
+                  : 'text-secondary hover:text-primary'
+              )}
+              onClick={() => setMode('register')}
+            >
+              Create account
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'login'}
+              className={cn(
+                'rounded-lg px-3 py-2 text-center text-xs font-medium transition-colors',
+                mode === 'login'
+                  ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
+                  : 'text-secondary hover:text-primary'
+              )}
+              onClick={() => setMode('login')}
+            >
+              Sign in
+            </button>
+          </div>
+
+          <form onSubmit={onSubmit} className="mt-4 space-y-3">
+            {mode === 'register' && (
+              <FormField label="Name" className="space-y-1.5 [&_label]:text-xs">
+                <Input
+                  className="h-10 focus-visible:ring-[#0066FF]/35"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  autoComplete="name"
+                  placeholder="Your name"
+                />
+              </FormField>
+            )}
+            <FormField label="Email" className="space-y-1.5 [&_label]:text-xs">
               <Input
-                className="h-9 focus-visible:ring-[#0066FF]/35"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                className="h-10 focus-visible:ring-[#0066FF]/35"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="name"
+                autoComplete="email"
+                placeholder="you@example.com"
               />
             </FormField>
-          )}
-          <FormField label="Email" className="space-y-1 [&_label]:text-xs">
-            <Input
-              className="h-9 focus-visible:ring-[#0066FF]/35"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </FormField>
-          <FormField label="Password" className="space-y-1 [&_label]:text-xs">
-            <PasswordInput
-              className="h-9 focus-visible:ring-[#0066FF]/35"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-            />
-          </FormField>
-          {mode === 'register' && (
-            <LegalConsentFields
-              acceptPrivacy={acceptPrivacy}
-              acceptTerms={acceptTerms}
-              onPrivacyChange={setAcceptPrivacy}
-              onTermsChange={setAcceptTerms}
-              className="space-y-1.5 px-2.5 py-2"
-            />
-          )}
-          <Button
-            type="submit"
-            size="sm"
-            className="home-cta-primary w-full border-0 hover:bg-transparent"
-            disabled={loading || (mode === 'register' && !canRegister)}
-          >
-            {loading ? 'Please wait…' : mode === 'register' ? 'Create account' : 'Sign in'}
-          </Button>
-        </form>
+            <FormField label="Password" className="space-y-1.5 [&_label]:text-xs">
+              <PasswordInput
+                className="h-10 focus-visible:ring-[#0066FF]/35"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                placeholder="At least 6 characters"
+              />
+            </FormField>
 
-        <p className="mt-3 text-center text-xs text-subtle">
-          {mode === 'register' ? (
-            <>
-              Already have an account?{' '}
-              <button
-                type="button"
-                className="font-medium text-[#0066FF] hover:underline"
-                onClick={() => setMode('login')}
-              >
-                Sign in
-              </button>
-            </>
-          ) : (
-            <>
-              New here?{' '}
-              <button
-                type="button"
-                className="font-medium text-[#0066FF] hover:underline"
-                onClick={() => setMode('register')}
-              >
-                Create account
-              </button>
-            </>
-          )}
-        </p>
+            {mode === 'register' && (
+              <LegalConsentFields
+                variant="plain"
+                acceptPrivacy={acceptPrivacy}
+                acceptTerms={acceptTerms}
+                onPrivacyChange={setAcceptPrivacy}
+                onTermsChange={setAcceptTerms}
+              />
+            )}
+
+            <Button
+              type="submit"
+              className="home-cta-primary mt-1 h-10 w-full border-0 text-sm hover:bg-transparent"
+              loading={loading}
+              disabled={mode === 'register' && !canRegister}
+            >
+              {loading ? 'Please wait…' : mode === 'register' ? 'Create account' : 'Sign in'}
+            </Button>
+          </form>
+
+          <p className="mt-4 text-center text-xs text-subtle">
+            {mode === 'register' ? (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  className="font-medium text-[#0066FF] hover:underline"
+                  onClick={() => setMode('login')}
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                New here?{' '}
+                <button
+                  type="button"
+                  className="font-medium text-[#0066FF] hover:underline"
+                  onClick={() => setMode('register')}
+                >
+                  Create account
+                </button>
+              </>
+            )}
+          </p>
+        </div>
       </div>
     </div>,
     document.body

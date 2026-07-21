@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -16,8 +16,11 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
+import { useAuth } from '@/context/AuthContext';
 import { cn, generateSlug, getPortfolioViewUrl, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
+import { FREE_PUBLISH_MESSAGE } from '@/lib/plans';
 import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -30,6 +33,11 @@ type StatusFilter = 'all' | 'published' | 'draft';
 
 export default function AdminProfilesPage() {
   const { profiles, refreshProfiles, setActiveProfileId } = useAdminProfile();
+  const { user } = useAuth();
+  const canPublish = Boolean(user?.limits?.canPublish);
+  const maxPortfolios = user?.limits?.maxPortfolios ?? 1;
+  const atPortfolioLimit = profiles.length >= maxPortfolios;
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('active');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [binned, setBinned] = useState<PortfolioProfile[]>([]);
@@ -44,7 +52,6 @@ export default function AdminProfilesPage() {
   const [detailsSlug, setDetailsSlug] = useState('');
   const [slugHint, setSlugHint] = useState('');
   const [savingDetails, setSavingDetails] = useState(false);
-  const navigate = useNavigate();
 
   const loadBin = useCallback(async () => {
     const items = await adminApi.getBinnedProfiles();
@@ -136,6 +143,13 @@ export default function AdminProfilesPage() {
   };
 
   const handleCreate = async () => {
+    if (atPortfolioLimit) {
+      toast.error(
+        `Your plan allows up to ${maxPortfolios} portfolio${maxPortfolios === 1 ? '' : 's'}. Upgrade to add more.`,
+        { action: { label: 'View plans', onClick: () => navigate('/dashboard/pricing') } }
+      );
+      return;
+    }
     try {
       const profile = await adminApi.createProfile({
         displayName,
@@ -148,7 +162,11 @@ export default function AdminProfilesPage() {
       setDisplayName('');
       setSlug('');
       setDuplicateFromId('');
-      toast.success(`Draft created. Publish it when you’re ready — live URL: ${getPublicPortfolioLabel(profile.slug)}`);
+      toast.success(
+        canPublish
+          ? `Draft created. Publish when you’re ready — ${getPublicPortfolioLabel(profile.slug)}`
+          : `Draft created. Free plans stay private — upgrade to publish ${getPublicPortfolioLabel(profile.slug)}`
+      );
       navigate('/dashboard/content');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create profile');
@@ -164,6 +182,12 @@ export default function AdminProfilesPage() {
       switch (action) {
         case 'publish': {
           const next = !profile.isPublished;
+          if (next && !canPublish) {
+            toast.error(FREE_PUBLISH_MESSAGE, {
+              action: { label: 'View plans', onClick: () => navigate('/dashboard/pricing') },
+            });
+            return;
+          }
           if (
             !next &&
             !confirm(
@@ -234,24 +258,44 @@ export default function AdminProfilesPage() {
       return;
     }
     await navigator.clipboard.writeText(getPortfolioViewUrl(profile));
-    toast.success('Preview link copied (login required)');
+    toast.success('Preview link copied');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-primary">My Portfolios</h1>
-          <p className="text-sm text-subtle mt-1">
-            Drafts stay private until you publish. Deleted portfolios go to the Bin first.
+          <h1 className="text-2xl font-bold tracking-tight text-primary">My Portfolios</h1>
+          <p className="mt-0.5 text-sm text-subtle">
+            {canPublish
+              ? 'Drafts stay private until you publish. Deleted portfolios go to the Bin first.'
+              : 'Free plan: 1 private draft — preview anytime. Publishing requires Pro or Premium.'}{' '}
+            ({profiles.length}/{maxPortfolios} used)
+            {!canPublish ? (
+              <>
+                {' '}
+                <Link to="/dashboard/pricing" className="font-medium text-[#0066FF] hover:underline">
+                  View plans
+                </Link>
+              </>
+            ) : null}
           </p>
         </div>
-        <DialogRoot open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger>
-            <Button>
-              <Plus className="h-4 w-4" /> Create Profile
-            </Button>
-          </DialogTrigger>
+        {atPortfolioLimit ? (
+          <Tooltip content={`Plan limit: ${maxPortfolios} portfolio${maxPortfolios === 1 ? '' : 's'}. Upgrade to add more.`}>
+            <span className="inline-flex">
+              <Button disabled>
+                <Plus className="h-4 w-4" /> Limit reached
+              </Button>
+            </span>
+          </Tooltip>
+        ) : (
+          <DialogRoot open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger>
+              <Button>
+                <Plus className="h-4 w-4" /> Create Profile
+              </Button>
+            </DialogTrigger>
           <DialogContent title="Create New Profile">
             <div className="space-y-4">
               <FormField label="Display Name">
@@ -290,7 +334,8 @@ export default function AdminProfilesPage() {
               </Button>
             </div>
           </DialogContent>
-        </DialogRoot>
+          </DialogRoot>
+        )}
       </div>
 
       <DialogRoot
@@ -519,15 +564,16 @@ export default function AdminProfilesPage() {
                         <Badge variant="outline">Draft</Badge>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      className="mt-0.5 flex max-w-full items-center gap-1.5 rounded text-left text-xs font-mono text-subtle transition-colors hover:text-accent"
-                      onClick={() => openDetails(profile)}
-                      title="Edit URL slug"
-                    >
-                      <span className="truncate">/{profile.slug}</span>
-                      <Pencil className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-                    </button>
+                    <Tooltip content="Edit URL slug">
+                      <button
+                        type="button"
+                        className="mt-0.5 flex max-w-full items-center gap-1.5 rounded text-left text-xs font-mono text-subtle transition-colors hover:text-accent"
+                        onClick={() => openDetails(profile)}
+                      >
+                        <span className="truncate">/{profile.slug}</span>
+                        <Pencil className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                      </button>
+                    </Tooltip>
                     <p className="mt-1 text-xs text-subtle">
                       {profile.isPublished ? 'Live for visitors' : 'Private draft'} · Updated{' '}
                       {new Date(profile.updatedAt).toLocaleDateString()}
@@ -559,57 +605,71 @@ export default function AdminProfilesPage() {
                         Unpublish
                       </Button>
                     ) : (
-                      <Button size="sm" disabled={busy} onClick={() => handleAction('publish', profile)}>
-                        <Globe className="h-3.5 w-3.5" />
-                        Publish
-                      </Button>
+                      <Tooltip content={!canPublish ? FREE_PUBLISH_MESSAGE : 'Publish live'}>
+                        <span className="inline-flex">
+                          <Button
+                            size="sm"
+                            disabled={busy || !canPublish}
+                            onClick={() => handleAction('publish', profile)}
+                          >
+                            <Globe className="h-3.5 w-3.5" />
+                            {canPublish ? 'Publish' : 'Locked'}
+                          </Button>
+                        </span>
+                      </Tooltip>
                     )}
-                    <Button size="sm" variant="outline" asChild>
-                      <a
-                        href={getPortfolioViewUrl(profile)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={profile.isPublished ? 'Open live site' : 'Open draft preview'}
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        {profile.isPublished ? 'View' : 'Preview'}
-                      </a>
-                    </Button>
+                    <Tooltip
+                      content={profile.isPublished ? 'Open live site' : 'Open draft preview'}
+                    >
+                      <Button size="sm" variant="outline" asChild>
+                        <a
+                          href={getPortfolioViewUrl(profile)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          {profile.isPublished ? 'View' : 'Preview'}
+                        </a>
+                      </Button>
+                    </Tooltip>
                   </div>
 
                   <div className="flex items-center gap-1 sm:justify-end">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => copyLink(profile)}
-                      title="Copy public link"
-                      aria-label="Copy public link"
-                    >
-                      <Link2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => handleAction('duplicate', profile)}
-                      title="Duplicate as draft"
-                      aria-label="Duplicate as draft"
-                    >
-                      <CopyPlus className="h-4 w-4" />
-                    </Button>
-                    {!profile.isDefault && (
+                    <Tooltip content="Copy public link">
                       <Button
                         size="sm"
                         variant="ghost"
                         disabled={busy}
-                        onClick={() => handleAction('bin', profile)}
-                        title="Move to Bin"
-                        aria-label="Move to Bin"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        onClick={() => copyLink(profile)}
+                        aria-label="Copy public link"
                       >
-                        <Archive className="h-4 w-4" />
+                        <Link2 className="h-4 w-4" />
                       </Button>
+                    </Tooltip>
+                    <Tooltip content="Duplicate as draft">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => handleAction('duplicate', profile)}
+                        aria-label="Duplicate as draft"
+                      >
+                        <CopyPlus className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
+                    {!profile.isDefault && (
+                      <Tooltip content="Move to Bin">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => handleAction('bin', profile)}
+                          aria-label="Move to Bin"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        >
+                          <Archive className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
                     )}
                   </div>
                 </div>

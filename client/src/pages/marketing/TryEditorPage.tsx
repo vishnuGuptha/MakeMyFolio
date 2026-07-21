@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Globe, PanelRightClose, PanelRightOpen, Upload, Eye, Monitor, Smartphone } from 'lucide-react';
+import { Globe, PanelRightClose, PanelRightOpen, Upload, Eye, Monitor, Smartphone, Tablet } from 'lucide-react';
 import {
   useGuestDraft,
   writeGuestPreviewSnapshot,
 } from '@/context/GuestDraftContext';
 import { PORTFOLIO_THEME_LIST } from '@/themes/registry';
 import type { PortfolioThemeId } from '@/themes/types';
-import { DeviceThemePreview } from '@/components/marketing/DeviceThemePreview';
+import { DeviceThemePreview, type DeviceMode } from '@/components/marketing/DeviceThemePreview';
 import {
   GuestDraftEditorFields,
   GUEST_DRAFT_SECTIONS,
@@ -23,7 +23,7 @@ export default function TryEditorPage() {
   const { draft, setDraft, requireAuth } = useGuestDraft();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [device, setDevice] = useState<DeviceMode>('desktop');
   const [section, setSection] = useState<GuestDraftSectionId>('profile');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -84,6 +84,17 @@ export default function TryEditorPage() {
                 aria-pressed={device === 'desktop'}
               >
                 <Monitor className="h-3.5 w-3.5" /> Desktop
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevice('tablet')}
+                className={cn(
+                  'try-editor-chip inline-flex items-center gap-1.5 px-2.5 py-1 text-xs',
+                  device === 'tablet' && 'try-editor-chip-active'
+                )}
+                aria-pressed={device === 'tablet'}
+              >
+                <Tablet className="h-3.5 w-3.5" /> iPad
               </button>
               <button
                 type="button"

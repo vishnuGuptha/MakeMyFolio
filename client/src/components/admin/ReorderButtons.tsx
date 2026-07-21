@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 /** Swap item at index with neighbor; returns new ordered id list */
 export function moveItemIds<T extends { _id: string }>(
@@ -173,30 +174,31 @@ export function SortableDragHandle({
   const { disabled, onHandleDragStart, onDragEnd } = useSortable();
 
   return (
-    <div
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      draggable={!disabled}
-      aria-disabled={disabled}
-      title="Drag to reorder"
-      aria-label="Drag to reorder"
-      onDragStart={(e) => onHandleDragStart(index, e)}
-      onDragEnd={onDragEnd}
-      onKeyDown={(e) => {
-        // Keyboard: leave for now; drag is pointer-led
-        if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
-      }}
-      className={cn(
-        'shrink-0 touch-none select-none',
-        'flex h-10 w-8 items-center justify-center rounded-lg',
-        'text-subtle hover:text-primary hover:bg-muted/80',
-        'cursor-grab active:cursor-grabbing',
-        'transition-colors',
-        disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
-        className
-      )}
-    >
-      <GripVertical className="h-5 w-5 pointer-events-none" strokeWidth={2} />
-    </div>
+    <Tooltip content="Drag to reorder">
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        draggable={!disabled}
+        aria-disabled={disabled}
+        aria-label="Drag to reorder"
+        onDragStart={(e) => onHandleDragStart(index, e)}
+        onDragEnd={onDragEnd}
+        onKeyDown={(e) => {
+          // Keyboard: leave for now; drag is pointer-led
+          if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
+        }}
+        className={cn(
+          'shrink-0 touch-none select-none',
+          'flex h-10 w-8 items-center justify-center rounded-lg',
+          'text-subtle hover:text-primary hover:bg-muted/80',
+          'cursor-grab active:cursor-grabbing',
+          'transition-colors',
+          disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
+          className
+        )}
+      >
+        <GripVertical className="h-5 w-5 pointer-events-none" strokeWidth={2} />
+      </div>
+    </Tooltip>
   );
 }

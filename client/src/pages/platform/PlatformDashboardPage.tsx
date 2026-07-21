@@ -4,6 +4,7 @@ import { Users, Briefcase, Mail, Eye } from 'lucide-react';
 import { platformApi } from '@/api';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { PageLoader } from '@/components/ui/PageLoader';
 import { getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
 
 type DashboardData = Awaited<ReturnType<typeof platformApi.getDashboard>>;
@@ -16,7 +17,7 @@ export default function PlatformDashboardPage() {
   }, []);
 
   if (!data) {
-    return <div className="text-subtle font-mono text-sm">Loading platform overview...</div>;
+    return <PageLoader variant="inline" label="Loading platform overview" />;
   }
 
   const stats = [

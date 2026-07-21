@@ -26,6 +26,27 @@ export function PortfolioThemeProvider({
     };
   }, [settings, theme.id]);
 
+  // Studio is dark-only — lock document appearance while this theme is open.
+  useEffect(() => {
+    if (theme.id !== 'studio') return;
+    const root = document.documentElement;
+    root.setAttribute('data-studio-force-dark', '1');
+    root.classList.remove('light');
+    root.classList.add('dark');
+    return () => {
+      root.removeAttribute('data-studio-force-dark');
+      let preferred: 'dark' | 'light' = 'light';
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || stored === 'light') preferred = stored;
+      } catch {
+        /* ignore */
+      }
+      root.classList.remove('dark', 'light');
+      root.classList.add(preferred);
+    };
+  }, [theme.id]);
+
   return (
     <PortfolioThemeContext.Provider value={theme}>
       <div

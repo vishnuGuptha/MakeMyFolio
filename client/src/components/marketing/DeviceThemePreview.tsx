@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import { writeGuestPreviewSnapshot, type GuestDraft } from '@/context/GuestDraftContext';
+import { PageLoader } from '@/components/ui/PageLoader';
 
-export type DeviceMode = 'desktop' | 'mobile';
+export type DeviceMode = 'desktop' | 'tablet' | 'mobile';
 
-/** Logical viewport so theme media queries match desktop (keep ≥900px). */
+/** Logical viewports so theme media queries behave like real devices. */
 export const DESKTOP_VW = 1080;
 export const DESKTOP_VH = 680;
+/** iPad Air-ish portrait */
+export const TABLET_VW = 820;
+export const TABLET_VH = 1180;
 export const MOBILE_VW = 390;
 export const MOBILE_VH = 780;
 
 /** Phone chrome — thin bezel; home indicator is overlaid on the screen. */
 const MOBILE_BORDER = 3;
 const MOBILE_PAD = 3;
-const MOBILE_HOME = 0;
+
+/** iPad chrome — thicker bezel + camera strip. */
+const TABLET_BORDER = 10;
+const TABLET_PAD = 8;
+const TABLET_CAMERA = 12;
 
 /** Desktop Mac chrome — pad + camera strip + hinge/base below the screen. */
 const DESKTOP_PAD = 10;
@@ -24,6 +32,37 @@ const DESKTOP_BASE_H = 18;
 const DESKTOP_BASE_WIDTH_FACTOR = 1.12;
 
 const DEFAULT_SRC = '/try/preview?embed=1';
+
+const DEVICE_VIEWPORT: Record<DeviceMode, { vw: number; vh: number }> = {
+  desktop: { vw: DESKTOP_VW, vh: DESKTOP_VH },
+  tablet: { vw: TABLET_VW, vh: TABLET_VH },
+  mobile: { vw: MOBILE_VW, vh: MOBILE_VH },
+};
+
+function chromeFor(device: DeviceMode) {
+  if (device === 'mobile') {
+    return {
+      chromeW: MOBILE_BORDER * 2 + MOBILE_PAD * 2,
+      chromeH: MOBILE_BORDER * 2 + MOBILE_PAD * 2,
+      widthFactor: 1,
+      maxScale: 0.85,
+    };
+  }
+  if (device === 'tablet') {
+    return {
+      chromeW: TABLET_BORDER * 2 + TABLET_PAD * 2,
+      chromeH: TABLET_BORDER * 2 + TABLET_PAD * 2 + TABLET_CAMERA,
+      widthFactor: 1,
+      maxScale: 0.8,
+    };
+  }
+  return {
+    chromeW: DESKTOP_PAD * 2,
+    chromeH: DESKTOP_PAD * 2 + DESKTOP_CAMERA + DESKTOP_BASE_H,
+    widthFactor: DESKTOP_BASE_WIDTH_FACTOR,
+    maxScale: 0.9,
+  };
+}
 
 export function DeviceThemePreview({
   draft,
@@ -43,15 +82,14 @@ export function DeviceThemePreview({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.35);
+  const [frameReady, setFrameReady] = useState(false);
 
-  const isMobile = device === 'mobile';
-  const vw = isMobile ? MOBILE_VW : DESKTOP_VW;
-  const vh = isMobile ? MOBILE_VH : DESKTOP_VH;
+  const { vw, vh } = DEVICE_VIEWPORT[device];
+  const { chromeW, chromeH, widthFactor, maxScale } = chromeFor(device);
 
-  const chromeW = isMobile ? MOBILE_BORDER * 2 + MOBILE_PAD * 2 : DESKTOP_PAD * 2;
-  const chromeH = isMobile
-    ? MOBILE_BORDER * 2 + MOBILE_PAD * 2 + MOBILE_HOME
-    : DESKTOP_PAD * 2 + DESKTOP_CAMERA + DESKTOP_BASE_H;
+  useEffect(() => {
+    setFrameReady(false);
+  }, [device, src]);
 
   useEffect(() => {
     if (skipDraftSync || !draft) return;
@@ -73,23 +111,13 @@ export function DeviceThemePreview({
     if (!stage) return;
 
     const fit = () => {
-      // Measure the viewport box (parent constrains height) — not content size.
       const { width, height } = stage.getBoundingClientRect();
       const margin = 8;
       const availW = Math.max(80, width - margin);
       const availH = Math.max(80, height - margin);
-
-      let fitted: number;
-      if (isMobile) {
-        fitted = Math.min((availW - chromeW) / vw, (availH - chromeH) / vh);
-      } else {
-        // Base is wider than the lid; reserve width for the overhang.
-        const widthBudget = availW / DESKTOP_BASE_WIDTH_FACTOR - chromeW;
-        fitted = Math.min(widthBudget / vw, (availH - chromeH) / vh);
-      }
-
-      // Never force a floor that can overflow the stage.
-      setScale(Math.min(Math.max(fitted, 0.12), isMobile ? 0.85 : 0.9));
+      const widthBudget = availW / widthFactor - chromeW;
+      const fitted = Math.min(widthBudget / vw, (availH - chromeH) / vh);
+      setScale(Math.min(Math.max(fitted, 0.12), maxScale));
     };
 
     fit();
@@ -100,7 +128,7 @@ export function DeviceThemePreview({
       ro.disconnect();
       window.removeEventListener('resize', fit);
     };
-  }, [device, vw, vh, chromeW, chromeH, isMobile]);
+  }, [device, vw, vh, chromeW, chromeH, widthFactor, maxScale]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -120,19 +148,30 @@ export function DeviceThemePreview({
     transform: `scale(${scale})`,
     transformOrigin: 'top left',
     backgroundColor: '#000',
+    opacity: frameReady ? 1 : 0,
+    transition: 'opacity 0.35s ease',
   };
+
+  const onFrameLoad = () => setFrameReady(true);
 
   return (
     <div
       className={cn('flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden', className)}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Dedicated measure box — fills the stage so scale fits the real viewport */}
       <div
         ref={stageRef}
-        className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden overscroll-none"
+        className="relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden overscroll-none"
       >
-        {isMobile ? (
+        {!frameReady && (
+          <PageLoader
+            variant="overlay"
+            label="Preparing preview"
+            className="rounded-[inherit] bg-transparent backdrop-blur-0"
+            delayMs={80}
+          />
+        )}
+        {device === 'mobile' && (
           <div className="shrink-0" style={{ width: shellW }}>
             <div
               className="relative box-border rounded-[1.65rem] border-solid border-zinc-800 bg-zinc-950 shadow-[0_32px_64px_-14px_rgba(0,0,0,0.55),0_0_48px_-14px_rgba(0,102,255,0.4)]"
@@ -157,6 +196,7 @@ export function DeviceThemePreview({
                   src={src}
                   className="absolute left-0 top-0 block border-0"
                   style={iframeStyle}
+                  onLoad={onFrameLoad}
                 />
                 <div
                   className="pointer-events-none absolute bottom-1.5 left-1/2 z-10 h-1 w-[28%] max-w-[100px] -translate-x-1/2 rounded-full bg-zinc-900/35"
@@ -165,7 +205,53 @@ export function DeviceThemePreview({
               </div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {device === 'tablet' && (
+          <div className="shrink-0" style={{ width: shellW }}>
+            <div
+              className="relative box-border rounded-[1.35rem] border-solid border-zinc-700 bg-zinc-900 shadow-[0_36px_72px_-16px_rgba(0,0,0,0.55),0_0_56px_-16px_rgba(0,102,255,0.35)]"
+              style={{
+                borderWidth: TABLET_BORDER,
+                padding: TABLET_PAD,
+              }}
+            >
+              <div
+                className="relative isolate overflow-hidden rounded-[0.85rem] bg-black"
+                style={{
+                  width: displayW,
+                  height: displayH + TABLET_CAMERA,
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  maskImage: 'radial-gradient(white, black)',
+                }}
+              >
+                <div className="absolute left-1/2 top-1.5 z-10 -translate-x-1/2">
+                  <span className="block h-1.5 w-1.5 rounded-full bg-zinc-600 ring-1 ring-zinc-500/80" />
+                </div>
+                <div
+                  className="absolute left-0 overflow-hidden bg-black"
+                  style={{ top: TABLET_CAMERA, width: displayW, height: displayH }}
+                >
+                  <iframe
+                    key={`tablet-${src}`}
+                    ref={iframeRef}
+                    title="iPad theme preview"
+                    src={src}
+                    className="absolute left-0 top-0 block border-0"
+                    style={iframeStyle}
+                    onLoad={onFrameLoad}
+                  />
+                </div>
+                <div
+                  className="pointer-events-none absolute bottom-2 left-1/2 z-10 h-1 w-[18%] max-w-[120px] -translate-x-1/2 rounded-full bg-zinc-900/30"
+                  aria-hidden
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {device === 'desktop' && (
           <div className="shrink-0" style={{ width: shellW }}>
             <div
               className="overflow-hidden rounded-t-[12px] border border-white/40 bg-gradient-to-b from-zinc-100 via-zinc-200 to-zinc-300 shadow-[0_40px_80px_-28px_rgba(15,23,42,0.55),0_0_70px_-24px_rgba(0,102,255,0.35)] ring-1 ring-black/5 dark:border-white/10 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800"
@@ -194,6 +280,7 @@ export function DeviceThemePreview({
                     src={src}
                     className="absolute left-0 top-0 block border-0"
                     style={iframeStyle}
+                    onLoad={onFrameLoad}
                   />
                 </div>
               </div>

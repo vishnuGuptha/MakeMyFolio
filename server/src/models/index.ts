@@ -330,6 +330,11 @@ export interface IContactMessage extends Document {
   message: string;
   read: boolean;
   archived: boolean;
+  /** Conversation-level pin (mirrored on all messages for that email). */
+  pinned: boolean;
+  pinnedAt?: Date | null;
+  /** Marked as contacted / followed up. */
+  contacted: boolean;
   createdAt: Date;
 }
 
@@ -340,7 +345,12 @@ const contactMessageSchema = new Schema<IContactMessage>({
   message: { type: String, required: true },
   read: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
+  pinned: { type: Boolean, default: false },
+  pinnedAt: { type: Date, default: null },
+  contacted: { type: Boolean, default: false },
 }, { timestamps: { createdAt: true, updatedAt: false } });
+
+contactMessageSchema.index({ portfolioProfileId: 1, email: 1, createdAt: -1 });
 
 export const ContactMessage = mongoose.model<IContactMessage>('ContactMessage', contactMessageSchema);
 
@@ -374,20 +384,53 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   name: string;
-  /** Freemium plan stub — billing enforced later */
-  plan: 'free' | 'pro' | 'team';
+  /** Billing plan — updated after Stripe / Razorpay checkout */
+  plan: 'free' | 'pro' | 'premium' | 'domain' | 'team';
+  planBilling?: 'monthly' | 'yearly' | null;
+  planCurrency?: 'usd' | 'inr' | null;
+  planActivatedAt?: Date | null;
+  /** Saved checkout intents (synced from client cart) */
+  cart?: {
+    id: string;
+    planId: 'pro' | 'premium' | 'domain';
+    billing: 'monthly' | 'yearly';
+    currency: 'usd' | 'inr';
+    addedAt: number;
+  }[];
+  /** Free tier: one successful resume parse lifetime */
+  resumeImportUsed: boolean;
   resetPasswordToken?: string | null;
   resetPasswordExpires?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
+const cartItemSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    planId: { type: String, enum: ['pro', 'premium', 'domain'], required: true },
+    billing: { type: String, enum: ['monthly', 'yearly'], required: true },
+    currency: { type: String, enum: ['usd', 'inr'], required: true },
+    addedAt: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
     name: { type: String, default: '' },
-    plan: { type: String, enum: ['free', 'pro', 'team'], default: 'free' },
+    plan: {
+      type: String,
+      enum: ['free', 'pro', 'premium', 'domain', 'team'],
+      default: 'free',
+    },
+    planBilling: { type: String, enum: ['monthly', 'yearly'], default: null },
+    planCurrency: { type: String, enum: ['usd', 'inr'], default: null },
+    planActivatedAt: { type: Date, default: null },
+    cart: { type: [cartItemSchema], default: [] },
+    resumeImportUsed: { type: Boolean, default: false },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
   },

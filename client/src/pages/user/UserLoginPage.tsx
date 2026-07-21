@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
+import { buildAuthPath, readCheckoutIntent } from '@/lib/planCheckout';
 import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +23,11 @@ export default function UserLoginPage() {
   const [params] = useSearchParams();
   const claimGuest = params.get('claimGuest') === '1';
   const next = params.get('next') || '/dashboard';
+  const pendingPlan = readCheckoutIntent();
+  const registerHref = buildAuthPath('/register', {
+    claimGuest,
+    next: next !== '/dashboard' ? next : undefined,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +59,9 @@ export default function UserLoginPage() {
       <p className="mt-1 text-xs text-subtle">
         {claimGuest
           ? `Attach your guest draft to your account.`
-          : `Access your ${BRAND.name} dashboard`}
+          : pendingPlan
+            ? `Sign in to continue checkout for ${pendingPlan.planId === 'pro' ? 'Pro' : pendingPlan.planId === 'premium' ? 'Premium' : 'Custom domain'}.`
+            : `Access your ${BRAND.name} dashboard`}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
@@ -86,18 +94,15 @@ export default function UserLoginPage() {
         <Button
           type="submit"
           className="home-cta-primary h-9 w-full border-0 text-sm hover:bg-transparent"
-          disabled={loading}
+          loading={loading}
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
 
       <p className="mt-3.5 text-center text-xs text-subtle">
         No account?{' '}
-        <Link
-          to={claimGuest ? '/register?claimGuest=1' : '/register'}
-          className="font-medium text-[#0066FF] hover:underline"
-        >
+        <Link to={registerHref} className="font-medium text-[#0066FF] hover:underline">
           Create one free
         </Link>
       </p>

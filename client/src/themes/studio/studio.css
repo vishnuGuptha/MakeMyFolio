@@ -194,20 +194,6 @@
     0 14px 40px rgb(0 0 0 / 0.4);
 }
 
-.light [data-portfolio-theme='studio'] .studio-nav-bar {
-  background: color-mix(in srgb, #ffffff 86%, transparent);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.7) inset,
-    0 10px 28px rgb(0 0 0 / 0.08);
-}
-
-.light [data-portfolio-theme='studio'] .studio-nav-scrolled .studio-nav-bar {
-  background: color-mix(in srgb, #ffffff 94%, transparent);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.8) inset,
-    0 12px 32px rgb(0 0 0 / 0.1);
-}
-
 [data-portfolio-theme='studio'] .studio-nav-links {
   display: none;
   flex: 1;
@@ -254,14 +240,6 @@
   background: color-mix(in srgb, var(--studio-accent) 18%, transparent);
 }
 
-.light [data-portfolio-theme='studio'] .studio-nav-link:hover {
-  background: rgb(0 0 0 / 0.04);
-}
-
-.light [data-portfolio-theme='studio'] .studio-nav-link-active {
-  background: color-mix(in srgb, var(--studio-accent) 16%, #fff);
-}
-
 [data-portfolio-theme='studio'] .studio-nav-actions {
   display: flex;
   align-items: center;
@@ -292,10 +270,6 @@
 
 [data-portfolio-theme='studio'] .studio-icon-btn:active {
   transform: scale(0.96);
-}
-
-.light [data-portfolio-theme='studio'] .studio-icon-btn:hover {
-  background: rgb(0 0 0 / 0.05);
 }
 
 [data-portfolio-theme='studio'] .studio-nav-mobile {

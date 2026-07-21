@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { Menu, X } from 'lucide-react';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
 import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
@@ -36,7 +35,6 @@ export default function StudioNavbar({
   const [navHidden, setNavHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const lastY = useRef(0);
-  const { theme, toggleTheme } = useTheme();
   const { content } = usePortfolioData();
   const location = useLocation();
   const navItems = getVisibleNavSections(sectionVisibility);
@@ -170,9 +168,6 @@ export default function StudioNavbar({
               linkClassName="studio-icon-btn !h-8 !w-8"
             />
           )}
-          <button type="button" className="studio-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-          </button>
           <button
             type="button"
             className="studio-icon-btn studio-nav-mobile"

@@ -112,17 +112,20 @@ export default function AdminProjectsPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6">
-        <div className="flex justify-between">
-          <h1 className="text-2xl font-bold text-primary">Projects</h1>
+      <div className="mx-auto max-w-6xl space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Projects</h1>
+            <p className="mt-0.5 text-sm text-subtle">Case studies and work samples.</p>
+          </div>
           <Button onClick={() => setEditing({ ...empty })}>
             <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
 
         {editing && (
-          <Card className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+          <Card className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <FormField label="Title">
                 <Input
                   value={editing.title || ''}

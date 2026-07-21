@@ -36,10 +36,10 @@ export default function AdminAccountPage() {
   };
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="mx-auto max-w-lg space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Account</h1>
-        <p className="text-sm text-subtle mt-1">Signed in as {user?.email}</p>
+        <h1 className="text-2xl font-bold text-primary">Change password</h1>
+        <p className="mt-1 text-sm text-subtle">Signed in as {user?.email}</p>
       </div>
 
       <Card>

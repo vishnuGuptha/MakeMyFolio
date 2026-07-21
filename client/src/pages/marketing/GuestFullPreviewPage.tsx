@@ -15,6 +15,8 @@ import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
 import type { PortfolioThemeId } from '@/themes/types';
 import { cn } from '@/lib/utils';
+import { restoreDocumentFavicon, setDocumentFavicon } from '@/lib/favicon';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 /** Full-theme guest portfolio — new tab, or embedded in try device frame (`?embed=1`). */
 export default function GuestFullPreviewPage() {
@@ -56,11 +58,15 @@ export default function GuestFullPreviewPage() {
   }, [embed]);
 
   useEffect(() => {
-    if (!data?.settings) return;
-    if (!embed) {
-      document.title = `[Guest] ${data.settings.siteTitle || BRAND.name}`;
-    }
+    if (!data?.settings || embed) return;
+    document.title = `[Guest] ${data.settings.siteTitle || BRAND.name}`;
+    setDocumentFavicon(data.content?.profileImageUrl, data.settings?.primaryColor);
   }, [data, embed]);
+
+  useEffect(() => {
+    if (embed) return;
+    return () => restoreDocumentFavicon();
+  }, [embed]);
 
   if (!draft || !data?.content) {
     return (
@@ -73,7 +79,7 @@ export default function GuestFullPreviewPage() {
         <p className="text-sm text-subtle">Waiting for draft…</p>
         {!embed && (
           <Button type="button" className="home-cta-primary border-0 hover:bg-transparent" onClick={() => navigate('/try')}>
-            Back to try editor
+            Back to playground
           </Button>
         )}
       </div>
@@ -89,13 +95,14 @@ export default function GuestFullPreviewPage() {
       <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {!embed && (
-            <Link
-              to="/try"
-              className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
-              title="Back to try editor"
-            >
-              Preview / Demo mode
-            </Link>
+            <Tooltip content="Back to playground">
+              <Link
+                to="/try"
+                className="home-cta-secondary fixed right-4 top-4 z-[100] inline-flex items-center rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:border-[#0066FF]/35 hover:text-[#0066FF]"
+              >
+                Preview / Demo mode
+              </Link>
+            </Tooltip>
           )}
           <ThemeNavbar
             name={data.content.name}

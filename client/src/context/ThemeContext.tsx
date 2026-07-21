@@ -22,6 +22,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    // Studio portfolio locks dark appearance.
+    if (root.getAttribute('data-studio-force-dark') === '1') {
+      root.classList.remove('light');
+      root.classList.add('dark');
+      return;
+    }
     root.classList.remove('dark', 'light');
     root.classList.add(theme);
     try {

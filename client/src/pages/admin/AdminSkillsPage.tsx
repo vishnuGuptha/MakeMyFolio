@@ -15,6 +15,7 @@ import { errorMessage } from '@/lib/apiError';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { Tooltip } from '@/components/ui/Tooltip';
 import type { SkillCategory } from '@/types';
 
 export default function AdminSkillsPage() {
@@ -96,9 +97,12 @@ export default function AdminSkillsPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Skills</h1>
+      <div className="mx-auto max-w-6xl space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">Skills</h1>
+            <p className="mt-0.5 text-sm text-subtle">Grouped skills visitors can scan quickly.</p>
+          </div>
           <Button onClick={addCategory}>
             <Plus className="h-4 w-4" /> Add Category
           </Button>
@@ -132,23 +136,25 @@ export default function AdminSkillsPage() {
                         aria-label="Category name"
                         className="flex-1"
                       />
-                      <Button
-                        size="sm"
-                        onClick={() => saveCategory(cat)}
-                        aria-label="Save category"
-                        title="Save"
-                      >
-                        <Save className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => deleteCategory(cat._id)}
-                        aria-label="Delete category"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Tooltip content="Save">
+                        <Button
+                          size="sm"
+                          onClick={() => saveCategory(cat)}
+                          aria-label="Save category"
+                        >
+                          <Save className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content="Delete">
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => deleteCategory(cat._id)}
+                          aria-label="Delete category"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
                     </div>
                     <Input
                       placeholder="Skills (comma-separated)"

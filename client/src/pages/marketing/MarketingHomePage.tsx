@@ -15,7 +15,7 @@ const STEPS = [
   {
     n: '01',
     icon: Zap,
-    title: 'Try it free',
+    title: 'Open the playground',
     body: 'Pick a theme and edit your portfolio right away. No account needed.',
   },
   {
@@ -34,7 +34,7 @@ const STEPS = [
 
 const TRUST = [
   'No credit card to start',
-  'Guest try in under a minute',
+  'Guest playground in under a minute',
   'Your own subdomain URL',
 ];
 
@@ -80,7 +80,7 @@ export default function MarketingHomePage() {
         >
           <div className="space-y-4 sm:space-y-5">
             <div className="inline-flex items-center rounded-full border border-[#0066FF]/25 bg-[#0066FF]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#0066FF] dark:border-[#0066FF]/35 dark:bg-[#0066FF]/15">
-              No signup to try
+              No signup needed
             </div>
 
             <h1 className="font-display text-[2.65rem] leading-[1.05] text-primary sm:text-5xl lg:text-[3.35rem]">
@@ -103,7 +103,7 @@ export default function MarketingHomePage() {
                     className={cn('home-cta-primary h-12 border-0 px-6 text-base shadow-none hover:bg-transparent')}
                   >
                     <Link to="/try">
-                      Try free <ArrowRight className="h-4 w-4" />
+                      Open playground <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
                 </MagneticCta>
@@ -114,7 +114,7 @@ export default function MarketingHomePage() {
                 </MagneticCta>
               </div>
               <p className="text-xs text-subtle sm:text-[13px]">
-                7 themes · free guest try · your subdomain
+                7 themes · free playground · your subdomain
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function MarketingHomePage() {
             <MagneticCta>
               <Button asChild className="home-cta-primary h-11 border-0 px-5 hover:bg-transparent">
                 <Link to="/try">
-                  Try free <ArrowRight className="h-4 w-4" />
+                  Open playground <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </MagneticCta>
@@ -346,7 +346,7 @@ export default function MarketingHomePage() {
               className="home-cta-primary h-12 border-0 px-7 text-base hover:bg-transparent"
             >
               <Link to="/try">
-                Try free <ArrowRight className="h-4 w-4" />
+                Open playground <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </MagneticCta>

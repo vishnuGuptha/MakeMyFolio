@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
           />
         </FormField>
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" loading={loading}>
           {loading ? 'Sending…' : 'Send reset link'}
         </Button>
       </form>

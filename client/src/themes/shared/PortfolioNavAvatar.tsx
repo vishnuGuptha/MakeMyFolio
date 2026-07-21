@@ -43,7 +43,10 @@ export function PortfolioNavAvatar({
         src={imageUrl}
         alt=""
         style={dim}
-        className={cn('rounded-full object-cover shrink-0 ring-2 ring-accent/40', className)}
+        className={cn(
+          'shrink-0 rounded-full border-2 border-accent object-cover shadow-sm',
+          className
+        )}
       />
     );
   }
@@ -52,7 +55,8 @@ export function PortfolioNavAvatar({
     <span
       style={dim}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-semibold ring-2 ring-accent/30',
+        'inline-flex shrink-0 items-center justify-center rounded-full border-2 border-accent',
+        'bg-accent/15 font-semibold text-accent shadow-sm',
         fallbackClassName,
         className
       )}

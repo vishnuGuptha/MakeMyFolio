@@ -19,7 +19,7 @@ export const studioTheme: PortfolioThemeDefinition = {
   id: 'studio',
   name: 'Studio Portfolio',
   description:
-    'Figma Personal Portfolio template — mono + sans, glow CTAs, case studies, testimonials, and dark/light bands.',
+    'Figma Personal Portfolio template — mono + sans, glow CTAs, case studies, testimonials — dark-only.',
   preview: '/theme-previews/studio.svg',
   defaults: {
     portfolioTheme: 'studio',

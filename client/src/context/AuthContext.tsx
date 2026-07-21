@@ -9,6 +9,7 @@ interface AuthContextType {
   userLogin: (email: string, password: string) => Promise<void>;
   platformLogin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -24,6 +25,7 @@ function redirectToLogin() {
     path.startsWith('/try') ||
     path.startsWith('/themes') ||
     path.startsWith('/pricing') ||
+    path.startsWith('/cart') ||
     path.startsWith('/examples') ||
     path.startsWith('/privacy') ||
     path.startsWith('/terms')
@@ -46,6 +48,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const data = await authApi.me();
+      setUser(data);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
   useEffect(() => {
     authApi
       .me()
@@ -56,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userRegister = useCallback(async (name: string, email: string, password: string) => {
     const data = await authApi.userRegister(name, email, password);
-    setUser({ email: data.email, name: data.name, role: 'user' });
+    setUser(data);
   }, []);
 
   const userLogin = useCallback(async (email: string, password: string) => {
@@ -75,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, userRegister, userLogin, platformLogin, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, userRegister, userLogin, platformLogin, logout, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

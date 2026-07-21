@@ -12,6 +12,7 @@ import {
   ContactMessage,
   MediaAsset,
   ActivityLog,
+  User,
 } from '../models/index.js';
 import { AuthRequest, requireAuth, requireProfileAccess } from '../middleware/auth.js';
 import {
@@ -34,10 +35,31 @@ import {
   isResumeFile,
 } from '../services/resumeTextExtract.js';
 import { applyResumeExtract } from '../services/resumeImport.js';
+import {
+  FREE_IMPORT_USED_MESSAGE,
+  FREE_PUBLISH_MESSAGE,
+  getPlanLimits,
+  normalizePlanId,
+  PORTFOLIO_LIMIT_MESSAGE,
+} from '../lib/plans.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+async function getOwnerPlan(req: AuthRequest) {
+  if (req.auth?.role !== 'user') {
+    return {
+      plan: 'premium' as const,
+      limits: getPlanLimits('premium'),
+      resumeImportUsed: false,
+      user: null as InstanceType<typeof User> | null,
+    };
+  }
+  const user = await User.findById(req.auth.id).select('plan resumeImportUsed name email');
+  if (!user) throw new AppError('User not found', 401);
+  const plan = normalizePlanId(user.plan);
+  return { plan, limits: getPlanLimits(plan), resumeImportUsed: !!user.resumeImportUsed, user };
+}
 const router = Router();
 router.use(requireAuth);
 
@@ -150,6 +172,22 @@ router.post('/profiles', async (req: AuthRequest, res) => {
   try {
     const { displayName, slug: customSlug, duplicateFromId } = req.body;
     if (!displayName) return res.status(400).json({ error: 'Display name is required' });
+
+    if (req.auth?.role === 'user') {
+      const { plan, limits } = await getOwnerPlan(req);
+      const count = await PortfolioProfile.countDocuments({
+        ownerId: req.auth.id,
+        deletedAt: null,
+      });
+      if (count >= limits.maxPortfolios) {
+        return res.status(403).json({
+          error: PORTFOLIO_LIMIT_MESSAGE(limits.maxPortfolios, plan),
+          code: 'PLAN_PORTFOLIO_LIMIT',
+          plan,
+          maxPortfolios: limits.maxPortfolios,
+        });
+      }
+    }
 
     let slug = customSlug || generateSlug(displayName);
     if (isReservedSlug(slug)) {
@@ -325,11 +363,20 @@ router.patch('/profiles/:profileId/publish', requireProfileAccess, async (req, r
     const profile = await PortfolioProfile.findById(req.params.profileId);
     if (!profile || profile.deletedAt) return res.status(404).json({ error: 'Not found' });
 
-    if (isPublished && (await publishedSlugTaken(profile.slug, profile._id))) {
-      return res.status(400).json({
-        error:
-          'Cannot publish: another portfolio is already live at this URL. Change your slug, then publish.',
-      });
+    if (isPublished) {
+      const { limits } = await getOwnerPlan(req as AuthRequest);
+      if (!limits.canPublish) {
+        return res.status(403).json({
+          error: FREE_PUBLISH_MESSAGE,
+          code: 'PLAN_PUBLISH_LOCKED',
+        });
+      }
+      if (await publishedSlugTaken(profile.slug, profile._id)) {
+        return res.status(400).json({
+          error:
+            'Cannot publish: another portfolio is already live at this URL. Change your slug, then publish.',
+        });
+      }
     }
 
     profile.isPublished = !!isPublished;
@@ -489,6 +536,19 @@ router.post(
     try {
       if (!req.file) throw new AppError('No file uploaded', 400);
 
+      const { plan, limits, resumeImportUsed, user } = await getOwnerPlan(req);
+      if (
+        Number.isFinite(limits.maxResumeImports) &&
+        resumeImportUsed &&
+        limits.maxResumeImports <= 1
+      ) {
+        return res.status(403).json({
+          error: FREE_IMPORT_USED_MESSAGE,
+          code: 'PLAN_IMPORT_USED',
+          plan,
+        });
+      }
+
       const pid = profileId(req);
       const profile = await PortfolioProfile.findById(pid);
       if (!profile) return res.status(404).json({ error: 'Profile not found' });
@@ -513,10 +573,16 @@ router.post(
 
       const { content, summary } = await applyResumeExtract(pid, extracted, resumeUrl);
 
+      if (user && Number.isFinite(limits.maxResumeImports)) {
+        user.resumeImportUsed = true;
+        await user.save();
+      }
+
       res.json({
         content,
         summary,
         resumeUrl,
+        resumeImportUsed: true,
       });
     } catch (err) {
       sendError(res, err);
@@ -844,6 +910,19 @@ router.delete('/profiles/:profileId/certifications/:id', requireProfileAccess, a
 });
 
 // Contact messages
+router.get('/profiles/:profileId/contact-messages/unread-count', requireProfileAccess, async (req, res) => {
+  try {
+    const count = await ContactMessage.countDocuments({
+      portfolioProfileId: profileId(req),
+      read: false,
+      archived: { $ne: true },
+    });
+    res.json({ count });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 router.get('/profiles/:profileId/contact-messages', requireProfileAccess, async (req, res) => {
   try {
     const messages = await ContactMessage.find({ portfolioProfileId: profileId(req) })
@@ -854,11 +933,71 @@ router.get('/profiles/:profileId/contact-messages', requireProfileAccess, async 
   }
 });
 
+/** Update all messages in a conversation (same email). */
+router.patch('/profiles/:profileId/contact-conversations', requireProfileAccess, async (req, res) => {
+  try {
+    const pid = profileId(req);
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'email is required' });
+
+    const updates: Record<string, unknown> = {};
+    if (typeof req.body.read === 'boolean') updates.read = req.body.read;
+    if (typeof req.body.archived === 'boolean') updates.archived = req.body.archived;
+    if (typeof req.body.contacted === 'boolean') updates.contacted = req.body.contacted;
+
+    if (typeof req.body.pinned === 'boolean') {
+      if (req.body.pinned) {
+        const pinnedEmails = await ContactMessage.distinct('email', {
+          portfolioProfileId: pid,
+          pinned: true,
+          archived: { $ne: true },
+        });
+        const normalized = pinnedEmails.map((e) => String(e).toLowerCase());
+        if (!normalized.includes(email) && normalized.length >= 3) {
+          return res.status(400).json({ error: 'You can pin up to 3 chats' });
+        }
+        updates.pinned = true;
+        updates.pinnedAt = new Date();
+      } else {
+        updates.pinned = false;
+        updates.pinnedAt = null;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    // Match email case-insensitively
+    const result = await ContactMessage.updateMany(
+      {
+        portfolioProfileId: pid,
+        email: { $regex: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      },
+      { $set: updates }
+    );
+
+    const messages = await ContactMessage.find({ portfolioProfileId: pid }).sort({ createdAt: -1 });
+    res.json({ modified: result.modifiedCount, messages });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 router.patch('/profiles/:profileId/contact-messages/:id', requireProfileAccess, async (req, res) => {
   try {
+    const allowed: Record<string, unknown> = {};
+    if (typeof req.body.read === 'boolean') allowed.read = req.body.read;
+    if (typeof req.body.archived === 'boolean') allowed.archived = req.body.archived;
+    if (typeof req.body.contacted === 'boolean') allowed.contacted = req.body.contacted;
+    if (typeof req.body.pinned === 'boolean') {
+      allowed.pinned = req.body.pinned;
+      allowed.pinnedAt = req.body.pinned ? new Date() : null;
+    }
+
     const message = await ContactMessage.findOneAndUpdate(
       { _id: req.params.id, portfolioProfileId: profileId(req) },
-      req.body,
+      { $set: allowed },
       { new: true }
     );
     if (!message) return res.status(404).json({ error: 'Not found' });

@@ -12,6 +12,9 @@ import HomeRedirect from '@/pages/HomeRedirect';
 import LegacyPortfolioRedirect from '@/pages/LegacyPortfolioRedirect';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { isPortfolioSubdomainHost } from '@/lib/domains';
+import { PageLoader } from '@/components/ui/PageLoader';
+import { TooltipProvider } from '@/components/ui/Tooltip';
+import { CartSync } from '@/components/billing/CartSync';
 
 const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
 const PlatformLayout = lazy(() => import('@/components/platform/PlatformLayout'));
@@ -49,13 +52,20 @@ const PlatformTryDemoPage = lazy(() => import('@/pages/platform/PlatformTryDemoP
 const TryEditorPage = lazy(() => import('@/pages/marketing/TryEditorPage'));
 const ThemesPage = lazy(() => import('@/pages/marketing/ThemesPage'));
 const PricingPage = lazy(() => import('@/pages/marketing/PricingPage'));
+const CartPage = lazy(() => import('@/pages/marketing/CartPage'));
+const PricingRoute = lazy(() =>
+  import('@/pages/marketing/BillingRoutes').then((m) => ({ default: m.PricingRoute }))
+);
+const CartRoute = lazy(() =>
+  import('@/pages/marketing/BillingRoutes').then((m) => ({ default: m.CartRoute }))
+);
 const GuestFullPreviewPage = lazy(() => import('@/pages/marketing/GuestFullPreviewPage'));
 const ThemeDemoEmbedPage = lazy(() => import('@/pages/marketing/ThemeDemoEmbedPage'));
 const PrivacyPage = lazy(() => import('@/pages/marketing/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/marketing/TermsPage'));
 
-function Fallback({ label }: { label: string }) {
-  return <div className="text-subtle font-mono text-sm p-6">Loading {label}...</div>;
+function Fallback({ label }: { label?: string }) {
+  return <PageLoader variant="page" label={label ? `Loading ${label}` : undefined} immediate />;
 }
 
 export default function App() {
@@ -64,6 +74,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <CartSync />
+        <TooltipProvider>
         <UnsavedChangesProvider>
           <AdminProfileProvider>
           <Toaster position="top-right" richColors />
@@ -81,7 +93,7 @@ export default function App() {
               <Route
                 path="try"
                 element={
-                  <Suspense fallback={<Fallback label="try" />}>
+                  <Suspense fallback={<Fallback label="playground" />}>
                     <TryEditorPage />
                   </Suspense>
                 }
@@ -98,7 +110,15 @@ export default function App() {
                 path="pricing"
                 element={
                   <Suspense fallback={<Fallback label="pricing" />}>
-                    <PricingPage />
+                    <PricingRoute />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="cart"
+                element={
+                  <Suspense fallback={<Fallback label="cart" />}>
+                    <CartRoute />
                   </Suspense>
                 }
               />
@@ -165,6 +185,22 @@ export default function App() {
               <Route path="themes/new" element={<Suspense fallback={<Fallback label="themes" />}><AdminAddThemePage /></Suspense>} />
               <Route path="messages" element={<Suspense fallback={<Fallback label="messages" />}><AdminMessagesPage /></Suspense>} />
               <Route path="media" element={<Suspense fallback={<Fallback label="media" />}><AdminMediaPage /></Suspense>} />
+              <Route
+                path="pricing"
+                element={
+                  <Suspense fallback={<Fallback label="pricing" />}>
+                    <PricingPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="cart"
+                element={
+                  <Suspense fallback={<Fallback label="cart" />}>
+                    <CartPage />
+                  </Suspense>
+                }
+              />
             </Route>
             <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
 
@@ -182,7 +218,7 @@ export default function App() {
               <Route index element={<Suspense fallback={<Fallback label="platform" />}><PlatformDashboardPage /></Suspense>} />
               <Route path="users" element={<Suspense fallback={<Fallback label="users" />}><PlatformUsersPage /></Suspense>} />
               <Route path="portfolios" element={<Suspense fallback={<Fallback label="portfolios" />}><PlatformPortfoliosPage /></Suspense>} />
-              <Route path="try-demo" element={<Suspense fallback={<Fallback label="try demo" />}><PlatformTryDemoPage /></Suspense>} />
+              <Route path="try-demo" element={<Suspense fallback={<Fallback label="playground seed" />}><PlatformTryDemoPage /></Suspense>} />
               <Route path="activity" element={<Suspense fallback={<Fallback label="activity" />}><PlatformActivityPage /></Suspense>} />
             </Route>
 
@@ -211,6 +247,7 @@ export default function App() {
           )}
           </AdminProfileProvider>
         </UnsavedChangesProvider>
+        </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
   );
