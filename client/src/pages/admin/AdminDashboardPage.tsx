@@ -133,10 +133,10 @@ export default function AdminDashboardPage() {
 
   const planCta = useMemo(() => {
     if (planId === 'premium' || planId === 'domain') {
-      return { label: 'View plans', to: '/dashboard/pricing' as const };
+      return { label: 'View plan', to: '/dashboard/pricing' as const };
     }
     if (planId === 'pro') {
-      return { label: 'Upgrade to Premium', to: '/dashboard/pricing' as const };
+      return { label: 'Upgrade', to: '/dashboard/pricing?upgrade=1' as const };
     }
     return { label: 'Upgrade plan', to: '/dashboard/pricing' as const };
   }, [planId]);
