@@ -46,6 +46,9 @@ export function CheckoutModal({
   const payingRef = useRef(false);
   const [paying, setPaying] = useState(false);
   const [alreadyInCart, setAlreadyInCart] = useState(false);
+  // While Razorpay's own modal owns the screen we unmount our Radix dialog,
+  // otherwise its focus-trap / pointer-events lock blocks clicks on Razorpay.
+  const [handedOff, setHandedOff] = useState(false);
 
   const cartHref = `${
     pathname.startsWith('/dashboard') || user?.role === 'user'
@@ -58,6 +61,7 @@ export function CheckoutModal({
       savedRef.current = false;
       payingRef.current = false;
       setPaying(false);
+      setHandedOff(false);
       setAlreadyInCart(isInCart(intent.planId));
     }
   }, [open, intent?.planId, intent?.billing, intent?.currency]);
@@ -157,6 +161,9 @@ export function CheckoutModal({
       }
 
       await loadRazorpayScript();
+      // Unmount our Radix dialog first so its focus-trap / body pointer-events
+      // lock is released before Razorpay's modal takes over the screen.
+      setHandedOff(true);
       openRazorpayCheckout({
         key: result.keyId,
         amount: result.amount,
@@ -181,6 +188,7 @@ export function CheckoutModal({
           } catch (err) {
             payingRef.current = false;
             setPaying(false);
+            setHandedOff(false);
             toast.error(errorMessage(err, 'Payment verification failed'));
           }
         },
@@ -188,6 +196,7 @@ export function CheckoutModal({
           ondismiss: () => {
             payingRef.current = false;
             setPaying(false);
+            setHandedOff(false);
             if (alreadyInCart) {
               clearCheckoutIntent();
               onOpenChange(false);
@@ -205,16 +214,27 @@ export function CheckoutModal({
             onOpenChange(false);
           },
         },
+        onPaymentFailed: (response) => {
+          payingRef.current = false;
+          setPaying(false);
+          setHandedOff(false);
+          toast.error('Payment failed', {
+            description:
+              response.error?.description ||
+              'The payment could not be completed. Please try again.',
+          });
+        },
       });
     } catch (err) {
       payingRef.current = false;
       setPaying(false);
+      setHandedOff(false);
       toast.error(errorMessage(err, 'Could not start checkout'));
     }
   };
 
   return (
-    <DialogRoot open={open} onOpenChange={handleOpenChange}>
+    <DialogRoot open={open && !handedOff} onOpenChange={handleOpenChange}>
       <DialogContent title="Checkout" className="max-w-md">
         <div className="space-y-4">
           <div className="rounded-xl border border-[#0066FF]/15 bg-muted/40 px-4 py-3">

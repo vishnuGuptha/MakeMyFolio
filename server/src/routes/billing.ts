@@ -149,6 +149,9 @@ router.post('/checkout', requireUser, checkoutLimiter, async (req: AuthRequest, 
     if (!razorpayConfigured()) {
       throw new AppError('UPI / card payments are not available yet. Try again later or switch to USD.', 503);
     }
+    if (amountMinor < 100) {
+      throw new AppError('Razorpay requires a minimum payment of ₹1', 400);
+    }
     const rzp = getRazorpay();
 
     const order = await PaymentOrder.create({
@@ -161,18 +164,33 @@ router.post('/checkout', requireUser, checkoutLimiter, async (req: AuthRequest, 
       status: 'pending',
     });
 
-    const rzOrder = await rzp.orders.create({
-      amount: amountMinor,
-      currency: 'INR',
-      receipt: order._id.toString().slice(-32),
-      notes: {
-        orderId: order._id.toString(),
-        userId: user._id.toString(),
-        planId,
-        billing,
-        creditMajor: String(creditMajor),
-      },
-    });
+    let rzOrder;
+    try {
+      rzOrder = await rzp.orders.create({
+        amount: amountMinor,
+        currency: 'INR',
+        receipt: order._id.toString().slice(-32),
+        notes: {
+          orderId: order._id.toString(),
+          userId: user._id.toString(),
+          planId,
+          billing,
+          creditMajor: String(creditMajor),
+        },
+      });
+    } catch (err) {
+      order.status = 'failed';
+      await order.save();
+      const statusCode =
+        typeof err === 'object' && err !== null && 'statusCode' in err
+          ? Number(err.statusCode)
+          : 500;
+      if (statusCode === 401) {
+        throw new AppError('Razorpay authentication failed. Check the configured API keys.', 401);
+      }
+      console.error('[billing] Razorpay order creation failed:', err);
+      throw new AppError('Could not create Razorpay order', 500);
+    }
 
     order.razorpayOrderId = rzOrder.id;
     await order.save();

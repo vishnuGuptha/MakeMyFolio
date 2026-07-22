@@ -4,6 +4,20 @@ type RazorpaySuccessResponse = {
   razorpay_signature: string;
 };
 
+export type RazorpayFailureResponse = {
+  error?: {
+    code?: string;
+    description?: string;
+    source?: string;
+    step?: string;
+    reason?: string;
+    metadata?: {
+      order_id?: string;
+      payment_id?: string;
+    };
+  };
+};
+
 type RazorpayOptions = {
   key: string;
   amount: number;
@@ -15,9 +29,17 @@ type RazorpayOptions = {
   theme?: { color?: string };
   handler: (response: RazorpaySuccessResponse) => void;
   modal?: { ondismiss?: () => void };
+  onPaymentFailed?: (response: RazorpayFailureResponse) => void;
 };
 
-type RazorpayConstructor = new (options: RazorpayOptions) => { open: () => void };
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: 'payment.failed', handler: (response: RazorpayFailureResponse) => void) => void;
+};
+
+type RazorpayConstructor = new (
+  options: Omit<RazorpayOptions, 'onPaymentFailed'>
+) => RazorpayInstance;
 
 declare global {
   interface Window {
@@ -56,6 +78,8 @@ export function loadRazorpayScript(): Promise<void> {
 
 export function openRazorpayCheckout(options: RazorpayOptions) {
   if (!window.Razorpay) throw new Error('Razorpay SDK not loaded');
-  const rzp = new window.Razorpay(options);
+  const { onPaymentFailed, ...checkoutOptions } = options;
+  const rzp = new window.Razorpay(checkoutOptions);
+  if (onPaymentFailed) rzp.on('payment.failed', onPaymentFailed);
   rzp.open();
 }
