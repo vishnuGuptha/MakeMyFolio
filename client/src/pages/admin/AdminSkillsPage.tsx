@@ -93,16 +93,21 @@ export default function AdminSkillsPage() {
 
   const setDisplayStyle = async (next: SkillsDisplayStyle) => {
     if (!activeProfile || !settings) return;
+    if (settings.skillsDisplayStyle === next) return;
     const prev = settings;
     setSettings({ ...settings, skillsDisplayStyle: next });
     setStyleSaving(true);
     try {
-      const saved = (await adminApi.updateSettings(activeProfile._id, {
-        ...settings,
+      // Patch only this field — spreading full settings can fail access-lock checks
+      // or strip unknown fields and snap the UI back to the theme default.
+      const saved = await adminApi.updateSettings(activeProfile._id, {
         skillsDisplayStyle: next,
-        accentColor: settings.primaryColor || settings.accentColor,
-      })) as SiteSettings;
-      setSettings(saved);
+      });
+      setSettings({
+        ...prev,
+        ...saved,
+        skillsDisplayStyle: saved.skillsDisplayStyle || next,
+      });
       toast.success('Skills layout updated');
     } catch (err) {
       setSettings(prev);
@@ -197,9 +202,9 @@ export default function AdminSkillsPage() {
               {SKILLS_DISPLAY_STYLE_OPTIONS.map((opt) => {
                 const Icon = STYLE_ICONS[opt.id];
                 const selected = displayStyle === opt.id;
+                const storedStyle = settings.skillsDisplayStyle;
                 const isThemeDefault =
-                  !settings.skillsDisplayStyle &&
-                  defaultSkillsDisplayStyleForTheme(themeId) === opt.id;
+                  !storedStyle && defaultSkillsDisplayStyleForTheme(themeId) === opt.id;
                 return (
                   <button
                     key={opt.id}
@@ -217,7 +222,7 @@ export default function AdminSkillsPage() {
                     <Icon className={cn('h-4 w-4 mb-2', selected ? 'text-accent' : 'text-subtle')} />
                     <p className="text-sm font-semibold text-primary leading-tight">{opt.label}</p>
                     <p className="text-[11px] text-subtle mt-1 leading-snug">{opt.description}</p>
-                    {isThemeDefault && !settings.skillsDisplayStyle ? (
+                    {isThemeDefault ? (
                       <p className="text-[10px] uppercase tracking-wide text-accent mt-2">Theme default</p>
                     ) : null}
                   </button>

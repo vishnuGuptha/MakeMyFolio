@@ -732,6 +732,11 @@ router.put('/profiles/:profileId/settings', requireProfileAccess, async (req, re
     delete body.accessCode;
     delete body.accessCodeHash;
     delete body.accessCodeSet;
+    delete body._id;
+    delete body.__v;
+    delete body.portfolioProfileId;
+    delete body.createdAt;
+    delete body.updatedAt;
 
     const existing = await SiteSettings.findOne({ portfolioProfileId: profileId(req) }).select(
       'accessCodeHash accessLockEnabled'
@@ -741,16 +746,18 @@ router.put('/profiles/:profileId/settings', requireProfileAccess, async (req, re
       body.accessCodeHash = await bcrypt.hash(rawCode, 12);
     }
 
-    const enablingLock = body.accessLockEnabled === true;
-    const willHaveHash = Boolean(rawCode || existing?.accessCodeHash);
-    if (enablingLock && !willHaveHash) {
-      return res.status(400).json({ error: 'Set an access code before enabling the portfolio lock' });
+    // Only enforce when the client is turning the lock on in this request
+    if (body.accessLockEnabled === true) {
+      const willHaveHash = Boolean(rawCode || existing?.accessCodeHash);
+      if (!willHaveHash) {
+        return res.status(400).json({ error: 'Set an access code before enabling the portfolio lock' });
+      }
     }
 
     const settings = await SiteSettings.findOneAndUpdate(
       { portfolioProfileId: profileId(req) },
-      body,
-      { new: true, upsert: true }
+      { $set: body },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
     await logActivity('update', 'settings', String(req.params.profileId));
     res.json(toAdminSettingsJson(settings));
