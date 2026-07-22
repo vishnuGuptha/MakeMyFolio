@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { publicApi } from '@/api';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { ResumePreviewModal, useResumeUrls } from '@/themes/shared/ResumePreviewModal';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import { TerminalContainer } from './layout/TerminalSection';
 import TerminalWindow from './components/TerminalWindow';
@@ -46,6 +46,8 @@ function TerminalAvatar({ imageUrl, name }: { imageUrl?: string; name: string })
 export default function TerminalHero({ content, slug }: HeroProps) {
   const portfolio = usePortfolioData();
   const bioExcerpt = (content.bio || content.tagline || '').slice(0, 280);
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const { viewUrl, downloadUrl } = useResumeUrls(slug);
 
   const skillNames = useMemo(
     () =>
@@ -118,19 +120,10 @@ export default function TerminalHero({ content, slug }: HeroProps) {
                 </button>
                 {content.resumeUrl && (
                   <>
-                    <a
-                      href={publicApi.getResumeUrl(slug)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="terminal-hero-link text-sm"
-                    >
+                    <button type="button" onClick={() => setResumeOpen(true)} className="terminal-hero-link text-sm">
                       $ open resume.pdf
-                    </a>
-                    <a
-                      href={publicApi.getResumeUrl(slug, true)}
-                      download
-                      className="terminal-hero-link text-sm"
-                    >
+                    </button>
+                    <a href={downloadUrl} download className="terminal-hero-link text-sm">
                       $ curl -O resume.pdf
                     </a>
                   </>
@@ -149,6 +142,16 @@ export default function TerminalHero({ content, slug }: HeroProps) {
           </div>
         </motion.div>
       </TerminalContainer>
+
+      {content.resumeUrl ? (
+        <ResumePreviewModal
+          open={resumeOpen}
+          onOpenChange={setResumeOpen}
+          viewUrl={viewUrl}
+          downloadUrl={downloadUrl}
+          resumeUrl={content.resumeUrl}
+        />
+      ) : null}
     </section>
   );
 }

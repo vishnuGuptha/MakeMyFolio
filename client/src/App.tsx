@@ -51,6 +51,7 @@ const PlatformActivityPage = lazy(() => import('@/pages/platform/PlatformActivit
 const PlatformTryDemoPage = lazy(() => import('@/pages/platform/PlatformTryDemoPage'));
 const TryEditorPage = lazy(() => import('@/pages/marketing/TryEditorPage'));
 const ThemesPage = lazy(() => import('@/pages/marketing/ThemesPage'));
+const ExamplesPage = lazy(() => import('@/pages/marketing/ExamplesPage'));
 const PricingPage = lazy(() => import('@/pages/marketing/PricingPage'));
 const CartPage = lazy(() => import('@/pages/marketing/CartPage'));
 const PricingRoute = lazy(() =>
@@ -122,7 +123,14 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route path="examples" element={<Navigate to="/themes" replace />} />
+              <Route
+                path="examples"
+                element={
+                  <Suspense fallback={<Fallback label="examples" />}>
+                    <ExamplesPage />
+                  </Suspense>
+                }
+              />
             </Route>
 
             <Route path="/p/*" element={<LegacyPortfolioRedirect />} />

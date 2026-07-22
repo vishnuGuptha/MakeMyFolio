@@ -113,6 +113,7 @@ async function seed() {
       certifications: true,
       contact: true,
     },
+    skillsDisplayStyle: 'chips',
   });
 
   const skillCategories = [

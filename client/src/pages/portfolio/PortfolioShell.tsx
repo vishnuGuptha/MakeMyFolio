@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, useParams, useLocation } from 'react-router-dom';
 import { publicApi, userApi } from '@/api';
 import { PortfolioProvider } from '@/context/PortfolioContext';
@@ -12,8 +12,14 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import type { PortfolioThemeId } from '@/themes/types';
 import { cn } from '@/lib/utils';
 import { isPortfolioSubdomainHost, usesSubdomainPortfolios } from '@/lib/domains';
-import { restoreDocumentFavicon, setDocumentFavicon } from '@/lib/favicon';
+import { applyPortfolioFavicon, restoreDocumentFavicon } from '@/lib/favicon';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { PORTFOLIO_NAV_SECTIONS } from '@/lib/theme';
+import {
+  clearUnlockToken,
+  readUnlockToken,
+  writeUnlockToken,
+} from '@/components/portfolio/PortfolioAccessGate';
 
 type ShellMode = 'public' | 'preview';
 
@@ -30,26 +36,52 @@ export default function PortfolioShell({
   const [data, setData] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
   const isPreview = mode === 'preview';
   const fetchKey = isPreview ? profileId : slug;
 
   useEffect(() => {
     if (!fetchKey) return;
+    let cancelled = false;
     setLoading(true);
     setError(false);
+    setUnlocked(false);
 
-    const load = isPreview
-      ? userApi.getPreview(fetchKey)
-      : publicApi.getPortfolio(fetchKey);
+    const load = async () => {
+      if (isPreview) {
+        return userApi.getPreview(fetchKey);
+      }
 
-    load
+      const token = slug ? readUnlockToken(slug) : null;
+      if (token && slug) {
+        try {
+          const resumed = await publicApi.unlockPortfolio(slug, { token });
+          const { unlockToken, ...portfolio } = resumed;
+          writeUnlockToken(slug, unlockToken);
+          if (!cancelled) setUnlocked(true);
+          return portfolio;
+        } catch {
+          clearUnlockToken(slug);
+        }
+      }
+
+      return publicApi.getPortfolio(fetchKey);
+    };
+
+    load()
       .then((d) => {
+        if (cancelled) return;
         setData(d);
         if (d.settings?.siteTitle) {
           document.title = isPreview ? `[Preview] ${d.settings.siteTitle}` : d.settings.siteTitle;
         }
-        setDocumentFavicon(d.content?.profileImageUrl, d.settings?.primaryColor);
+        applyPortfolioFavicon({
+          name: d.content?.name || d.profile.displayName,
+          imageUrl: d.content?.profileImageUrl,
+          accentColor: d.settings?.primaryColor,
+          style: d.settings?.faviconStyle,
+        });
         if (d.settings?.metaDescription) {
           let meta = document.querySelector('meta[name="description"]');
           if (!meta) {
@@ -60,15 +92,29 @@ export default function PortfolioShell({
           meta.setAttribute('content', d.settings.metaDescription);
         }
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [fetchKey, isPreview]);
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchKey, isPreview, slug]);
 
   useEffect(() => {
-    if (data?.settings?.siteTitle) {
+    if (!data) return;
+    if (data.settings?.siteTitle) {
       document.title = isPreview ? `[Preview] ${data.settings.siteTitle}` : data.settings.siteTitle;
     }
-    setDocumentFavicon(data?.content?.profileImageUrl, data?.settings?.primaryColor);
+    applyPortfolioFavicon({
+      name: data.content?.name || data.profile.displayName,
+      imageUrl: data.content?.profileImageUrl,
+      accentColor: data.settings?.primaryColor,
+      style: data.settings?.faviconStyle,
+    });
   }, [data, location.pathname, isPreview]);
 
   useEffect(() => {
@@ -76,6 +122,29 @@ export default function PortfolioShell({
       restoreDocumentFavicon();
     };
   }, []);
+
+  const unlockWithCode = useCallback(
+    async (code: string) => {
+      if (!slug) return;
+      const result = await publicApi.unlockPortfolio(slug, { code });
+      const { unlockToken, ...portfolio } = result;
+      writeUnlockToken(slug, unlockToken);
+      setData(portfolio);
+      setUnlocked(true);
+    },
+    [slug]
+  );
+
+  const accessLocked = useMemo(() => {
+    if (isPreview) return false;
+    if (!data?.settings?.accessLockEnabled) return false;
+    return !unlocked;
+  }, [isPreview, data?.settings?.accessLockEnabled, unlocked]);
+
+  const navVisibility = useMemo(() => {
+    if (!accessLocked) return data?.settings?.sectionVisibility;
+    return Object.fromEntries(PORTFOLIO_NAV_SECTIONS.map((s) => [s.id, false]));
+  }, [accessLocked, data?.settings?.sectionVisibility]);
 
   if (loading) return <PortfolioSkeleton />;
   if (error || !data?.content) return <NotFoundPage />;
@@ -88,7 +157,13 @@ export default function PortfolioShell({
     isPreview && profileId ? `/preview/${profileId}` : onSubdomain ? '' : `/${data.profile.slug}`;
 
   return (
-    <PortfolioProvider data={data} basePath={basePath} isPreview={isPreview}>
+    <PortfolioProvider
+      data={data}
+      basePath={basePath}
+      isPreview={isPreview}
+      accessLocked={accessLocked}
+      unlockWithCode={unlockWithCode}
+    >
       <PortfolioThemeProvider themeId={portfolioTheme} settings={data.settings}>
         <ThemeShell>
           {isPreview && (
@@ -106,7 +181,7 @@ export default function PortfolioShell({
             slug={data.profile.slug}
             basePath={basePath}
             layoutMode={layoutMode}
-            sectionVisibility={data.settings?.sectionVisibility}
+            sectionVisibility={navVisibility}
             profileImageUrl={data.content.profileImageUrl}
             resumeUrl={data.content.resumeUrl}
           />

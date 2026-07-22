@@ -27,11 +27,22 @@ export const publicApi = {
   getDefaultSlug: () => request<{ slug: string | null }>('/api/public/default-slug'),
   getPortfolio: (slug: string) => request<import('@/types').PortfolioData>(`/api/public/portfolio/${slug}`),
   getProfiles: () => request<import('@/types').PortfolioProfile[]>('/api/public/profiles'),
+  getExamples: () =>
+    request<{ examples: import('@/types').PublicExampleFolio[] }>('/api/public/examples'),
   getTryDemo: () => request<import('@/context/GuestDraftContext').GuestDraft>('/api/public/try-demo'),
   sendContact: (slug: string, data: { name: string; email: string; message: string }) =>
     request(`/api/public/contact/${slug}`, { method: 'POST', body: JSON.stringify(data) }),
   getResumeUrl: (slug: string, download = false) =>
     `${API_BASE}/api/public/portfolio/${slug}/resume${download ? '?download=1' : ''}`,
+  unlockPortfolio: (slug: string, body: { code?: string; token?: string }) =>
+    request<import('@/types').PortfolioData & { unlockToken: string }>(
+      `/api/public/portfolio/${slug}/unlock`,
+      { method: 'POST', body: JSON.stringify(body) }
+    ),
+  getPortfolioWithUnlock: (slug: string, unlockToken: string) =>
+    request<import('@/types').PortfolioData>(`/api/public/portfolio/${slug}`, {
+      headers: { 'x-portfolio-unlock': unlockToken },
+    }),
 };
 
 export type AuthRole = 'user' | 'platform_admin';
@@ -106,7 +117,7 @@ export const userApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  updateProfile: (id: string, data: { displayName?: string; slug?: string }) =>
+  updateProfile: (id: string, data: { displayName?: string; slug?: string; showInGallery?: boolean }) =>
     request<import('@/types').PortfolioProfile>(`/api/user/profiles/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -163,6 +174,29 @@ export const userApi = {
     });
     await throwIfNotOk(res, 'Import failed');
     return res.json() as Promise<{
+      extracted: import('@/components/admin/ResumeImportReviewModal').ExtractedResumePreview;
+      resumeUrl: string;
+      summary: {
+        displayName: string;
+        skills: number;
+        experiences: number;
+        projects: number;
+        education: number;
+        certifications: number;
+      };
+      resumeImportUsed: boolean;
+    }>;
+  },
+
+  applyResumeImport: (
+    profileId: string,
+    body: {
+      extracted: import('@/components/admin/ResumeImportReviewModal').ExtractedResumePreview;
+      resumeUrl: string;
+      sections: import('@/components/admin/ResumeImportReviewModal').ImportSectionFlags;
+    }
+  ) =>
+    request<{
       content: import('@/types').ProfileContent;
       resumeUrl: string;
       summary: {
@@ -173,8 +207,21 @@ export const userApi = {
         education: number;
         certifications: number;
       };
-    }>;
-  },
+      resumeImportUsed: boolean;
+      canUndo: boolean;
+    }>(userPath(profileId, '/resume/import/apply'), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  getResumeImportUndoAvailable: (profileId: string) =>
+    request<{ available: boolean }>(userPath(profileId, '/resume/import/undo')),
+
+  undoResumeImport: (profileId: string) =>
+    request<{ ok: boolean; content: import('@/types').ProfileContent; canUndo: boolean }>(
+      userPath(profileId, '/resume/import/undo'),
+      { method: 'POST' }
+    ),
 
   enhanceWithAi: (
     profileId: string,
@@ -189,7 +236,10 @@ export const userApi = {
   getSettings: (profileId: string) =>
     request<import('@/types').SiteSettings>(userPath(profileId, '/settings')),
   updateSettings: (profileId: string, data: Partial<import('@/types').SiteSettings>) =>
-    request(userPath(profileId, '/settings'), { method: 'PUT', body: JSON.stringify(data) }),
+    request<import('@/types').SiteSettings>(userPath(profileId, '/settings'), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
   getSkills: (profileId: string) =>
     request<import('@/types').SkillCategory[]>(userPath(profileId, '/skills')),
@@ -413,4 +463,27 @@ export const billingApi = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  getOrders: () =>
+    request<{
+      orders: {
+        id: string;
+        planId: string;
+        billing: string;
+        currency: 'usd' | 'inr';
+        amountMinor: number;
+        provider: string;
+        status: string;
+        paidAt: string | null;
+        createdAt: string;
+        reference: string | null;
+      }[];
+    }>('/api/billing/orders'),
+  /** Fetches printable HTML receipt (auth cookie). Opens in a new tab via blob URL. */
+  getReceiptHtml: async (orderId: string) => {
+    const res = await fetch(`${API_BASE}/api/billing/orders/${orderId}/receipt?format=html`, {
+      credentials: 'include',
+    });
+    await throwIfNotOk(res, `HTTP ${res.status}`);
+    return res.text();
+  },
 };

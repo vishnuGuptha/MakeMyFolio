@@ -3,32 +3,30 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Info, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { billingApi } from '@/api';
+import { billingApi, userApi } from '@/api';
 import {
   PLANS,
   PLAN_RANK,
   formatPlanPrice,
-  formatMoney,
   previewUpgradeDue,
   normalizePlanId,
   readStoredCurrency,
-  storeCurrency,
   resolveCheckoutCurrency,
-  USD_CHECKOUT_ENABLED,
   type BillingInterval,
   type PlanId,
   type PricingCurrency,
 } from '@/lib/plans';
+import { autoPublishActiveFolio } from '@/lib/autoPublish';
 import {
-  addToCart,
   buildAuthPath,
   cartCount,
   clearCheckoutIntent,
   consumeOpenCheckoutAfterAuth,
   DASHBOARD_CART_PATH,
+  DASHBOARD_PRICING_PATH,
   markOpenCheckoutAfterAuth,
-  PRICING_CHECKOUT_NEXT,
   PUBLIC_CART_PATH,
+  PUBLIC_PRICING_PATH,
   readCheckoutIntent,
   removeFromCartByPlanId,
   setCheckoutIntent,
@@ -60,6 +58,7 @@ export default function PricingPage() {
   const { pathname } = useLocation();
   const inDashboard = pathname.startsWith('/dashboard');
   const cartPath = inDashboard ? DASHBOARD_CART_PATH : PUBLIC_CART_PATH;
+  const authNext = inDashboard ? DASHBOARD_PRICING_PATH : `${PUBLIC_PRICING_PATH}?checkout=1`;
   const [searchParams, setSearchParams] = useSearchParams();
   const [billing, setBilling] = useState<BillingInterval>('monthly');
   const [currency, setCurrency] = useState<PricingCurrency>(() => readStoredCurrency());
@@ -67,6 +66,7 @@ export default function PricingPage() {
   const [checkoutIntent, setCheckoutIntentState] = useState<CheckoutIntent | null>(null);
   const [cartItems, setCartItems] = useState(() => cartCount());
   const [showUpgrades, setShowUpgrades] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const currentPlan = user?.role === 'user' ? normalizePlan(user.plan) : null;
   const isLoggedIn = user?.role === 'user';
   const hasPaidPlan = Boolean(isLoggedIn && currentPlan && currentPlan !== 'free');
@@ -86,6 +86,11 @@ export default function PricingPage() {
   useEffect(() => {
     if (searchParams.get('upgrade') === '1' && hasPaidPlan && upgradePlans.length > 0) {
       setShowUpgrades(true);
+      setShowCompare(false);
+    }
+    if (searchParams.get('compare') === '1' && hasPaidPlan) {
+      setShowCompare(true);
+      setShowUpgrades(false);
     }
   }, [searchParams, hasPaidPlan, upgradePlans.length]);
 
@@ -95,7 +100,7 @@ export default function PricingPage() {
     const intent = readCheckoutIntent();
     if (!intent) return;
     setBilling(intent.billing);
-    setCurrency(intent.currency);
+    setCurrency(resolveCheckoutCurrency(intent.currency));
     setCheckoutIntentState(intent);
     setCheckoutOpen(true);
   }, [isLoggedIn]);
@@ -133,21 +138,9 @@ export default function PricingPage() {
     };
 
     if (payment === 'cancelled') {
-      const intent = readCheckoutIntent();
-      if (intent) {
-        addToCart(intent);
-        clearCheckoutIntent();
-        setCartItems(cartCount());
-      } else if (planId) {
-        addToCart({
-          planId,
-          billing,
-          currency,
-        });
-        setCartItems(cartCount());
-      }
+      clearCheckoutIntent();
       toast.message('Checkout cancelled', {
-        description: 'Your plan is saved in the cart — resume anytime.',
+        description: 'Nothing was charged. Reopen checkout from pricing when you’re ready.',
       });
       clearQs();
       return;
@@ -163,11 +156,35 @@ export default function PricingPage() {
           if (planId) removeFromCartByPlanId(planId);
           clearCheckoutIntent();
           setCartItems(cartCount());
-          toast.success('Payment successful', {
-            description: planId
-              ? `${PLANS.find((p) => p.id === planId)?.name || 'Plan'} is now active.`
-              : 'Your plan is now active.',
-          });
+
+          let liveUrl: string | null = null;
+          try {
+            const profiles = await userApi.getProfiles();
+            const target =
+              profiles.find((p) => p.isDefault) || profiles[0] || null;
+            const live = await autoPublishActiveFolio(target);
+            liveUrl = live?.publicUrl ?? null;
+          } catch {
+            /* plan still unlocked */
+          }
+
+          if (liveUrl) {
+            toast.success('You’re live!', {
+              description: 'Your portfolio was published. Share your link.',
+              action: {
+                label: 'Copy link',
+                onClick: () => {
+                  void navigator.clipboard.writeText(liveUrl!);
+                },
+              },
+            });
+          } else {
+            toast.success('Payment successful', {
+              description: planId
+                ? `${PLANS.find((p) => p.id === planId)?.name || 'Plan'} is now active.`
+                : 'Your plan is now active.',
+            });
+          }
         } catch (err) {
           toast.error(errorMessage(err, 'Could not confirm payment — refresh in a moment'));
           await refreshUser().catch(() => undefined);
@@ -179,17 +196,6 @@ export default function PricingPage() {
       clearQs();
     }
   }, [searchParams, isLoggedIn, billing, currency, refreshUser, setSearchParams]);
-
-  const setCurrencyPersist = (next: PricingCurrency) => {
-    if (next === 'usd' && !USD_CHECKOUT_ENABLED) {
-      toast.message('USD payments coming soon', {
-        description: 'Checkout is available in INR for now.',
-      });
-      return;
-    }
-    setCurrency(next);
-    storeCurrency(next);
-  };
 
   const openCheckout = (planId: PaidPlanId) => {
     const intent: CheckoutIntent = {
@@ -236,7 +242,7 @@ export default function PricingPage() {
     toast.message('Sign in to continue', {
       description: `We’ll open ${PLANS.find((p) => p.id === planId)?.name} checkout right after you sign in.`,
     });
-    navigate(buildAuthPath('/login', { next: PRICING_CHECKOUT_NEXT }));
+    navigate(buildAuthPath('/login', { next: authNext }));
   };
 
   const ctaState = useMemo(() => {
@@ -299,12 +305,10 @@ export default function PricingPage() {
         }
         return {
           disabled: false,
-          label: due.isUpgrade
-            ? `Pay ${formatMoney(due.amountMajor, resolveCheckoutCurrency(currency))} remaining`
-            : `Get ${plan.name}`,
+          label: due.dueLabel,
           hint: due.isUpgrade
             ? `Credit applied from ${PLANS.find((p) => p.id === currentPlan)?.name ?? 'your plan'}`
-            : null,
+            : due.noCreditReason || null,
           to: null as string | null,
           kind: 'action' as const,
         };
@@ -312,25 +316,30 @@ export default function PricingPage() {
       return {
         disabled: false,
         label: plan.cta,
-        hint: null as string | null,
+        hint: 'Sign in → Pay',
         to: null as string | null,
         kind: 'action' as const,
       };
     };
   }, [currentPlan, isLoggedIn, billing, currency, user?.planBilling, user?.planCurrency]);
 
-  const savingsHint = 'Pro yearly ≈ ₹70/mo · Premium yearly ≈ ₹141/mo · USD checkout coming soon';
+  const savingsHint = 'Prices in INR · UPI & cards · USD checkout coming soon';
 
   const currentPlanDef = currentPlan ? PLANS.find((p) => p.id === currentPlan) : null;
   const currentPrice = currentPlanDef
-    ? formatPlanPrice(currentPlanDef, currency, billing)
+    ? formatPlanPrice(currentPlanDef, resolveCheckoutCurrency(currency), billing)
     : null;
 
+  /** Browse catalog: Free / Pro / Premium only — domain is a footer note */
+  const browsePlans = PLANS.filter((p) => p.id !== 'domain');
+
   const catalogPlans = hasPaidPlan
-    ? showUpgrades
-      ? upgradePlans
-      : []
-    : PLANS;
+    ? showCompare
+      ? browsePlans
+      : showUpgrades
+        ? upgradePlans
+        : []
+    : browsePlans;
 
   const tipTitle = hasPaidPlan ? 'Your plan' : 'Free tier limits';
   const tipItems =
@@ -347,16 +356,17 @@ export default function PricingPage() {
             'Custom domain support is coming soon as a separate add-on.',
           ]
         : [
-            'One portfolio per account — draft / preview only (not publicly published).',
-            'Resume import works once; after a successful parse the button stays disabled.',
-            'Upgrade to Pro (2 folios) or Premium (5 folios) to publish on a subdomain.',
-            'Cancel checkout anytime — the plan stays in your cart until you pay.',
+            'One portfolio draft — preview anytime, publish after you upgrade.',
+            'One resume import on Free; unlimited on Pro and Premium.',
+            'Sign in, then pay with UPI or card to unlock live portfolios.',
           ];
 
   const openUpgradePicker = () => {
+    setShowCompare(false);
     setShowUpgrades(true);
     const next = new URLSearchParams(searchParams);
     next.set('upgrade', '1');
+    next.delete('compare');
     setSearchParams(next, { replace: true });
   };
 
@@ -364,6 +374,22 @@ export default function PricingPage() {
     setShowUpgrades(false);
     const next = new URLSearchParams(searchParams);
     next.delete('upgrade');
+    setSearchParams(next, { replace: true });
+  };
+
+  const openCompare = () => {
+    setShowUpgrades(false);
+    setShowCompare(true);
+    const next = new URLSearchParams(searchParams);
+    next.set('compare', '1');
+    next.delete('upgrade');
+    setSearchParams(next, { replace: true });
+  };
+
+  const closeCompare = () => {
+    setShowCompare(false);
+    const next = new URLSearchParams(searchParams);
+    next.delete('compare');
     setSearchParams(next, { replace: true });
   };
 
@@ -395,7 +421,7 @@ export default function PricingPage() {
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#0066FF]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#0066FF] hover:bg-[#0066FF]/15"
               >
                 <ShoppingCart className="h-3 w-3" />
-                Cart ({cartItems})
+                Saved ({cartItems})
               </Link>
             ) : null}
           </div>
@@ -475,14 +501,35 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {upgradePlans.length > 0 && !showUpgrades ? (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-[#0066FF] hover:underline"
+                  onClick={openUpgradePicker}
+                >
+                  Upgrade options
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="text-xs font-medium text-subtle hover:text-[#0066FF] hover:underline"
+                onClick={showCompare ? closeCompare : openCompare}
+              >
+                {showCompare ? 'Hide comparison' : 'Compare plans'}
+              </button>
+            </div>
           </motion.div>
         ) : null}
 
-        {(!hasPaidPlan || showUpgrades) && (
+        {(!hasPaidPlan || showUpgrades || showCompare) && (
           <>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              {showUpgrades && hasPaidPlan ? (
+              {showUpgrades && hasPaidPlan && !showCompare ? (
                 <p className="w-full text-sm font-medium text-primary">Choose an upgrade</p>
+              ) : null}
+              {showCompare && hasPaidPlan ? (
+                <p className="w-full text-sm font-medium text-primary">Compare plans</p>
               ) : null}
               <div className="inline-flex rounded-xl bg-muted/70 p-1 dark:bg-muted/40" role="group" aria-label="Billing period">
                 <button
@@ -511,39 +558,10 @@ export default function PricingPage() {
                 </button>
               </div>
 
-              <div className="inline-flex rounded-xl bg-muted/70 p-1 dark:bg-muted/40" role="group" aria-label="Currency">
-                <button
-                  type="button"
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                    currency === 'inr'
-                      ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
-                      : 'text-secondary hover:text-primary'
-                  )}
-                  onClick={() => setCurrencyPersist('inr')}
-                >
-                  INR ₹
-                </button>
-                <button
-                  type="button"
-                  disabled={!USD_CHECKOUT_ENABLED}
-                  title={USD_CHECKOUT_ENABLED ? 'USD' : 'USD payments coming soon'}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                    USD_CHECKOUT_ENABLED && currency === 'usd'
-                      ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
-                      : 'cursor-not-allowed text-subtle opacity-70'
-                  )}
-                  onClick={() => setCurrencyPersist('usd')}
-                >
-                  USD $
-                  {!USD_CHECKOUT_ENABLED ? (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-subtle">
-                      Soon
-                    </span>
-                  ) : null}
-                </button>
-              </div>
+              <p className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1.5 text-xs font-medium text-secondary">
+                INR ₹
+                <span className="text-subtle">· USD coming soon</span>
+              </p>
 
               <p className="flex items-start gap-1.5 text-xs text-subtle">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0066FF]" />
@@ -557,14 +575,18 @@ export default function PricingPage() {
                 catalogPlans.length === 1
                   ? 'max-w-md sm:grid-cols-1'
                   : catalogPlans.length === 2
-                    ? 'sm:grid-cols-2 max-w-3xl'
-                    : 'sm:grid-cols-2 xl:grid-cols-4'
+                    ? 'max-w-3xl sm:grid-cols-2'
+                    : 'sm:grid-cols-2 lg:grid-cols-3'
               )}
               style={{ perspective: 1400 }}
             >
               {catalogPlans.map((plan, i) => {
                 const cta = ctaState(plan.id);
-                const { price, note, equivalent } = formatPlanPrice(plan, currency, billing);
+                const { price, note, equivalent } = formatPlanPrice(
+                  plan,
+                  resolveCheckoutCurrency(currency),
+                  billing
+                );
                 const paid = isPaidPlan(plan.id) && !plan.comingSoon;
                 const isCurrent = currentPlan === plan.id;
                 const showPopular = Boolean(plan.highlighted) && !isCurrent && !hasPaidPlan;
@@ -667,6 +689,11 @@ export default function PricingPage() {
                 );
               })}
             </div>
+            {!hasPaidPlan || showCompare ? (
+              <p className="mt-4 text-center text-xs text-subtle">
+                Custom domain add-on is coming soon — not available for purchase yet.
+              </p>
+            ) : null}
           </>
         )}
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Types } from 'mongoose';
+import bcrypt from 'bcryptjs';
 import {
   PortfolioProfile,
   ProfileContent,
@@ -12,6 +13,7 @@ import {
   ContactMessage,
   MediaAsset,
   ActivityLog,
+  PortfolioPageView,
   User,
 } from '../models/index.js';
 import { AuthRequest, requireAuth, requireProfileAccess } from '../middleware/auth.js';
@@ -21,6 +23,7 @@ import {
   duplicateProfileContent,
   getPortfolioAggregateById,
   logActivity,
+  toAdminSettingsJson,
 } from '../services/portfolio.js';
 import { generateSlug, isValidSlug, isReservedSlug, ensureUniqueSlug } from '../utils/slug.js';
 import { ownerSlugTaken, publishedSlugTaken } from '../utils/slugAvailability.js';
@@ -34,7 +37,15 @@ import {
   getResumeExtension,
   isResumeFile,
 } from '../services/resumeTextExtract.js';
-import { applyResumeExtract } from '../services/resumeImport.js';
+import {
+  applyResumeExtract,
+  buildImportSummary,
+  hasResumeUndo,
+  restoreResumeSnapshot,
+  ALL_IMPORT_SECTIONS,
+  type ImportSections,
+} from '../services/resumeImport.js';
+import type { ExtractedResumeData } from '../services/resumeExtract.js';
 import {
   FREE_IMPORT_USED_MESSAGE,
   FREE_PUBLISH_MESSAGE,
@@ -252,16 +263,27 @@ router.get('/profiles/:profileId/preview', requireProfileAccess, async (req, res
 
 router.put('/profiles/:profileId', requireProfileAccess, async (req, res) => {
   try {
-    const { displayName, slug: rawSlug } = req.body as {
+    const { displayName, slug: rawSlug, showInGallery } = req.body as {
       displayName?: string;
       slug?: string;
+      showInGallery?: boolean;
     };
     const profile = await PortfolioProfile.findById(req.params.profileId);
     if (!profile || profile.deletedAt) return res.status(404).json({ error: 'Not found' });
 
-    const updates: { displayName?: string; slug?: string } = {};
+    const updates: { displayName?: string; slug?: string; showInGallery?: boolean } = {};
     if (typeof displayName === 'string' && displayName.trim()) {
       updates.displayName = displayName.trim();
+    }
+
+    if (typeof showInGallery === 'boolean') {
+      if (showInGallery && !profile.isPublished) {
+        return res.status(400).json({
+          error: 'Publish your folio before listing it in the Examples gallery.',
+          code: 'GALLERY_REQUIRES_PUBLISH',
+        });
+      }
+      updates.showInGallery = showInGallery;
     }
 
     if (typeof rawSlug === 'string') {
@@ -315,6 +337,7 @@ router.delete('/profiles/:profileId', requireProfileAccess, async (req: AuthRequ
     }
     profile.deletedAt = new Date();
     profile.isPublished = false;
+    profile.showInGallery = false;
     await profile.save();
     await logActivity('bin', 'profile', profile._id);
     res.json({ ok: true, profile });
@@ -380,6 +403,9 @@ router.patch('/profiles/:profileId/publish', requireProfileAccess, async (req, r
     }
 
     profile.isPublished = !!isPublished;
+    if (!isPublished) {
+      profile.showInGallery = false;
+    }
     await profile.save();
     await logActivity(isPublished ? 'publish' : 'unpublish', 'profile', String(req.params.profileId));
     res.json(profile);
@@ -536,7 +562,7 @@ router.post(
     try {
       if (!req.file) throw new AppError('No file uploaded', 400);
 
-      const { plan, limits, resumeImportUsed, user } = await getOwnerPlan(req);
+      const { plan, limits, resumeImportUsed } = await getOwnerPlan(req);
       if (
         Number.isFinite(limits.maxResumeImports) &&
         resumeImportUsed &&
@@ -562,33 +588,104 @@ router.post(
 
       const extracted = await extractResumeFromText(rawText);
 
-      const existing = await ProfileContent.findOne({ portfolioProfileId: pid });
-      if (existing?.resumeUrl) deleteResumeFile(existing.resumeUrl);
-
+      // Keep the previous resume file until apply — cancel must not break downloads.
       const ext = getResumeExtension(req.file.mimetype, req.file.originalname);
       const filename = `resume-${req.params.profileId}-${Date.now()}${ext}`;
       const diskPath = path.join(uploadDir, filename);
       fs.writeFileSync(diskPath, req.file.buffer);
       const resumeUrl = `/${uploadDir}/${filename}`;
 
-      const { content, summary } = await applyResumeExtract(pid, extracted, resumeUrl);
-
-      if (user && Number.isFinite(limits.maxResumeImports)) {
-        user.resumeImportUsed = true;
-        await user.save();
-      }
-
+      // Preview only — Free import quota is consumed on /apply, not here.
       res.json({
-        content,
-        summary,
+        extracted,
         resumeUrl,
-        resumeImportUsed: true,
+        summary: buildImportSummary(extracted),
+        resumeImportUsed: false,
       });
     } catch (err) {
       sendError(res, err);
     }
   }
 );
+
+router.post('/profiles/:profileId/resume/import/apply', requireProfileAccess, async (req: AuthRequest, res) => {
+  try {
+    const { plan, limits, resumeImportUsed, user } = await getOwnerPlan(req);
+    if (
+      Number.isFinite(limits.maxResumeImports) &&
+      resumeImportUsed &&
+      limits.maxResumeImports <= 1
+    ) {
+      return res.status(403).json({
+        error: FREE_IMPORT_USED_MESSAGE,
+        code: 'PLAN_IMPORT_USED',
+        plan,
+      });
+    }
+
+    const body = req.body || {};
+    const extracted = body.extracted as ExtractedResumeData | undefined;
+    const resumeUrl = typeof body.resumeUrl === 'string' ? body.resumeUrl : undefined;
+    if (!extracted?.content) throw new AppError('Missing extracted resume data', 400);
+
+    const sectionsRaw = body.sections as Partial<ImportSections> | undefined;
+    const sections: ImportSections = {
+      ...ALL_IMPORT_SECTIONS,
+      ...(sectionsRaw || {}),
+    };
+
+    const pid = profileId(req);
+    const existing = await ProfileContent.findOne({ portfolioProfileId: pid });
+    const previousResumeUrl = existing?.resumeUrl || '';
+
+    const { content, summary } = await applyResumeExtract(pid, extracted, resumeUrl, sections);
+
+    if (resumeUrl && previousResumeUrl && previousResumeUrl !== resumeUrl) {
+      deleteResumeFile(previousResumeUrl);
+    }
+
+    if (user && Number.isFinite(limits.maxResumeImports)) {
+      user.resumeImportUsed = true;
+      await user.save();
+    }
+
+    res.json({
+      content,
+      summary,
+      resumeUrl:
+        resumeUrl ||
+        (content && typeof content === 'object' && 'resumeUrl' in content
+          ? String((content as { resumeUrl?: string }).resumeUrl || '')
+          : ''),
+      resumeImportUsed: Boolean(user && Number.isFinite(limits.maxResumeImports)),
+      canUndo: true,
+    });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.get('/profiles/:profileId/resume/import/undo', requireProfileAccess, async (req, res) => {
+  try {
+    const pid = profileId(req);
+    const available = await hasResumeUndo(pid);
+    res.json({ available });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.post('/profiles/:profileId/resume/import/undo', requireProfileAccess, async (req, res) => {
+  try {
+    const pid = profileId(req);
+    const available = await hasResumeUndo(pid);
+    if (!available) throw new AppError('Nothing to undo', 404);
+    const { content } = await restoreResumeSnapshot(pid);
+    res.json({ ok: true, content, canUndo: false });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
 
 router.post('/profiles/:profileId/ai/enhance', requireProfileAccess, async (req, res) => {
   try {
@@ -622,7 +719,7 @@ router.post('/profiles/:profileId/ai/enhance', requireProfileAccess, async (req,
 router.get('/profiles/:profileId/settings', requireProfileAccess, async (req, res) => {
   try {
     const settings = await SiteSettings.findOne({ portfolioProfileId: profileId(req) });
-    res.json(settings);
+    res.json(toAdminSettingsJson(settings));
   } catch (err) {
     sendError(res, err);
   }
@@ -630,13 +727,33 @@ router.get('/profiles/:profileId/settings', requireProfileAccess, async (req, re
 
 router.put('/profiles/:profileId/settings', requireProfileAccess, async (req, res) => {
   try {
+    const body = { ...(req.body || {}) } as Record<string, unknown>;
+    const rawCode = typeof body.accessCode === 'string' ? body.accessCode.trim() : '';
+    delete body.accessCode;
+    delete body.accessCodeHash;
+    delete body.accessCodeSet;
+
+    const existing = await SiteSettings.findOne({ portfolioProfileId: profileId(req) }).select(
+      'accessCodeHash accessLockEnabled'
+    );
+
+    if (rawCode) {
+      body.accessCodeHash = await bcrypt.hash(rawCode, 12);
+    }
+
+    const enablingLock = body.accessLockEnabled === true;
+    const willHaveHash = Boolean(rawCode || existing?.accessCodeHash);
+    if (enablingLock && !willHaveHash) {
+      return res.status(400).json({ error: 'Set an access code before enabling the portfolio lock' });
+    }
+
     const settings = await SiteSettings.findOneAndUpdate(
       { portfolioProfileId: profileId(req) },
-      req.body,
+      body,
       { new: true, upsert: true }
     );
     await logActivity('update', 'settings', String(req.params.profileId));
-    res.json(settings);
+    res.json(toAdminSettingsJson(settings));
   } catch (err) {
     sendError(res, err);
   }
@@ -1052,6 +1169,9 @@ router.delete('/profiles/:profileId/media/:id', requireProfileAccess, async (req
 router.get('/profiles/:profileId/dashboard', requireProfileAccess, async (req, res) => {
   try {
     const pid = profileId(req);
+    const pidObj = new Types.ObjectId(pid);
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     const [
       projects,
       experiences,
@@ -1062,6 +1182,8 @@ router.get('/profiles/:profileId/dashboard', requireProfileAccess, async (req, r
       activity,
       content,
       profile,
+      viewsLast7Days,
+      viewsByDayRaw,
     ] = await Promise.all([
       Project.countDocuments({ portfolioProfileId: pid }),
       Experience.countDocuments({ portfolioProfileId: pid }),
@@ -1074,10 +1196,33 @@ router.get('/profiles/:profileId/dashboard', requireProfileAccess, async (req, r
         'resumeUrl profileImageUrl bio tagline name title'
       ),
       PortfolioProfile.findById(pid),
+      PortfolioPageView.countDocuments({
+        portfolioProfileId: pidObj,
+        createdAt: { $gte: since7d },
+      }),
+      PortfolioPageView.aggregate<{ _id: string; count: number }>([
+        { $match: { portfolioProfileId: pidObj, createdAt: { $gte: since7d } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
     ]);
 
     if (!profile || profile.deletedAt) {
       return res.status(404).json({ error: 'Not found' });
+    }
+
+    const countByDay = new Map(viewsByDayRaw.map((r) => [r._id, r.count]));
+    const viewsByDay: { date: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+      const key = d.toISOString().slice(0, 10);
+      viewsByDay.push({ date: key, count: countByDay.get(key) ?? 0 });
     }
 
     const hasResume = !!content?.resumeUrl;
@@ -1092,6 +1237,8 @@ router.get('/profiles/:profileId/dashboard', requireProfileAccess, async (req, r
       education,
       certifications,
       unreadMessages: messages,
+      viewsLast7Days,
+      viewsByDay,
       lastUpdated: profile.updatedAt,
       activity,
       isPublished: !!profile.isPublished,

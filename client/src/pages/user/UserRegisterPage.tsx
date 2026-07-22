@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { startOnboarding } from '@/lib/onboarding';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
 import { buildAuthPath, readCheckoutIntent } from '@/lib/planCheckout';
+import { peekGuestDraft } from '@/context/GuestDraftContext';
 import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
@@ -32,9 +33,10 @@ export default function UserRegisterPage() {
   const claimGuest = params.get('claimGuest') === '1';
   const nextParam = params.get('next');
   const pendingPlan = readCheckoutIntent();
+  const hasGuestDraft = typeof window !== 'undefined' && Boolean(peekGuestDraft());
   const next = nextParam || (pendingPlan ? '/dashboard/pricing' : '/dashboard/onboarding');
   const loginHref = buildAuthPath('/login', {
-    claimGuest,
+    claimGuest: claimGuest || hasGuestDraft,
     next: nextParam || (pendingPlan ? '/dashboard/pricing' : undefined),
   });
 
@@ -47,7 +49,7 @@ export default function UserRegisterPage() {
     setLoading(true);
     try {
       await userRegister(name, email, password);
-      if (claimGuest) await claimGuestDraftIfAny();
+      await claimGuestDraftIfAny();
       startOnboarding();
       const goingToCheckout = next.startsWith('/dashboard/pricing') || next.startsWith('/pricing');
       toast.success(
@@ -70,16 +72,16 @@ export default function UserRegisterPage() {
       eyebrow="Get started"
       panelTitle="Create your free account"
       panelBody={
-        claimGuest
-          ? `We’ll save your guest draft so you can publish when ready.`
+        claimGuest || hasGuestDraft
+          ? `We'll save your playground draft so you can publish when ready.`
           : 'Start free. Publish your live portfolio link in minutes.'
       }
       highlights={['No credit card to start', 'Keep drafts after signup', 'Your own subdomain URL']}
     >
       <h1 className="font-display text-xl text-primary">Create account</h1>
       <p className="mt-1 text-xs text-subtle">
-        {claimGuest
-          ? 'Save your guest draft permanently.'
+        {claimGuest || hasGuestDraft
+          ? 'Save your playground draft permanently.'
           : pendingPlan
             ? `Create an account to checkout ${pendingPlan.planId === 'pro' ? 'Pro' : pendingPlan.planId === 'premium' ? 'Premium' : 'Custom domain'}.`
             : BRAND.shortTagline}

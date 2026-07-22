@@ -74,6 +74,7 @@ export function AccountMenu({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label="Account menu"
         className={cn(
           'flex h-8 items-center gap-2 rounded-lg border border-[#0066FF]/15 bg-elevated/80 px-2 text-left transition-colors',
           'hover:border-[#0066FF]/30 hover:bg-muted dark:border-border',

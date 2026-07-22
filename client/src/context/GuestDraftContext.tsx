@@ -20,6 +20,7 @@ import type {
 } from '@/types';
 import { BRAND } from '@/brand/constants';
 import { publicApi } from '@/api';
+import { defaultSkillsDisplayStyleForTheme } from '@/themes/shared/skills/types';
 
 /** Color defaults only — keeps the full theme React trees out of this module. */
 const THEME_COLOR_DEFAULTS: Record<
@@ -76,9 +77,11 @@ const THEME_COLOR_DEFAULTS: Record<
   },
 };
 
+/** Primary guest draft — localStorage so work survives refresh. */
 const STORAGE_KEY = 'buildmyfolio-guest-draft';
-const LEGACY_STORAGE_KEY = 'buildmyfolio-guest-draft';
-/** Shared across tabs so /try/preview can load (sessionStorage is per-tab). */
+/** Legacy session key (migrated on read). */
+const LEGACY_SESSION_KEY = 'buildmyfolio-guest-draft';
+/** Cross-tab snapshot for /try/preview (kept in sync with STORAGE_KEY). */
 const PREVIEW_KEY = 'buildmyfolio-guest-preview';
 
 export type AuthGateReason = 'import' | 'publish' | 'persist';
@@ -190,7 +193,7 @@ export function emptyDraft(): GuestDraft {
       location: 'Bengaluru, India',
       email: 'alex@example.com',
       phone: '+91 98765 43210',
-      github: 'https://github.com',
+      github: 'https://github.com/sindresorhus',
       linkedin: 'https://linkedin.com',
       yearsExperience: '6+',
       profileImageUrl: DEMO_AVATAR,
@@ -483,29 +486,58 @@ function migrateDraft(raw: unknown): GuestDraft | null {
 
 function readDraft(): GuestDraft | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(LEGACY_STORAGE_KEY);
-    if (!raw) return null;
-    return migrateDraft(JSON.parse(raw));
+    const fromLocal =
+      localStorage.getItem(STORAGE_KEY) || localStorage.getItem(PREVIEW_KEY);
+    if (fromLocal) {
+      return migrateDraft(JSON.parse(fromLocal));
+    }
   } catch {
-    return null;
+    /* ignore */
   }
+  try {
+    const fromSession =
+      sessionStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(LEGACY_SESSION_KEY);
+    if (fromSession) {
+      const migrated = migrateDraft(JSON.parse(fromSession));
+      if (migrated) writeDraft(migrated);
+      return migrated;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 function writeDraft(draft: GuestDraft) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+  const raw = JSON.stringify(draft);
   try {
-    localStorage.setItem(PREVIEW_KEY, JSON.stringify(draft));
+    localStorage.setItem(STORAGE_KEY, raw);
+    localStorage.setItem(PREVIEW_KEY, raw);
   } catch {
-    /* quota / private mode */
+    /* quota / private mode — fall back to session */
+    try {
+      sessionStorage.setItem(STORAGE_KEY, raw);
+    } catch {
+      /* ignore */
+    }
+  }
+  try {
+    sessionStorage.removeItem(LEGACY_SESSION_KEY);
+  } catch {
+    /* ignore */
   }
 }
 
 function clearDraftStorage() {
-  sessionStorage.removeItem(STORAGE_KEY);
-  sessionStorage.removeItem(LEGACY_STORAGE_KEY);
   try {
+    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(PREVIEW_KEY);
+  } catch {
+    /* ignore */
+  }
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(LEGACY_SESSION_KEY);
   } catch {
     /* ignore */
   }
@@ -547,35 +579,9 @@ const GuestDraftContext = createContext<GuestCtx | null>(null);
 export function GuestDraftProvider({ children }: { children: ReactNode }) {
   const [seedReady, setSeedReady] = useState(false);
   const [baseline, setBaseline] = useState(() => JSON.stringify(emptyDraft()));
-  const [draft, setDraftState] = useState<GuestDraft>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const nav = performance.getEntriesByType('navigation')[0] as
-          | PerformanceNavigationTiming
-          | undefined;
-        if (nav?.type === 'reload') {
-          clearDraftStorage();
-          return emptyDraft();
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-    return readDraft() || emptyDraft();
-  });
+  const [draft, setDraftState] = useState<GuestDraft>(() => readDraft() || emptyDraft());
   const [authGate, setAuthGate] = useState<AuthGateReason | null>(null);
-  const [hadLocalDraft] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const nav = performance.getEntriesByType('navigation')[0] as
-        | PerformanceNavigationTiming
-        | undefined;
-      if (nav?.type === 'reload') return false;
-    } catch {
-      /* ignore */
-    }
-    return Boolean(readDraft());
-  });
+  const [hadLocalDraft] = useState(() => Boolean(readDraft()));
 
   useEffect(() => {
     let cancelled = false;
@@ -798,9 +804,14 @@ export function guestDraftToPortfolioData(draft: GuestDraft): PortfolioData {
     showAiStrip: false,
     showTestimonials: true,
     showBlog: false,
+    showNavHireMe: false,
+    showSectionNumbers: false,
     cursorEffect: 'none',
     projectPreviewMode: 'image',
     projectWebviewSlowScroll: false,
+    skillsDisplayStyle: defaultSkillsDisplayStyleForTheme(draft.themeId),
+    accessLockEnabled: false,
+    faviconStyle: 'auto',
   };
 
   const content: ProfileContent = {

@@ -16,7 +16,7 @@ export function TerminalSection({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn('py-16 md:py-20 scroll-mt-20', className)}>
+    <section id={id} className={cn('py-10 md:py-12 scroll-mt-20', className)}>
       {children}
     </section>
   );

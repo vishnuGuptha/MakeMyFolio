@@ -12,6 +12,8 @@ import {
   type PricingCurrency,
 } from '../lib/plans.js';
 import { AppError } from '../utils/errors.js';
+import { notifyPaymentReceipt } from './emailNotify.js';
+import { buildPaymentReceipt } from './receipt.js';
 
 let stripeClient: Stripe | null = null;
 let razorpayClient: InstanceType<typeof Razorpay> | null = null;
@@ -87,6 +89,35 @@ export async function activatePlanFromOrder(order: IPaymentOrder) {
     },
     $pull: { cart: { planId: order.planId } },
   });
+
+  // Fire-and-forget receipt (webhook or console). Never block payment success.
+  void (async () => {
+    try {
+      const user = await User.findById(order.userId).select('email name');
+      if (!user?.email) return;
+      const receipt = buildPaymentReceipt({
+        order,
+        payerEmail: user.email,
+        payerName: user.name,
+      });
+      const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+      await notifyPaymentReceipt({
+        to: user.email,
+        payerName: receipt.payerName,
+        orderId: receipt.orderId,
+        planName: receipt.planName,
+        billing: receipt.billing,
+        amountFormatted: receipt.amountFormatted,
+        currency: receipt.currency,
+        paidAt: receipt.paidAt,
+        provider: receipt.provider,
+        paymentReference: receipt.paymentReference,
+        receiptUrl: `${clientUrl}/dashboard/account?receipt=${receipt.orderId}`,
+      });
+    } catch (err) {
+      console.error('[receipt-email] notify failed', err);
+    }
+  })();
 }
 
 export async function fulfillStripeSession(session: Stripe.Checkout.Session) {

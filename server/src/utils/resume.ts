@@ -36,6 +36,9 @@ export function sendResumeFile(res: Response, filePath: string, filename: string
     return;
   }
 
+  // Allow portfolio frontends (often a different origin) to embed the PDF in a preview iframe.
+  res.removeHeader('X-Frame-Options');
+  res.setHeader('Content-Security-Policy', "frame-ancestors *");
   res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
   fs.createReadStream(filePath).pipe(res);
 }

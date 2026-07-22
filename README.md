@@ -52,11 +52,11 @@ Seed credentials (dev only, from `npm run seed`):
 | URL | Description |
 |-----|-------------|
 | `/` | **BuildMyFolio** marketing home (guests). Signed-in users → `/dashboard` |
-| `/try` | Guest editor (session draft; cleared on refresh) |
+| `/try` | Guest playground (draft persists in this browser until cleared) |
 | `/try/preview` | Full theme preview of the guest draft (new tab) |
-| `/examples` | Published portfolio gallery |
+| `/examples` | Role-based example folios — remix into playground |
 | `/{slug}` | Live public portfolio |
-| `/login` · `/register` | Auth (optional `?claimGuest=1` to save try-mode draft) |
+| `/login` · `/register` | Auth (playground draft is claimed automatically when present) |
 | `/dashboard` | Owner CMS |
 | `/platform` | Platform admin |
 | `/platform/try-demo` | Edit the shared public `/try` demo seed |
@@ -67,15 +67,15 @@ Publish at `https://{slug}.buildmyfolio.com` in production (subdomain).
 
 1. Explore themes and examples without an account.
 2. Edit in `/try` — richer fields + side preview; **Full preview** opens `/try/preview` in a new tab.
-3. Draft stored in `sessionStorage`, **lost on page refresh**. Fresh visits load the platform-managed demo seed from the API.
-4. **Resume import** and **Publish** open an auth modal (or use `/register?claimGuest=1`).
-5. After signup, the guest draft is claimed onto the new profile.
+3. Draft stored in `localStorage` (survives refresh). Fresh visits without a saved draft load the platform-managed demo seed from the API.
+4. **Sign in to import** and **Sign in to publish** open an auth modal (or use `/register`).
+5. After signup/login, any playground draft is claimed onto the profile automatically.
 
 Platform admins control the default `/try` (and theme-card) content at `/platform/try-demo`.
 
 ## Freemium
 
-Plans are marketed on the home page (`Free` / `Pro` / `Team`). Users have `plan: free` on the server by default; Stripe enforcement is not in v1.
+Plans: **Free** (draft + preview), **Pro**, **Premium** (live publish; more portfolios). Custom domain is coming soon. Checkout is **INR via Razorpay** (USD/Stripe marked coming soon). Legacy `team` plan maps to Premium.
 
 ## Environment
 
@@ -83,7 +83,7 @@ Copy examples only — never commit real `.env` files.
 
 | File | Purpose |
 |------|---------|
-| [`server/.env.example`](server/.env.example) | `JWT_SECRET`, MongoDB, storage (`STORAGE_PROVIDER`, Cloudinary/S3), Gemini resume AI |
+| [`server/.env.example`](server/.env.example) | `JWT_SECRET`, MongoDB, storage, Gemini, optional `RESET_EMAIL_WEBHOOK` / `CONTACT_EMAIL_WEBHOOK` |
 | [`client/.env.example`](client/.env.example) | `VITE_API_URL` (empty in same-origin prod proxies; `http://localhost:4000` in local dev) |
 
 **Production checklist**

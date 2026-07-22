@@ -16,7 +16,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn('py-20 scroll-mt-20', className)}>
+    <section id={id} className={cn('py-10 md:py-12 scroll-mt-20', className)}>
       {children}
     </section>
   );
@@ -35,7 +35,7 @@ export function SectionHeading({
   const displayNumber = showNumber ?? showByLayout;
 
   return (
-    <div className="mb-12 flex items-center gap-4">
+    <div className="mb-7 md:mb-8 flex items-center gap-4">
       {displayNumber && <span className="font-mono text-accent text-sm">{number}.</span>}
       <h2 className="text-2xl font-bold text-primary">{title}</h2>
       <div className="h-px flex-1 bg-border max-w-xs" />

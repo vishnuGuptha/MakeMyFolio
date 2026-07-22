@@ -1,54 +1,70 @@
 import { motion } from 'framer-motion';
-import { CommandCenterContainer, CommandCenterSection, CommandCenterHeading } from '../layout/CommandCenterSection';
+import type { ReactNode } from 'react';
+import {
+  CommandCenterContainer,
+  CommandCenterSection,
+  CommandCenterHeading,
+} from '../layout/CommandCenterSection';
 import GlassCard from '../components/GlassCard';
-import SkillProgressBar from '../components/SkillProgressBar';
+import { usePortfolioData } from '@/context/PortfolioContext';
+import {
+  resolveSkillsDisplayStyle,
+  SkillBarsLayout,
+  SkillCardsLayout,
+  SkillChipsLayout,
+  SkillRingsLayout,
+} from '@/themes/shared/skills';
 import type { SkillCategory } from '@/types';
 
-function levelToPercent(level?: string): number {
-  if (!level) return 80;
-  const map: Record<string, number> = {
-    beginner: 40,
-    intermediate: 60,
-    advanced: 80,
-    expert: 95,
-  };
-  const key = level.toLowerCase();
-  if (map[key]) return map[key];
-  const num = parseInt(level, 10);
-  if (!isNaN(num)) return Math.min(100, num);
-  return 75;
-}
-
 export default function CommandCenterSkillsSection({ skills }: { skills: SkillCategory[] }) {
+  const { settings } = usePortfolioData();
+  const style = resolveSkillsDisplayStyle('command-center', settings?.skillsDisplayStyle);
+
   if (!skills.length) return null;
+
+  const wrap = (cat: SkillCategory, body: ReactNode, i: number) => (
+    <motion.div
+      key={cat._id}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: i * 0.04 }}
+    >
+      <GlassCard hover={false}>{body}</GlassCard>
+    </motion.div>
+  );
 
   return (
     <CommandCenterSection id="skills">
       <CommandCenterContainer>
         <CommandCenterHeading number="02" title="Skills" />
-        <div className="grid md:grid-cols-2 gap-4">
-          {skills.map((cat, ci) => (
-            <motion.div
-              key={cat._id}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: ci * 0.04 }}
-            >
-              <GlassCard hover={false}>
-                <p className="text-sm font-semibold text-accent mb-4">{cat.name}</p>
-                <div className="space-y-4">
-                  {cat.skills.sort((a, b) => a.order - b.order).map((skill) => (
-                    <div key={`${cat._id}-${skill.name}`}>
-                      <span className="text-sm text-primary block mb-1.5">{skill.name}</span>
-                      <SkillProgressBar value={levelToPercent(skill.level)} />
-                    </div>
-                  ))}
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
-        </div>
+        {style === 'rings' ? (
+          <div className="grid md:grid-cols-2 gap-4">
+            <SkillRingsLayout
+              skills={skills}
+              classNames={{ root: 'contents', category: '' }}
+              renderCategory={(cat, body) => wrap(cat, body, skills.indexOf(cat))}
+            />
+          </div>
+        ) : style === 'chips' ? (
+          <div className="grid md:grid-cols-2 gap-4">
+            <SkillChipsLayout
+              skills={skills}
+              classNames={{ root: 'contents' }}
+              renderCategory={(cat, body) => wrap(cat, body, skills.indexOf(cat))}
+            />
+          </div>
+        ) : style === 'cards' ? (
+          <SkillCardsLayout skills={skills} />
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            <SkillBarsLayout
+              skills={skills}
+              classNames={{ root: 'contents', categoryTitle: 'text-sm font-semibold text-accent mb-4' }}
+              renderCategory={(cat, body) => wrap(cat, body, skills.indexOf(cat))}
+            />
+          </div>
+        )}
       </CommandCenterContainer>
     </CommandCenterSection>
   );

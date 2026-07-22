@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { claimGuestDraftIfAny } from '@/lib/claimGuestDraft';
 import { buildAuthPath, readCheckoutIntent } from '@/lib/planCheckout';
+import { peekGuestDraft } from '@/context/GuestDraftContext';
 import { BRAND } from '@/brand/constants';
 import { AuthPageShell } from '@/components/auth/AuthPageShell';
 import { Button } from '@/components/ui/Button';
@@ -24,8 +25,9 @@ export default function UserLoginPage() {
   const claimGuest = params.get('claimGuest') === '1';
   const next = params.get('next') || '/dashboard';
   const pendingPlan = readCheckoutIntent();
+  const hasGuestDraft = typeof window !== 'undefined' && Boolean(peekGuestDraft());
   const registerHref = buildAuthPath('/register', {
-    claimGuest,
+    claimGuest: claimGuest || hasGuestDraft,
     next: next !== '/dashboard' ? next : undefined,
   });
 
@@ -34,7 +36,7 @@ export default function UserLoginPage() {
     setLoading(true);
     try {
       await userLogin(email, password);
-      if (claimGuest) await claimGuestDraftIfAny();
+      await claimGuestDraftIfAny();
       toast.success(`Welcome back to ${BRAND.name}`);
       navigate(next.startsWith('/') ? next : '/dashboard');
     } catch {

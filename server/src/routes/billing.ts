@@ -18,6 +18,7 @@ import {
 import { normalizePlanId, PLAN_PRICES, resolveUpgradeDue } from '../lib/plans.js';
 import { normalizeCartItems } from '../lib/cart.js';
 import { AppError } from '../utils/errors.js';
+import { buildPaymentReceipt, renderReceiptHtml } from '../services/receipt.js';
 
 const router = Router();
 
@@ -156,6 +157,62 @@ router.post('/checkout', requireUser, checkoutLimiter, async (req: AuthRequest, 
         email: user.email,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/orders', requireUser, async (req: AuthRequest, res, next) => {
+  try {
+    const orders = await PaymentOrder.find({ userId: req.auth!.id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .select('planId billing currency amountMinor provider status paidAt createdAt razorpayPaymentId stripeSessionId');
+    return res.json({
+      orders: orders.map((o) => ({
+        id: o._id.toString(),
+        planId: o.planId,
+        billing: o.billing,
+        currency: o.currency,
+        amountMinor: o.amountMinor,
+        provider: o.provider,
+        status: o.status,
+        paidAt: o.paidAt,
+        createdAt: o.createdAt,
+        reference: o.razorpayPaymentId || o.stripeSessionId || null,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/orders/:orderId/receipt', requireUser, async (req: AuthRequest, res, next) => {
+  try {
+    const order = await PaymentOrder.findById(req.params.orderId);
+    if (!order) throw new AppError('Order not found', 404);
+    if (order.userId.toString() !== req.auth!.id) throw new AppError('Forbidden', 403);
+    if (order.status !== 'paid') throw new AppError('Receipt available after payment', 400);
+
+    const user = await User.findById(req.auth!.id).select('email name');
+    if (!user?.email) throw new AppError('User not found', 404);
+
+    const receipt = buildPaymentReceipt({
+      order,
+      payerEmail: user.email,
+      payerName: user.name,
+    });
+
+    const wantsHtml =
+      req.query.format === 'html' ||
+      (typeof req.headers.accept === 'string' && req.headers.accept.includes('text/html'));
+
+    if (wantsHtml) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(renderReceiptHtml(receipt));
+    }
+
+    return res.json({ receipt });
   } catch (err) {
     next(err);
   }

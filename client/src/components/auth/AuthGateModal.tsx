@@ -21,9 +21,9 @@ import {
 import { cn } from '@/lib/utils';
 
 const REASON_COPY: Record<AuthGateReason, string> = {
-  import: 'Import your resume and keep your work forever.',
-  publish: `Publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
-  persist: 'Save your draft permanently to your account.',
+  import: 'Sign in to import your resume and keep edits forever.',
+  publish: `Sign in to publish at ${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')}.`,
+  persist: 'Sign in to save this draft to your account permanently.',
 };
 
 export default function AuthGateModal({

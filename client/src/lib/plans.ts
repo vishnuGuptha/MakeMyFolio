@@ -54,7 +54,7 @@ export const PLANS: PlanDef[] = [
     priceInrYearly: 0,
     features: [
       '1 portfolio (draft only)',
-      'Preview anytime — publish locked',
+      'Preview anytime — upgrade to publish',
       '1 resume import (lifetime)',
       `${getPortfolioUrlPlaceholder().replace('your-name', '{slug}')} when you upgrade`,
       'Contact form ready after upgrade',
@@ -273,6 +273,8 @@ export function previewUpgradeDue(params: {
   creditMajor: number;
   isUpgrade: boolean;
   dueLabel: string;
+  /** Explains when list price is charged with no credit */
+  noCreditReason?: string | null;
 } {
   const { currentPlan, targetPlan, billing, currency, currentBilling, currentCurrency } = params;
 
@@ -287,6 +289,7 @@ export function previewUpgradeDue(params: {
       creditMajor: 0,
       isUpgrade: false,
       dueLabel: '',
+      noCreditReason: null,
     };
   }
   if (!isUpgradeablePlanId(targetPlan)) {
@@ -298,6 +301,7 @@ export function previewUpgradeDue(params: {
       creditMajor: 0,
       isUpgrade: false,
       dueLabel: '',
+      noCreditReason: null,
     };
   }
   if (PLAN_RANK[targetPlan] <= PLAN_RANK[currentPlan]) {
@@ -312,18 +316,33 @@ export function previewUpgradeDue(params: {
       creditMajor: 0,
       isUpgrade: false,
       dueLabel: '',
+      noCreditReason: null,
     };
   }
 
   const listMajor = listPriceMajor(targetPlan, billing, currency);
   let creditMajor = 0;
-  if (
-    isUpgradeablePlanId(currentPlan) &&
-    currentBilling === billing &&
-    currentCurrency === currency
-  ) {
-    creditMajor = listPriceMajor(currentPlan, billing, currency);
+  let noCreditReason: string | null = null;
+
+  if (isUpgradeablePlanId(currentPlan)) {
+    const sameBilling = currentBilling === billing;
+    const sameCurrency = currentCurrency === currency;
+    if (sameBilling && sameCurrency) {
+      creditMajor = listPriceMajor(currentPlan, billing, currency);
+    } else if (currentBilling || currentCurrency) {
+      const bits: string[] = [];
+      if (!sameBilling) {
+        bits.push(
+          `switch to ${currentBilling === 'yearly' ? 'yearly' : 'monthly'} billing to apply credit`
+        );
+      }
+      if (!sameCurrency) {
+        bits.push('match your current currency to apply credit');
+      }
+      noCreditReason = `Full price — ${bits.join('; ')}.`;
+    }
   }
+
   const amountMajor = Math.max(0, listMajor - creditMajor);
   const isUpgrade = creditMajor > 0;
 
@@ -336,6 +355,7 @@ export function previewUpgradeDue(params: {
     dueLabel: isUpgrade
       ? `Pay ${formatMoney(amountMajor, currency)} remaining`
       : `Pay ${formatMoney(amountMajor, currency)}`,
+    noCreditReason: isUpgrade ? null : noCreditReason,
   };
 }
 
@@ -350,7 +370,7 @@ export function normalizePlanId(raw?: string | null): PlanId {
 }
 
 export const FREE_PUBLISH_MESSAGE =
-  'Free accounts can build and preview a draft, but cannot publish a live site. Upgrade to Pro or Premium to go live.';
+  'Free plans can preview drafts anytime. Upgrade to Pro or Premium to publish a live link.';
 
 export const FREE_IMPORT_USED_MESSAGE =
   'Your free resume import has already been used. Upgrade for unlimited imports.';

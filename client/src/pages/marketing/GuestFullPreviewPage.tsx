@@ -15,7 +15,7 @@ import { BRAND } from '@/brand/constants';
 import { Button } from '@/components/ui/Button';
 import type { PortfolioThemeId } from '@/themes/types';
 import { cn } from '@/lib/utils';
-import { restoreDocumentFavicon, setDocumentFavicon } from '@/lib/favicon';
+import { applyPortfolioFavicon, restoreDocumentFavicon } from '@/lib/favicon';
 import { Tooltip } from '@/components/ui/Tooltip';
 
 /** Full-theme guest portfolio — new tab, or embedded in try device frame (`?embed=1`). */
@@ -60,7 +60,12 @@ export default function GuestFullPreviewPage() {
   useEffect(() => {
     if (!data?.settings || embed) return;
     document.title = `[Guest] ${data.settings.siteTitle || BRAND.name}`;
-    setDocumentFavicon(data.content?.profileImageUrl, data.settings?.primaryColor);
+    applyPortfolioFavicon({
+      name: data.content?.name || data.profile.displayName,
+      imageUrl: data.content?.profileImageUrl,
+      accentColor: data.settings?.primaryColor,
+      style: data.settings?.faviconStyle,
+    });
   }, [data, embed]);
 
   useEffect(() => {

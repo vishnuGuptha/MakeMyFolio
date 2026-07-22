@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Check, Palette } from 'lucide-react';
+import { Check, Eye, Palette } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
+import { AdminPortfolioPreviewPane } from '@/components/admin/AdminPortfolioPreviewPane';
 import { UnsavedChangesBar } from '@/components/admin/UnsavedChangesBar';
 import { useUnsavedForm } from '@/hooks/useUnsavedForm';
 import { errorMessage } from '@/lib/apiError';
@@ -16,12 +17,14 @@ import { Card } from '@/components/ui/Card';
 import { GenerateWithAiButton, AiFieldLabel } from '@/components/admin/GenerateWithAiButton';
 import { Badge } from '@/components/ui/Badge';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { FONT_OPTIONS, PORTFOLIO_NAV_SECTIONS, COLOR_PALETTE_OPTIONS, findMatchingColorPalette } from '@/lib/theme';
+import { FONT_OPTIONS, PORTFOLIO_NAV_SECTIONS, COLOR_PALETTE_OPTIONS, SPOTLIGHT_PRESETS, findMatchingColorPalette } from '@/lib/theme';
 import { getPortfolioTheme } from '@/themes/registry';
 import { CURSOR_EFFECT_OPTIONS } from '@/themes/shared/cursorEffects';
 import ThemePreviewMini from '@/components/admin/ThemePreviewMini';
 import { MediaPickerField } from '@/components/admin/MediaPickerField';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import type { SiteSettings } from '@/types';
+import { cn } from '@/lib/utils';
 
 const defaults: SiteSettings = {
   siteTitle: '',
@@ -40,16 +43,48 @@ const defaults: SiteSettings = {
   showAiStrip: true,
   showTestimonials: false,
   showBlog: false,
+  showNavHireMe: false,
+  showSectionNumbers: false,
   cursorEffect: 'none',
   projectPreviewMode: 'webview',
   projectWebviewSlowScroll: false,
+  skillsDisplayStyle: 'chips',
+  accessLockEnabled: false,
+  faviconStyle: 'auto',
 };
 
 export default function AdminSettingsPage() {
-  const { activeProfile } = useAdminProfile();
+  const { activeProfile, refreshProfiles } = useAdminProfile();
   const [form, setForm] = useState<SiteSettings>(defaults);
+  const [accessCodeDraft, setAccessCodeDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  const [gallerySaving, setGallerySaving] = useState(false);
+  const [previewOpenMobile, setPreviewOpenMobile] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
   const { isDirty, lastSavedAt, commitBaseline } = useUnsavedForm(form);
+
+  const showInGallery = Boolean(activeProfile?.showInGallery);
+  const isPublished = Boolean(activeProfile?.isPublished);
+
+  const toggleGallery = async (checked: boolean) => {
+    if (!activeProfile) return;
+    if (checked && !isPublished) {
+      toast.error('Publish your folio first, then list it in Examples.');
+      return;
+    }
+    setGallerySaving(true);
+    try {
+      await adminApi.updateProfile(activeProfile._id, { showInGallery: checked });
+      await refreshProfiles();
+      toast.success(
+        checked ? 'Listed on the public Examples page' : 'Removed from the Examples page'
+      );
+    } catch (err) {
+      toast.error(errorMessage(err, 'Could not update gallery listing'));
+    } finally {
+      setGallerySaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!activeProfile) return;
@@ -67,6 +102,7 @@ export default function AdminSettingsPage() {
             (data?.showCursorGlow ? 'glow' : defaults.cursorEffect),
         };
         setForm(merged);
+        setAccessCodeDraft('');
         commitBaseline(merged);
       })
       .catch((err) => toast.error(errorMessage(err, 'Failed to load settings')));
@@ -76,9 +112,24 @@ export default function AdminSettingsPage() {
     if (!activeProfile) return;
     setSaving(true);
     try {
-      const payload = { ...form, accentColor: form.primaryColor };
-      await adminApi.updateSettings(activeProfile._id, payload);
-      commitBaseline(payload);
+      const payload = {
+        ...form,
+        accentColor: form.primaryColor,
+        ...(accessCodeDraft.trim() ? { accessCode: accessCodeDraft.trim() } : {}),
+      };
+      delete (payload as { accessCodeSet?: boolean }).accessCodeSet;
+      const saved = (await adminApi.updateSettings(activeProfile._id, payload)) as SiteSettings;
+      const next: SiteSettings = {
+        ...defaults,
+        ...saved,
+        accessCode: undefined,
+        accessLockEnabled: Boolean(saved?.accessLockEnabled),
+        faviconStyle: saved?.faviconStyle || 'auto',
+      };
+      setForm(next);
+      setAccessCodeDraft('');
+      commitBaseline(next);
+      setPreviewKey((k) => k + 1);
       toast.success('Settings saved!');
     } catch (err) {
       toast.error(errorMessage(err, 'Failed to save'));
@@ -96,28 +147,47 @@ export default function AdminSettingsPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="mx-auto max-w-6xl space-y-5">
+      <div className="mx-auto max-w-none space-y-4">
         <UnsavedChangesBar
           isDirty={isDirty}
           saving={saving}
           lastSavedAt={lastSavedAt}
           onSave={save}
         />
-        <div className="flex justify-between items-start gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-primary">Personalization & Settings</h1>
             <p className="mt-0.5 text-sm text-subtle">
               Theme and layout for <span className="text-accent">{activeProfile?.displayName}</span>
+              {' — '}preview updates after you save.
             </p>
           </div>
-          <Button onClick={save} disabled={saving || !isDirty} loading={saving}>
-            {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="xl:hidden"
+              onClick={() => setPreviewOpenMobile((o) => !o)}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              {previewOpenMobile ? 'Hide preview' : 'Show preview'}
+            </Button>
+            <Button onClick={save} disabled={saving || !isDirty} loading={saving}>
+              {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
+            </Button>
+          </div>
         </div>
 
+        <div
+          className={cn(
+            'flex flex-col gap-4',
+            'xl:h-[calc(100svh-8.75rem)] xl:min-h-[28rem] xl:flex-row xl:items-stretch xl:overflow-hidden'
+          )}
+        >
+          <div className="min-w-0 flex-1 space-y-5 xl:overflow-y-auto xl:pr-1">
         {/* Live preview */}
         <Card className="glass-panel overflow-hidden">
-          <p className="text-xs font-mono text-subtle mb-3">Live Preview</p>
+          <p className="text-xs font-mono text-subtle mb-3">Theme tokens (live)</p>
           <div className="grid md:grid-cols-2 gap-4 items-start">
             <ThemePreviewMini
               themeId={form.portfolioTheme || 'glass'}
@@ -153,12 +223,12 @@ export default function AdminSettingsPage() {
               <span className="text-primary font-medium">
                 {getPortfolioTheme(form.portfolioTheme).name}
               </span>
-              . Switch templates from the Add Theme page.
+              . Switch templates from the Themes page.
             </p>
           </div>
           <Button asChild size="sm" variant="outline">
             <Link to="/dashboard/themes/new">
-              <Palette className="h-4 w-4" /> Add Theme
+              <Palette className="h-4 w-4" /> Themes
             </Link>
           </Button>
         </Card>
@@ -172,6 +242,40 @@ export default function AdminSettingsPage() {
             <p className="text-xs text-subtle">
               Bright primary accents with soft secondary washes — built for Soft Bento and other themes.
             </p>
+            {form.portfolioTheme === 'spotlight' ? (
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Spotlight presets</p>
+                <div className="flex flex-wrap gap-2">
+                  {SPOTLIGHT_PRESETS.map((preset) => {
+                    const selected =
+                      form.primaryColor.toLowerCase() === preset.primary.toLowerCase() &&
+                      form.secondaryColor.toLowerCase() === preset.secondary.toLowerCase();
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            primaryColor: preset.primary,
+                            secondaryColor: preset.secondary,
+                            accentColor: preset.primary,
+                          })
+                        }
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          selected ? 'border-accent bg-accent/10 text-primary' : 'border-border text-secondary hover:border-accent/40'
+                        }`}
+                      >
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: preset.primary }} />
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: preset.secondary }} />
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {COLOR_PALETTE_OPTIONS.map((palette) => {
                 const selected = findMatchingColorPalette(form.primaryColor, form.secondaryColor)?.id === palette.id;
@@ -440,6 +544,8 @@ export default function AdminSettingsPage() {
               { key: 'showAiStrip', label: 'Show AI Tools Strip' },
               { key: 'showTestimonials', label: 'Show Testimonials' },
               { key: 'showBlog', label: 'Show Blog' },
+              { key: 'showNavHireMe', label: 'Show “Hire Me” in top bar only' },
+              { key: 'showSectionNumbers', label: 'Show section numbers (01, 02, …)' },
             ].map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 text-sm">
                 <input
@@ -450,8 +556,110 @@ export default function AdminSettingsPage() {
                 {label}
               </label>
             ))}
+            <p className="text-xs text-subtle pl-6">
+              When enabled, Hire Me appears in the portfolio navbar. The floating Hire Me button is never shown.
+              Section numbers appear only on single-page layouts when that toggle is on.
+            </p>
+          </div>
+          <div className="space-y-3 border-t border-border/60 pt-4">
+            <p className="text-sm font-medium text-secondary">Portfolio lock</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.accessLockEnabled}
+                onChange={(e) => setForm({ ...form, accessLockEnabled: e.target.checked })}
+              />
+              Lock sections behind access code (hero stays public)
+            </label>
+            <FormField
+              label={form.accessCodeSet ? 'Change access code' : 'Access code'}
+            >
+              <PasswordInput
+                value={accessCodeDraft}
+                onChange={(e) => setAccessCodeDraft(e.target.value)}
+                placeholder={form.accessCodeSet ? 'Leave blank to keep current code' : 'Shared with visitors'}
+                autoComplete="new-password"
+              />
+            </FormField>
+            <p className="text-xs text-subtle">
+              Visitors see the hero, then “View Full Portfolio”. They must enter this code to unlock skills,
+              experience, projects, and the rest. Owner preview always stays unlocked.
+              {form.accessCodeSet ? ' A code is already set.' : ' Set a code before enabling the lock.'}
+            </p>
+          </div>
+          <div className="space-y-2 border-t border-border/60 pt-4">
+            <p className="text-sm font-medium text-secondary">Browser tab favicon</p>
+            <div className="flex flex-col gap-2">
+              {(
+                [
+                  { id: 'auto' as const, label: 'Auto — photo if uploaded, else initials' },
+                  { id: 'photo' as const, label: 'Profile photo' },
+                  { id: 'initials' as const, label: 'Initials from name' },
+                ] as const
+              ).map((opt) => (
+                <label key={opt.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="faviconStyle"
+                    checked={(form.faviconStyle || 'auto') === opt.id}
+                    onChange={() => setForm({ ...form, faviconStyle: opt.id })}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
           </div>
         </Card>
+
+        <Card className="space-y-3">
+          <h2 className="font-semibold text-primary">Public Examples gallery</h2>
+          <p className="text-sm text-subtle">
+            Opt in to show this live folio on{' '}
+            <Link to="/examples" className="font-medium text-[#0066FF] hover:underline">
+              /examples
+            </Link>
+            . Visitors can open it or try the same theme in the playground.
+          </p>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={showInGallery}
+              disabled={gallerySaving || (!isPublished && !showInGallery)}
+              onChange={(e) => void toggleGallery(e.target.checked)}
+            />
+            <span>
+              <span className="font-medium text-secondary">Show in Examples gallery</span>
+              {!isPublished ? (
+                <span className="mt-0.5 block text-xs text-subtle">
+                  Publish this folio first — drafts stay private.
+                </span>
+              ) : (
+                <span className="mt-0.5 block text-xs text-subtle">
+                  Your name, title, tagline, and theme are shown — not private contact fields.
+                </span>
+              )}
+            </span>
+          </label>
+        </Card>
+          </div>
+
+          {activeProfile ? (
+            <div
+              className={cn(
+                'w-full shrink-0 xl:w-[min(42%,440px)] xl:self-stretch',
+                previewOpenMobile ? 'block' : 'hidden xl:block'
+              )}
+            >
+              <AdminPortfolioPreviewPane
+                profileId={activeProfile._id}
+                refreshKey={previewKey}
+                isDirty={isDirty}
+                className="h-[min(70svh,36rem)] xl:h-full"
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
     </RequireActiveProfile>
   );

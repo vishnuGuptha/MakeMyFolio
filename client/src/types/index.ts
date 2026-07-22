@@ -4,9 +4,23 @@ export interface PortfolioProfile {
   displayName: string;
   isPublished: boolean;
   isDefault: boolean;
+  /** Opt-in for public /examples gallery (only when published) */
+  showInGallery?: boolean;
   /** ISO date when moved to bin; null/undefined when active */
   deletedAt?: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicExampleFolio {
+  id: string;
+  slug: string;
+  displayName: string;
+  name: string;
+  title: string;
+  tagline: string;
+  profileImageUrl: string;
+  themeId: string;
   updatedAt: string;
 }
 
@@ -39,6 +53,7 @@ export interface ProfileContent {
 }
 
 export type ProjectPreviewMode = 'image' | 'webview';
+export type SkillsDisplayStyle = 'chips' | 'rings' | 'bars' | 'cards';
 
 export interface SiteSettings {
   _id?: string;
@@ -58,6 +73,10 @@ export interface SiteSettings {
   showAiStrip: boolean;
   showTestimonials: boolean;
   showBlog: boolean;
+  /** Show “Hire Me” CTA in the portfolio top navbar (not as a floating button) */
+  showNavHireMe: boolean;
+  /** Show section index labels (01, 02, …) on single-page layouts */
+  showSectionNumbers: boolean;
   /** @deprecated use cursorEffect */
   showCursorGlow?: boolean;
   cursorEffect:
@@ -73,6 +92,16 @@ export interface SiteSettings {
   projectPreviewMode: ProjectPreviewMode;
   /** Slowly pan/scroll the webview preview to reveal more of the page */
   projectWebviewSlowScroll: boolean;
+  /** How the Skills section is laid out across themes */
+  skillsDisplayStyle: SkillsDisplayStyle;
+  /** Lock all sections except hero behind an access code (public visitors) */
+  accessLockEnabled: boolean;
+  /** True when an access code is configured (server never returns the hash) */
+  accessCodeSet?: boolean;
+  /** Write-only: set/change access code from admin (never returned by API) */
+  accessCode?: string;
+  /** Browser tab favicon: photo, initials, or auto (photo if available) */
+  faviconStyle: 'auto' | 'photo' | 'initials';
 }
 
 export interface SkillItem {
@@ -208,6 +237,9 @@ export interface DashboardStats {
   education?: number;
   certifications?: number;
   unreadMessages: number;
+  /** Public page loads in the last 7 days (UTC day buckets). */
+  viewsLast7Days?: number;
+  viewsByDay?: { date: string; count: number }[];
   /** @deprecated platform-wide count — omitted from readiness dashboard */
   totalProfiles?: number;
   lastUpdated: string;

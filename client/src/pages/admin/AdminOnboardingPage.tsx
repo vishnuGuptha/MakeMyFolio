@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Circle, ExternalLink } from 'lucide-react';
 import { useAdminProfile } from '@/context/AdminProfileContext';
+import { useAuth } from '@/context/AuthContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
+import { GoLivePaywall } from '@/components/billing/GoLivePaywall';
 import {
   completeOnboarding,
   getOnboardingDone,
@@ -18,8 +20,11 @@ import { Card } from '@/components/ui/Card';
 
 export default function AdminOnboardingPage() {
   const { activeProfile, refreshProfiles } = useAdminProfile();
+  const { user } = useAuth();
+  const canPublish = Boolean(user?.limits?.canPublish);
   const navigate = useNavigate();
   const [done, setDone] = useState<OnboardingStepId[]>(() => getOnboardingDone());
+  const [goLiveOpen, setGoLiveOpen] = useState(false);
 
   const current = useMemo(
     () => ONBOARDING_STEPS.find((s) => !done.includes(s.id)) || null,
@@ -70,9 +75,20 @@ export default function AdminOnboardingPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-primary">
-                    {i + 1}. {step.title}
+                    {i + 1}.{' '}
+                    {step.id === 'publish'
+                      ? canPublish
+                        ? 'Publish'
+                        : 'Upgrade to go live'
+                      : step.title}
                   </p>
-                  <p className="text-xs text-subtle mt-0.5">{step.description}</p>
+                  <p className="text-xs text-subtle mt-0.5">
+                    {step.id === 'publish'
+                      ? canPublish
+                        ? 'Make your portfolio live for anyone with the link.'
+                        : 'Preview is free. Upgrade to Pro or Premium when you want a live URL.'
+                      : step.description}
+                  </p>
                   {isCurrent && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {step.id === 'preview' ? (
@@ -96,9 +112,15 @@ export default function AdminOnboardingPage() {
                         </>
                       ) : step.id === 'publish' ? (
                         <>
-                          <Button size="sm" asChild>
-                            <Link to="/dashboard">Go to Publish</Link>
-                          </Button>
+                          {canPublish ? (
+                            <Button size="sm" asChild>
+                              <Link to="/dashboard">Go to Publish</Link>
+                            </Button>
+                          ) : (
+                            <Button size="sm" onClick={() => setGoLiveOpen(true)}>
+                              Upgrade to go live
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -139,6 +161,16 @@ export default function AdminOnboardingPage() {
           </Button>
         </div>
       </div>
+      <GoLivePaywall
+        open={goLiveOpen}
+        onOpenChange={setGoLiveOpen}
+        onPaid={() => {
+          markOnboardingStep('publish');
+          setDone(getOnboardingDone());
+          void refreshProfiles();
+          navigate('/dashboard');
+        }}
+      />
     </RequireActiveProfile>
   );
 }

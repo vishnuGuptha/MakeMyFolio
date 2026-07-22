@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { ArrowUp, Github, Linkedin, Mail, MapPin, Phone, Eye, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { publicApi } from '@/api';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/layout/Section';
+import { ResumePreviewModal, useResumeUrls } from '@/themes/shared/ResumePreviewModal';
 import type { HeroProps } from '../types';
 
 export default function GlassHero({ content, slug }: HeroProps) {
   const [showTop, setShowTop] = useState(false);
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const { viewUrl, downloadUrl } = useResumeUrls(slug);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 500);
@@ -56,22 +58,11 @@ export default function GlassHero({ content, slug }: HeroProps) {
             </Button>
             {content.resumeUrl && (
               <>
-                <Button size="lg" variant="outline" asChild>
-                  <a
-                    href={publicApi.getResumeUrl(slug)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary"
-                  >
-                    <Eye className="h-4 w-4 shrink-0" /> View Resume
-                  </a>
+                <Button size="lg" variant="outline" className="text-primary" onClick={() => setResumeOpen(true)}>
+                  <Eye className="h-4 w-4 shrink-0" /> Preview Resume
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <a
-                    href={publicApi.getResumeUrl(slug, true)}
-                    download
-                    className="text-primary"
-                  >
+                  <a href={downloadUrl} download className="text-primary">
                     <Download className="h-4 w-4 shrink-0" /> Download Resume
                   </a>
                 </Button>
@@ -108,6 +99,16 @@ export default function GlassHero({ content, slug }: HeroProps) {
           <ArrowUp className="h-5 w-5" />
         </button>
       )}
+
+      {content.resumeUrl ? (
+        <ResumePreviewModal
+          open={resumeOpen}
+          onOpenChange={setResumeOpen}
+          viewUrl={viewUrl}
+          downloadUrl={downloadUrl}
+          resumeUrl={content.resumeUrl}
+        />
+      ) : null}
     </section>
   );
 }

@@ -34,9 +34,9 @@ export const ONBOARDING_STEPS: {
   },
   {
     id: 'publish',
-    title: 'Publish',
-    description: 'Make your portfolio live for anyone with the link.',
-    to: '/dashboard',
+    title: 'Go live',
+    description: 'Upgrade to publish, or open your dashboard when you’re ready.',
+    to: '/dashboard/pricing',
   },
 ];
 

@@ -7,6 +7,7 @@ export function useContactForm(slug: string) {
   const isPreview = usePortfolioPreview();
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +20,7 @@ export function useContactForm(slug: string) {
       await publicApi.sendContact(slug, form);
       toast.success('Message sent successfully!');
       setForm({ name: '', email: '', message: '' });
+      setSent(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
     } finally {
@@ -26,5 +28,7 @@ export function useContactForm(slug: string) {
     }
   };
 
-  return { form, setForm, sending, handleSubmit };
+  const resetSent = () => setSent(false);
+
+  return { form, setForm, sending, sent, resetSent, handleSubmit };
 }

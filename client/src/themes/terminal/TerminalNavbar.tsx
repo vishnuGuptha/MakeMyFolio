@@ -7,6 +7,7 @@ import { publicApi } from '@/api';
 import { TerminalContainer } from './layout/TerminalSection';
 import { getVisibleNavSections } from '@/lib/theme';
 import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
+import { usePortfolioData } from '@/context/PortfolioContext';
 import type { NavbarProps } from '../types';
 
 export default function TerminalNavbar({
@@ -23,6 +24,8 @@ export default function TerminalNavbar({
   const [active, setActive] = useState('');
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const { settings } = usePortfolioData();
+  const showNavHireMe = Boolean(settings?.showNavHireMe);
   const navItems = getVisibleNavSections(sectionVisibility);
   const basePath = basePathProp ?? `/${slug}`;
   const isMultiPage = layoutMode === 'multi-page';
@@ -121,12 +124,14 @@ export default function TerminalNavbar({
               Resume
             </a>
           )}
-          <button
-            onClick={() => scrollTo('contact')}
-            className="terminal-nav-btn terminal-nav-btn-primary hidden md:inline-flex"
-          >
-            Hire Me
-          </button>
+          {showNavHireMe ? (
+            <button
+              onClick={() => scrollTo('contact')}
+              className="terminal-nav-btn terminal-nav-btn-primary hidden md:inline-flex"
+            >
+              Hire Me
+            </button>
+          ) : null}
           <button
             onClick={toggleTheme}
             className="terminal-nav-btn terminal-nav-icon-btn"
@@ -181,9 +186,11 @@ export default function TerminalNavbar({
                 Resume
               </a>
             )}
-            <button onClick={() => scrollTo('contact')} className="text-sm py-2 px-2 text-accent font-semibold">
-              Hire Me
-            </button>
+            {showNavHireMe ? (
+              <button onClick={() => scrollTo('contact')} className="text-sm py-2 px-2 text-accent font-semibold">
+                Hire Me
+              </button>
+            ) : null}
           </TerminalContainer>
         </div>
       )}

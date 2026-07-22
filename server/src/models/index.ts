@@ -6,6 +6,8 @@ export interface IPortfolioProfile extends Document {
   ownerId?: Types.ObjectId;
   isPublished: boolean;
   isDefault: boolean;
+  /** Opt-in: appear on the public /examples gallery when published */
+  showInGallery: boolean;
   /** Soft-deleted portfolios sit in the bin until permanently removed */
   deletedAt: Date | null;
   createdAt: Date;
@@ -20,6 +22,7 @@ const portfolioProfileSchema = new Schema<IPortfolioProfile>(
     ownerId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     isPublished: { type: Boolean, default: false },
     isDefault: { type: Boolean, default: false },
+    showInGallery: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
@@ -41,6 +44,14 @@ portfolioProfileSchema.index(
     unique: true,
     name: 'slug_published_unique',
     partialFilterExpression: { isPublished: true, deletedAt: null },
+  }
+);
+
+portfolioProfileSchema.index(
+  { showInGallery: 1, updatedAt: -1 },
+  {
+    name: 'gallery_examples',
+    partialFilterExpression: { isPublished: true, showInGallery: true, deletedAt: null },
   }
 );
 
@@ -124,6 +135,8 @@ export interface ISiteSettings extends Document {
   showAiStrip: boolean;
   showTestimonials: boolean;
   showBlog: boolean;
+  showNavHireMe: boolean;
+  showSectionNumbers: boolean;
   showCursorGlow?: boolean;
   cursorEffect:
     | 'none'
@@ -136,6 +149,11 @@ export interface ISiteSettings extends Document {
     | 'hover-spotlight';
   projectPreviewMode: 'image' | 'webview';
   projectWebviewSlowScroll: boolean;
+  skillsDisplayStyle: 'chips' | 'rings' | 'bars' | 'cards';
+  accessLockEnabled: boolean;
+  /** bcrypt hash of visitor access code — never expose publicly */
+  accessCodeHash: string;
+  faviconStyle: 'auto' | 'photo' | 'initials';
 }
 
 const siteSettingsSchema = new Schema<ISiteSettings>({
@@ -156,6 +174,8 @@ const siteSettingsSchema = new Schema<ISiteSettings>({
   showAiStrip: { type: Boolean, default: true },
   showTestimonials: { type: Boolean, default: false },
   showBlog: { type: Boolean, default: false },
+  showNavHireMe: { type: Boolean, default: false },
+  showSectionNumbers: { type: Boolean, default: false },
   showCursorGlow: { type: Boolean, default: false },
   cursorEffect: {
     type: String,
@@ -164,6 +184,10 @@ const siteSettingsSchema = new Schema<ISiteSettings>({
   },
   projectPreviewMode: { type: String, enum: ['image', 'webview'], default: 'webview' },
   projectWebviewSlowScroll: { type: Boolean, default: false },
+  skillsDisplayStyle: { type: String, enum: ['chips', 'rings', 'bars', 'cards'], default: 'chips' },
+  accessLockEnabled: { type: Boolean, default: false },
+  accessCodeHash: { type: String, default: '' },
+  faviconStyle: { type: String, enum: ['auto', 'photo', 'initials'], default: 'auto' },
 });
 
 export const SiteSettings = mongoose.model<ISiteSettings>('SiteSettings', siteSettingsSchema);
@@ -468,6 +492,29 @@ const activityLogSchema = new Schema<IActivityLog>({
 });
 
 export const ActivityLog = mongoose.model<IActivityLog>('ActivityLog', activityLogSchema);
+
+/** Public folio page view (one row per successful public aggregate load). */
+export interface IPortfolioPageView extends Document {
+  portfolioProfileId: Types.ObjectId;
+  createdAt: Date;
+}
+
+const portfolioPageViewSchema = new Schema<IPortfolioPageView>({
+  portfolioProfileId: {
+    type: Schema.Types.ObjectId,
+    ref: 'PortfolioProfile',
+    required: true,
+    index: true,
+  },
+  createdAt: { type: Date, default: Date.now, index: true },
+});
+
+portfolioPageViewSchema.index({ portfolioProfileId: 1, createdAt: -1 });
+
+export const PortfolioPageView = mongoose.model<IPortfolioPageView>(
+  'PortfolioPageView',
+  portfolioPageViewSchema
+);
 
 /** Singleton platform-managed seed for public /try and theme demos. */
 export interface ITryDemoSeed extends Document {

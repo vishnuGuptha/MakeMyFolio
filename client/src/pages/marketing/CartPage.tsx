@@ -10,9 +10,7 @@ import {
   PLAN_RANK,
   normalizePlanId,
   resolveCheckoutCurrency,
-  USD_CHECKOUT_ENABLED,
   type BillingInterval,
-  type PricingCurrency,
 } from '@/lib/plans';
 import {
   buildAuthPath,
@@ -207,9 +205,9 @@ export default function CartPage() {
           <ShoppingCart className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="font-display text-3xl text-primary sm:text-4xl">Cart</h1>
+          <h1 className="font-display text-3xl text-primary sm:text-4xl">Saved plans</h1>
           <p className="mt-1 text-sm text-subtle">
-            Free → Pro → Premium. Upgrade by paying only the remaining amount.
+            Plans you saved for later. Select one and pay the amount due.
             {user?.role === 'user' ? ' Synced to your account.' : ''}
           </p>
         </div>
@@ -217,13 +215,18 @@ export default function CartPage() {
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-border/70 bg-elevated/60 px-6 py-10 text-center">
-          <p className="text-sm text-secondary">Your cart is empty.</p>
-          <Button className="mt-4 home-cta-secondary" variant="outline" asChild>
-            <Link to={pricingPath}>Browse pricing</Link>
+          <p className="text-sm font-medium text-primary">No saved plans yet</p>
+          <p className="mt-1 text-sm text-secondary">
+            Browse pricing and tap Save for later if you&apos;re not ready to pay.
+          </p>
+          <Button className="mt-4 home-cta-primary h-11 border-0 px-5 font-semibold shadow-none" asChild>
+            <Link to={pricingPath}>
+              <span>Browse pricing</span>
+            </Link>
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start pb-28 lg:pb-0">
           <ul className="space-y-3">
             {items.map((item) => {
               const plan = getPlan(item.planId);
@@ -268,28 +271,9 @@ export default function CartPage() {
                               { value: 'yearly', label: 'Yearly' },
                             ]}
                           />
-                          <ToggleGroup
-                            ariaLabel="Currency"
-                            value={resolveCheckoutCurrency(item.currency)}
-                            onChange={(currency: PricingCurrency) => {
-                              if (currency === 'usd' && !USD_CHECKOUT_ENABLED) {
-                                toast.message('USD payments coming soon', {
-                                  description: 'Checkout is available in INR for now.',
-                                });
-                                return;
-                              }
-                              patchItem(item.id, { currency });
-                            }}
-                            options={[
-                              { value: 'inr', label: 'INR ₹' },
-                              {
-                                value: 'usd',
-                                label: 'USD $',
-                                disabled: !USD_CHECKOUT_ENABLED,
-                                badge: USD_CHECKOUT_ENABLED ? undefined : 'Soon',
-                              },
-                            ]}
-                          />
+                          <span className="inline-flex items-center rounded-md bg-muted/70 px-2.5 py-1 text-[11px] font-medium text-secondary">
+                            INR ₹ · USD soon
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -311,7 +295,7 @@ export default function CartPage() {
                           e.preventDefault();
                           removeFromCart(item.id);
                           refresh();
-                          toast.message('Removed from cart');
+                          toast.message('Removed from saved plans');
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -326,7 +310,8 @@ export default function CartPage() {
           <aside
             id="cart-checkout"
             className={cn(
-              'rounded-2xl border bg-elevated/90 p-4 sm:p-5 lg:sticky lg:top-20 transition-shadow duration-500',
+              'rounded-2xl border bg-elevated/90 p-4 sm:p-5 transition-shadow duration-500',
+              'fixed inset-x-0 bottom-0 z-40 rounded-t-2xl border-t shadow-[0_-12px_40px_-20px_rgb(0_0_0/0.35)] lg:static lg:z-auto lg:rounded-2xl lg:shadow-none lg:sticky lg:top-20',
               highlightCheckout
                 ? 'border-[#0066FF] shadow-[0_0_0_3px_rgb(0_102_255/0.25)] ring-2 ring-[#0066FF]/30'
                 : 'border-[#0066FF]/15'
@@ -369,9 +354,10 @@ export default function CartPage() {
                 </div>
                 <p className="mt-3 text-xs text-subtle">
                   {duePreview?.ok
-                    ? duePreview.isUpgrade
-                      ? 'You only pay the difference to upgrade.'
-                      : 'Secure checkout · cancel anytime before payment.'
+                    ? duePreview.noCreditReason ||
+                      (duePreview.isUpgrade
+                        ? 'You only pay the difference to upgrade.'
+                        : 'Secure checkout · UPI, cards, or netbanking (INR).')
                     : duePreview?.reason}
                 </p>
                 <Button

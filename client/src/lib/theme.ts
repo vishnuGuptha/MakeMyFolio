@@ -70,6 +70,20 @@ export const COLOR_PALETTE_OPTIONS = [
     secondary: '#FFEDD5',
   },
   {
+    id: 'spotlight-warm',
+    label: 'Spotlight Warm',
+    description: 'Developer Spotlight warm — amber primary with soft sand',
+    primary: '#EA580C',
+    secondary: '#FDBA74',
+  },
+  {
+    id: 'spotlight-mono',
+    label: 'Spotlight Mono',
+    description: 'Developer Spotlight mono — graphite with cool silver',
+    primary: '#52525B',
+    secondary: '#A1A1AA',
+  },
+  {
     id: 'fuchsia-dream',
     label: 'Fuchsia Dream',
     description: 'Bright fuchsia with soft orchid',
@@ -100,6 +114,30 @@ export const COLOR_PALETTE_OPTIONS = [
 ] as const;
 
 export type ColorPaletteId = (typeof COLOR_PALETTE_OPTIONS)[number]['id'];
+
+/** Spotlight theme named presets (Warm / Mono / classic orange-green). */
+export const SPOTLIGHT_PRESETS = [
+  {
+    id: 'classic',
+    label: 'Classic',
+    primary: '#f97316',
+    secondary: '#22c55e',
+  },
+  {
+    id: 'warm',
+    label: 'Warm',
+    primary: '#EA580C',
+    secondary: '#FDBA74',
+  },
+  {
+    id: 'mono',
+    label: 'Mono',
+    primary: '#52525B',
+    secondary: '#A1A1AA',
+  },
+] as const;
+
+export type SpotlightPresetId = (typeof SPOTLIGHT_PRESETS)[number]['id'];
 
 export function findMatchingColorPalette(primary?: string, secondary?: string) {
   const p = (primary || '').toLowerCase();

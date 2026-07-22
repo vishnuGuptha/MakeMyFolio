@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Download } from 'lucide-react';
+import { Menu, X, Sun, Moon, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
-import { publicApi } from '@/api';
 import { SpotlightContainer } from './layout/SpotlightSection';
 import { getVisibleNavSections } from '@/lib/theme';
 import { PortfolioNavAvatar } from '@/themes/shared/PortfolioNavAvatar';
+import { ResumePreviewModal, useResumeUrls } from '@/themes/shared/ResumePreviewModal';
+import { usePortfolioData } from '@/context/PortfolioContext';
 import type { NavbarProps } from '../types';
 
 export default function SpotlightNavbar({
@@ -21,8 +22,12 @@ export default function SpotlightNavbar({
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState('');
+  const [resumeOpen, setResumeOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const { settings } = usePortfolioData();
+  const { viewUrl, downloadUrl } = useResumeUrls(slug);
+  const showNavHireMe = Boolean(settings?.showNavHireMe);
   const navItems = getVisibleNavSections(sectionVisibility);
   const basePath = basePathProp ?? `/${slug}`;
   const isMultiPage = layoutMode === 'multi-page';
@@ -60,9 +65,14 @@ export default function SpotlightNavbar({
     setMobileOpen(false);
   };
 
+  const openResume = () => {
+    setResumeOpen(true);
+    setMobileOpen(false);
+  };
+
   const navLinkClass = (isActive: boolean) =>
     cn(
-      'theme-nav-link text-xs xl:text-sm font-medium transition-colors px-2 xl:px-3 py-2 shrink-0',
+      'theme-nav-link text-xs md:text-sm font-medium transition-colors px-2 md:px-3 py-2 shrink-0',
       isActive ? 'theme-nav-link-active' : 'text-subtle hover:text-primary'
     );
 
@@ -88,25 +98,30 @@ export default function SpotlightNavbar({
     >
       <SpotlightContainer className="flex h-16 items-center gap-3 min-w-0">
         <div className="shrink-0 min-w-0">
-        {isMultiPage ? (
-          <Link to={basePath} className="flex items-center gap-2 shrink-0 min-w-0">
-            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
-            <span className="font-semibold text-sm truncate">
-              {firstName}<span className="text-accent">.dev</span>
-            </span>
-          </Link>
-        ) : (
-          <button type="button" onClick={() => scrollTo('home')} className="flex items-center gap-2 shrink-0 min-w-0">
-            <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
-            <span className="font-semibold text-sm truncate">
-              {firstName}<span className="text-accent">.dev</span>
-            </span>
-          </button>
-        )}
-
+          {isMultiPage ? (
+            <Link to={basePath} className="flex items-center gap-2 shrink-0 min-w-0">
+              <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+              <span className="font-semibold text-sm truncate">
+                {firstName}
+                <span className="text-accent">.dev</span>
+              </span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => scrollTo('home')}
+              className="flex items-center gap-2 shrink-0 min-w-0"
+            >
+              <PortfolioNavAvatar name={name} imageUrl={profileImageUrl} size={32} />
+              <span className="font-semibold text-sm truncate">
+                {firstName}
+                <span className="text-accent">.dev</span>
+              </span>
+            </button>
+          )}
         </div>
 
-        <nav className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-0.5 overflow-x-auto spotlight-nav-scroll px-1">
+        <nav className="hidden md:flex flex-1 min-w-0 items-center justify-center gap-0.5 overflow-x-auto spotlight-nav-scroll px-1">
           {homeLink}
           {navItems.map((item) =>
             isMultiPage ? (
@@ -131,21 +146,23 @@ export default function SpotlightNavbar({
 
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {resumeUrl && (
-            <a
-              href={publicApi.getResumeUrl(slug, true)}
-              download
+            <button
+              type="button"
+              onClick={openResume}
               className={cn(actionBtnClass, 'hidden md:inline-flex gap-1.5 px-3 spotlight-cta-outline')}
             >
-              <Download className="h-3.5 w-3.5 shrink-0" />
+              <Eye className="h-3.5 w-3.5 shrink-0" />
               Resume
-            </a>
+            </button>
           )}
-          <button
-            onClick={() => scrollTo('contact')}
-            className={cn(actionBtnClass, 'hidden md:inline-flex px-4 font-semibold spotlight-cta-primary')}
-          >
-            Hire Me
-          </button>
+          {showNavHireMe ? (
+            <button
+              onClick={() => scrollTo('contact')}
+              className={cn(actionBtnClass, 'hidden md:inline-flex px-4 font-semibold spotlight-cta-primary')}
+            >
+              Hire Me
+            </button>
+          ) : null}
           <button
             onClick={toggleTheme}
             className="spotlight-icon-btn h-9 w-9 inline-flex items-center justify-center shrink-0"
@@ -154,7 +171,7 @@ export default function SpotlightNavbar({
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <button
-            className="xl:hidden spotlight-icon-btn h-9 w-9 inline-flex items-center justify-center shrink-0"
+            className="md:hidden spotlight-icon-btn h-9 w-9 inline-flex items-center justify-center shrink-0"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Menu"
           >
@@ -164,14 +181,21 @@ export default function SpotlightNavbar({
       </SpotlightContainer>
 
       {mobileOpen && (
-        <div className="xl:hidden border-t border-border bg-elevated/95 backdrop-blur-xl">
+        <div className="md:hidden border-t border-border bg-elevated/95 backdrop-blur-xl">
           <SpotlightContainer className="py-4 flex flex-col gap-2">
             {isMultiPage ? (
-              <Link to={basePath} onClick={() => setMobileOpen(false)} className="text-left text-sm py-2 px-3 rounded-lg hover:bg-muted/50 text-primary">
+              <Link
+                to={basePath}
+                onClick={() => setMobileOpen(false)}
+                className="text-left text-sm py-2 px-3 rounded-lg hover:bg-muted/50 text-primary"
+              >
                 Home
               </Link>
             ) : (
-              <button onClick={() => scrollTo('home')} className="text-left text-sm py-2 px-3 rounded-lg hover:bg-muted/50 text-primary">
+              <button
+                onClick={() => scrollTo('home')}
+                className="text-left text-sm py-2 px-3 rounded-lg hover:bg-muted/50 text-primary"
+              >
                 Home
               </button>
             )}
@@ -196,23 +220,35 @@ export default function SpotlightNavbar({
               )
             )}
             {resumeUrl && (
-              <a
-                href={publicApi.getResumeUrl(slug, true)}
-                download
+              <button
+                type="button"
+                onClick={openResume}
                 className="text-left text-sm py-2 px-3 rounded-lg hover:bg-muted/50 flex items-center gap-2 text-primary"
               >
-                <Download className="h-4 w-4" /> Resume
-              </a>
+                <Eye className="h-4 w-4" /> Resume
+              </button>
             )}
-            <button
-              onClick={() => scrollTo('contact')}
-              className="text-left text-sm py-2 px-3 rounded-lg spotlight-cta-primary font-semibold"
-            >
-              Hire Me
-            </button>
+            {showNavHireMe ? (
+              <button
+                onClick={() => scrollTo('contact')}
+                className="text-left text-sm py-2 px-3 rounded-lg spotlight-cta-primary font-semibold"
+              >
+                Hire Me
+              </button>
+            ) : null}
           </SpotlightContainer>
         </div>
       )}
+
+      {resumeUrl ? (
+        <ResumePreviewModal
+          open={resumeOpen}
+          onOpenChange={setResumeOpen}
+          viewUrl={viewUrl}
+          downloadUrl={downloadUrl}
+          resumeUrl={resumeUrl}
+        />
+      ) : null}
     </header>
   );
 }

@@ -8,6 +8,8 @@ const DEFAULT_BORDER = '#0066FF';
 
 let faviconGen = 0;
 
+export type FaviconStyle = 'auto' | 'photo' | 'initials';
+
 function ensureLink(rel: string, attrs: Record<string, string>): HTMLLinkElement {
   let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
   if (!link) {
@@ -40,11 +42,73 @@ function applyIconHref(href: string, type: string, sizes?: string) {
   ensureLink('apple-touch-icon', { href });
 }
 
+function contrastText(hex: string): string {
+  const raw = hex.replace('#', '').trim();
+  const full =
+    raw.length === 3
+      ? raw
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : raw.padEnd(6, '0').slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16) || 0;
+  const g = parseInt(full.slice(2, 4), 16) || 0;
+  const b = parseInt(full.slice(4, 6), 16) || 0;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.55 ? '#0a0a0a' : '#ffffff';
+}
+
+/** 1–3 letters from a display name (e.g. "Simar Mann Singh" → "sms"). */
+export function initialsFromName(name?: string | null): string {
+  const parts = (name || '')
+    .trim()
+    .split(/\s+/)
+    .map((p) => p.replace(/[^a-zA-Z0-9]/g, ''))
+    .filter(Boolean);
+  if (!parts.length) return 'BF';
+  if (parts.length === 1) return parts[0].slice(0, 3).toLowerCase();
+  if (parts.length === 2) {
+    return (parts[0][0] + parts[1][0]).toLowerCase();
+  }
+  return (parts[0][0] + parts[1][0] + parts[parts.length - 1][0]).toLowerCase();
+}
+
+export function createInitialsFavicon(name: string, accentColor: string): string {
+  const size = FAVICON_SIZE;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return DEFAULT_ICON_PNG;
+
+  const fill = accentColor?.trim() || DEFAULT_BORDER;
+  const radius = 12;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(radius, 0);
+  ctx.arcTo(size, 0, size, size, radius);
+  ctx.arcTo(size, size, 0, size, radius);
+  ctx.arcTo(0, size, 0, 0, radius);
+  ctx.arcTo(0, 0, size, 0, radius);
+  ctx.closePath();
+  ctx.fill();
+
+  const letters = initialsFromName(name);
+  ctx.fillStyle = contrastText(fill);
+  ctx.font = `bold ${letters.length >= 3 ? 22 : 26}px ui-sans-serif, system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(letters, size / 2, size / 2 + 1);
+
+  return canvas.toDataURL('image/png');
+}
+
 /** Draw profile photo as a circle with theme-colored ring (transparent corners for the tab). */
 function createCircularFavicon(src: string, borderColor: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    // Same-origin /uploads work; anonymous helps when CDN sends CORS.
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
@@ -65,7 +129,6 @@ function createCircularFavicon(src: string, borderColor: string): Promise<string
 
         ctx.clearRect(0, 0, size, size);
 
-        // Photo (cover-fit, clipped to circle)
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, photoR, 0, Math.PI * 2);
@@ -78,7 +141,6 @@ function createCircularFavicon(src: string, borderColor: string): Promise<string
         ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
         ctx.restore();
 
-        // Theme ring
         ctx.beginPath();
         ctx.arc(cx, cy, cx - border / 2, 0, Math.PI * 2);
         ctx.strokeStyle = borderColor || DEFAULT_BORDER;
@@ -113,7 +175,6 @@ export function setDocumentFavicon(
   const gen = ++faviconGen;
   const color = borderColor?.trim() || DEFAULT_BORDER;
 
-  // Optimistic raw icon while the circular version renders
   applyIconHref(url, guessType(url));
 
   void createCircularFavicon(url, color)
@@ -122,10 +183,43 @@ export function setDocumentFavicon(
       applyIconHref(dataUrl, 'image/png', `${FAVICON_SIZE}x${FAVICON_SIZE}`);
     })
     .catch(() => {
-      // Keep raw image if canvas/CORS fails
       if (gen !== faviconGen) return;
       applyIconHref(url, guessType(url));
     });
+}
+
+export function setDocumentInitialsFavicon(name?: string | null, accentColor: string = DEFAULT_BORDER) {
+  const gen = ++faviconGen;
+  const dataUrl = createInitialsFavicon(name || 'Portfolio', accentColor?.trim() || DEFAULT_BORDER);
+  if (gen !== faviconGen) return;
+  applyIconHref(dataUrl, 'image/png', `${FAVICON_SIZE}x${FAVICON_SIZE}`);
+}
+
+/** Resolve photo vs initials from Personalization faviconStyle. */
+export function applyPortfolioFavicon(opts: {
+  name?: string | null;
+  imageUrl?: string | null;
+  accentColor?: string | null;
+  style?: FaviconStyle | string | null;
+}) {
+  const color = opts.accentColor?.trim() || DEFAULT_BORDER;
+  const style = (opts.style || 'auto') as FaviconStyle;
+  const photo = opts.imageUrl?.trim();
+
+  if (style === 'initials') {
+    setDocumentInitialsFavicon(opts.name, color);
+    return;
+  }
+
+  if (style === 'photo') {
+    if (photo) setDocumentFavicon(photo, color);
+    else setDocumentInitialsFavicon(opts.name, color);
+    return;
+  }
+
+  // auto
+  if (photo) setDocumentFavicon(photo, color);
+  else setDocumentInitialsFavicon(opts.name, color);
 }
 
 export function restoreDocumentFavicon() {

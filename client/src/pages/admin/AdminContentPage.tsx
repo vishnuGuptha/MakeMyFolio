@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ChevronDown, Eye, Download, FileText, Trash2, Upload, Sparkles } from 'lucide-react';
+import { ChevronDown, Eye, Download, FileText, Trash2, Upload, Sparkles, Undo2 } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
+import { AdminPortfolioPreviewPane } from '@/components/admin/AdminPortfolioPreviewPane';
 import { UnsavedChangesBar } from '@/components/admin/UnsavedChangesBar';
 import { useUnsavedForm } from '@/hooks/useUnsavedForm';
 import { errorMessage } from '@/lib/apiError';
@@ -15,10 +16,16 @@ import { Card } from '@/components/ui/Card';
 import { GenerateWithAiButton } from '@/components/admin/GenerateWithAiButton';
 import { MediaPickerField } from '@/components/admin/MediaPickerField';
 import { Tooltip } from '@/components/ui/Tooltip';
+import {
+  ResumeImportReviewModal,
+  type ExtractedResumePreview,
+  type ImportSectionFlags,
+} from '@/components/admin/ResumeImportReviewModal';
 import { useAuth } from '@/context/AuthContext';
 import { FREE_IMPORT_USED_MESSAGE } from '@/lib/plans';
 import { Link } from 'react-router-dom';
 import type { ProfileContent } from '@/types';
+import { cn } from '@/lib/utils';
 
 const empty: ProfileContent = {
   name: '', title: '', tagline: '', location: '', phone: '', email: '',
@@ -53,7 +60,23 @@ export default function AdminContentPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [importingResume, setImportingResume] = useState(false);
+  const [applyingImport, setApplyingImport] = useState(false);
+  const [undoingImport, setUndoingImport] = useState(false);
+  const [canUndoImport, setCanUndoImport] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [previewExtracted, setPreviewExtracted] = useState<ExtractedResumePreview | null>(null);
+  const [previewResumeUrl, setPreviewResumeUrl] = useState('');
+  const [previewSummary, setPreviewSummary] = useState<{
+    displayName: string;
+    skills: number;
+    experiences: number;
+    projects: number;
+    education: number;
+    certifications: number;
+  } | null>(null);
   const [aiToolsStr, setAiToolsStr] = useState('');
+  const [previewOpenMobile, setPreviewOpenMobile] = useState(true);
+  const [previewKey, setPreviewKey] = useState(0);
 
   const draft = useMemo(() => ({ form, aiToolsStr }), [form, aiToolsStr]);
   const { isDirty, lastSavedAt, commitBaseline } = useUnsavedForm(draft);
@@ -72,6 +95,17 @@ export default function AdminContentPage() {
       .catch((err) => toast.error(errorMessage(err, 'Failed to load profile')));
   }, [activeProfile, commitBaseline]);
 
+  useEffect(() => {
+    if (!activeProfile) {
+      setCanUndoImport(false);
+      return;
+    }
+    adminApi
+      .getResumeImportUndoAvailable(activeProfile._id)
+      .then((r) => setCanUndoImport(Boolean(r.available)))
+      .catch(() => setCanUndoImport(false));
+  }, [activeProfile]);
+
   const update = (key: keyof ProfileContent, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
   };
@@ -86,6 +120,7 @@ export default function AdminContentPage() {
         aiTools,
       });
       commitBaseline({ form: { ...form, aiTools }, aiToolsStr });
+      setPreviewKey((k) => k + 1);
       toast.success('Profile saved!');
     } catch (err) {
       toast.error(errorMessage(err, 'Failed to save'));
@@ -143,37 +178,76 @@ export default function AdminContentPage() {
       e.target.value = '';
       return;
     }
-    if (
-      !confirm(
-        'This will use Gemini AI to extract data from your resume and replace your current profile, skills, experience, projects, education, and certifications. Continue?'
-      )
-    ) {
-      e.target.value = '';
-      return;
-    }
     setImportingResume(true);
     try {
       const result = await adminApi.importFromResume(activeProfile._id, file);
+      setPreviewExtracted(result.extracted);
+      setPreviewResumeUrl(result.resumeUrl);
+      setPreviewSummary(result.summary);
+      setReviewOpen(true);
+    } catch (err) {
+      toast.error(errorMessage(err, 'Resume import failed'));
+    } finally {
+      setImportingResume(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleApplyImport = async (sections: ImportSectionFlags) => {
+    if (!activeProfile || !previewExtracted) return;
+    setApplyingImport(true);
+    try {
+      const result = await adminApi.applyResumeImport(activeProfile._id, {
+        extracted: previewExtracted,
+        resumeUrl: previewResumeUrl,
+        sections,
+      });
       const next = { ...empty, ...result.content };
       const tools = (result.content.aiTools || []).join(', ');
       setForm(next);
       setAiToolsStr(tools);
       commitBaseline({ form: next, aiToolsStr: tools });
+      setPreviewKey((k) => k + 1);
+      setCanUndoImport(true);
+      setReviewOpen(false);
+      setPreviewExtracted(null);
+      setPreviewSummary(null);
       await refreshProfiles();
       await refreshUser();
       toast.success(
-        `Portfolio filled with exact resume text! ${result.summary.skills} skill categories, ${result.summary.experiences} experiences, ${result.summary.projects} projects. Use Generate with AI on any field to improve.`
+        `Applied import — ${result.summary.skills} skill groups, ${result.summary.experiences} roles, ${result.summary.projects} projects. Undo available if needed.`
       );
-      if (user?.plan === 'free' || !user?.plan) {
+      if (result.resumeImportUsed) {
         toast.message('Free import used', {
           description: 'Resume import is now locked on Free. Upgrade for unlimited imports.',
         });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Resume import failed');
+      toast.error(errorMessage(err, 'Could not apply import'));
     } finally {
-      setImportingResume(false);
-      e.target.value = '';
+      setApplyingImport(false);
+    }
+  };
+
+  const handleUndoImport = async () => {
+    if (!activeProfile || !canUndoImport) return;
+    if (!confirm('Restore your portfolio to how it was before the last resume import?')) return;
+    setUndoingImport(true);
+    try {
+      const result = await adminApi.undoResumeImport(activeProfile._id);
+      const next = { ...empty, ...(result.content || {}) };
+      const tools = (result.content?.aiTools || []).join(', ');
+      setForm(next);
+      setAiToolsStr(tools);
+      commitBaseline({ form: next, aiToolsStr: tools });
+      setPreviewKey((k) => k + 1);
+      setCanUndoImport(false);
+      await refreshProfiles();
+      toast.success('Import undone — previous content restored.');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Could not undo import'));
+    } finally {
+      setUndoingImport(false);
     }
   };
 
@@ -182,7 +256,7 @@ export default function AdminContentPage() {
 
   return (
     <RequireActiveProfile>
-      <div className="mx-auto max-w-6xl space-y-5">
+      <div className="mx-auto max-w-none space-y-4">
         <UnsavedChangesBar
           isDirty={isDirty}
           saving={saving}
@@ -193,14 +267,28 @@ export default function AdminContentPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-primary">Profile & Hero</h1>
-            <p className="mt-0.5 text-sm text-subtle">What visitors see first on your portfolio.</p>
+            <p className="mt-0.5 text-sm text-subtle">
+              Edit above — preview updates after you save.
+            </p>
           </div>
-          <Button onClick={handleSave} disabled={saving || !isDirty} loading={saving}>
-            {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPreviewOpenMobile((o) => !o)}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              {previewOpenMobile ? 'Hide preview' : 'Show preview'}
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !isDirty} loading={saving}>
+              {saving ? 'Saving…' : isDirty ? 'Save' : 'Saved'}
+            </Button>
+          </div>
         </div>
 
-        <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <div className="min-w-0 space-y-5">
+            <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
           {/* Identity rail — not sticky; avoids jump when right column expands */}
           <aside className="space-y-3 [overflow-anchor:none]">
             <Card className="flex flex-col gap-3 !p-3.5">
@@ -314,7 +402,7 @@ export default function AdminContentPage() {
                   <p className="text-xs text-subtle">
                     {importLocked
                       ? FREE_IMPORT_USED_MESSAGE
-                      : 'Exact wording from PDF/DOCX — Free includes 1 import.'}
+                      : 'Review AI extraction before replacing anything — Free includes 1 import.'}
                   </p>
                   {importLocked ? (
                     <Link to="/dashboard/pricing" className="mt-1 inline-block text-xs font-medium text-[#0066FF] hover:underline">
@@ -323,30 +411,43 @@ export default function AdminContentPage() {
                   ) : null}
                 </div>
               </div>
-              <label className="shrink-0">
-                <Button size="sm" disabled={importingResume || importLocked} asChild={!importLocked}>
-                  {importLocked ? (
-                    <span>
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Import used
-                    </span>
-                  ) : (
-                    <span>
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {importingResume ? 'Importing…' : 'Import & auto-fill'}
-                    </span>
-                  )}
-                </Button>
-                {!importLocked ? (
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
-                    onChange={handleImportFromResume}
-                    disabled={importingResume}
-                  />
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {canUndoImport ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={undoingImport}
+                    onClick={handleUndoImport}
+                  >
+                    <Undo2 className="h-3.5 w-3.5" />
+                    {undoingImport ? 'Undoing…' : 'Undo import'}
+                  </Button>
                 ) : null}
-              </label>
+                <label className="shrink-0">
+                  <Button size="sm" disabled={importingResume || importLocked} asChild={!importLocked}>
+                    {importLocked ? (
+                      <span>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Import used
+                      </span>
+                    ) : (
+                      <span>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {importingResume ? 'Reading…' : 'Import & review'}
+                      </span>
+                    )}
+                  </Button>
+                  {!importLocked ? (
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
+                      onChange={handleImportFromResume}
+                      disabled={importingResume}
+                    />
+                  ) : null}
+                </label>
+              </div>
             </Card>
 
             <Card className="space-y-3 !p-4">
@@ -658,7 +759,36 @@ export default function AdminContentPage() {
             </details>
           </div>
         </div>
+          </div>
+
+          {activeProfile ? (
+            <div className={cn('w-full', previewOpenMobile ? 'block' : 'hidden')}>
+              <AdminPortfolioPreviewPane
+                profileId={activeProfile._id}
+                refreshKey={previewKey}
+                isDirty={isDirty}
+                className="h-[min(75svh,42rem)]"
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
+      <ResumeImportReviewModal
+        open={reviewOpen}
+        onOpenChange={(next) => {
+          if (!next && !applyingImport) {
+            setReviewOpen(false);
+            setPreviewExtracted(null);
+            setPreviewSummary(null);
+          } else {
+            setReviewOpen(next);
+          }
+        }}
+        extracted={previewExtracted}
+        summary={previewSummary}
+        applying={applyingImport}
+        onApply={handleApplyImport}
+      />
     </RequireActiveProfile>
   );
 }

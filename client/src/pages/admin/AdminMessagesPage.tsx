@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
+import { useAuth } from '@/context/AuthContext';
 import { RequireActiveProfile } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -122,6 +123,7 @@ function buildConversations(messages: ContactMessage[]): Conversation[] {
 
 export default function AdminMessagesPage() {
   const { activeProfile } = useAdminProfile();
+  const { user } = useAuth();
   const { syncFromMessages } = useUnreadMessages();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -234,6 +236,13 @@ export default function AdminMessagesPage() {
             <p className="mt-0.5 text-sm text-subtle">
               Chats grouped by email · pin up to 3 · latest on top
             </p>
+            {user?.email ? (
+              <p className="mt-1 text-xs text-subtle">
+                New visitor messages also notify{' '}
+                <span className="font-medium text-secondary">{user.email}</span>
+                {' '}when email delivery is configured — check inbox and spam.
+              </p>
+            ) : null}
           </div>
           {active ? (
             <div className="flex flex-wrap items-center gap-1.5">
@@ -303,6 +312,10 @@ export default function AdminMessagesPage() {
                 <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
                   <Mail className="h-8 w-8 text-subtle/50" />
                   <p className="text-sm text-subtle">No messages yet.</p>
+                  <p className="max-w-[16rem] text-xs text-subtle">
+                    When someone uses your live contact form, it shows up here
+                    {user?.email ? ` and can email ${user.email}` : ''}.
+                  </p>
                 </div>
               ) : (
                 conversations.map((conv) => {

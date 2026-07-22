@@ -11,6 +11,7 @@ import {
   ContactMessage,
   MediaAsset,
   ActivityLog,
+  PortfolioPageView,
 } from '../models/index.js';
 
 export async function logActivity(
@@ -40,8 +41,49 @@ export async function cascadeDeleteProfile(profileId: Types.ObjectId | string) {
     ContactMessage.deleteMany({ portfolioProfileId: id }),
     MediaAsset.deleteMany({ portfolioProfileId: id }),
     ActivityLog.deleteMany({ portfolioProfileId: id }),
+    PortfolioPageView.deleteMany({ portfolioProfileId: id }),
     PortfolioProfile.deleteOne({ _id: id }),
   ]);
+}
+
+export type PortfolioAggregate = Awaited<ReturnType<typeof buildPortfolioAggregate>>;
+
+function sanitizeSettingsPublic(settings: Record<string, unknown> | null) {
+  if (!settings) return null;
+  const { accessCodeHash: _hash, accessCode: _code, ...rest } = settings as Record<string, unknown> & {
+    accessCodeHash?: string;
+    accessCode?: string;
+  };
+  return {
+    ...rest,
+    accessLockEnabled: Boolean(rest.accessLockEnabled),
+    accessCodeSet: Boolean(_hash),
+    faviconStyle: (rest.faviconStyle as string) || 'auto',
+  };
+}
+
+function sanitizeSettingsAdmin(settings: Record<string, unknown> | null) {
+  if (!settings) return null;
+  const { accessCodeHash, accessCode: _code, ...rest } = settings as Record<string, unknown> & {
+    accessCodeHash?: string;
+    accessCode?: string;
+  };
+  return {
+    ...rest,
+    accessLockEnabled: Boolean(rest.accessLockEnabled),
+    accessCodeSet: Boolean(accessCodeHash),
+    faviconStyle: (rest.faviconStyle as string) || 'auto',
+  };
+}
+
+export function toAdminSettingsJson(settingsDoc: { toObject: () => Record<string, unknown> } | null) {
+  if (!settingsDoc) return null;
+  const obj = settingsDoc.toObject();
+  const sectionVisibility =
+    obj.sectionVisibility instanceof Map
+      ? Object.fromEntries(obj.sectionVisibility as Map<string, boolean>)
+      : (obj.sectionVisibility as Record<string, boolean> | undefined) ?? {};
+  return sanitizeSettingsAdmin({ ...obj, sectionVisibility });
 }
 
 async function buildPortfolioAggregate(profile: {
@@ -68,6 +110,13 @@ async function buildPortfolioAggregate(profile: {
       ? Object.fromEntries(settings.sectionVisibility)
       : (settings?.sectionVisibility as Record<string, boolean> | undefined) ?? {};
 
+  const settingsObj = settings
+    ? sanitizeSettingsPublic({
+        ...settings.toObject(),
+        sectionVisibility,
+      })
+    : null;
+
   return {
     profile: {
       id: profile._id.toString(),
@@ -78,17 +127,30 @@ async function buildPortfolioAggregate(profile: {
       updatedAt: profile.updatedAt,
     },
     content: content?.toObject() ?? null,
-    settings: settings
-      ? {
-          ...settings.toObject(),
-          sectionVisibility,
-        }
-      : null,
+    settings: settingsObj,
     skills: skills.map((s) => s.toObject()),
     experiences: experiences.map((e) => e.toObject()),
     projects: projects.map((p) => p.toObject()),
     education: education.map((e) => e.toObject()),
     certifications: certifications.map((c) => c.toObject()),
+  };
+}
+
+/** Hero-only public payload when access lock is enabled. */
+export function redactLockedPortfolio(data: PortfolioAggregate): PortfolioAggregate {
+  return {
+    ...data,
+    skills: [],
+    experiences: [],
+    projects: [],
+    education: [],
+    certifications: [],
+    settings: data.settings
+      ? {
+          ...data.settings,
+          accessLockEnabled: true,
+        }
+      : data.settings,
   };
 }
 
@@ -111,6 +173,27 @@ export async function getPortfolioAggregateById(profileId: string | Types.Object
   });
   if (!profile) return null;
   return buildPortfolioAggregate(profile);
+}
+
+export async function getAccessCodeHashForSlug(slug: string): Promise<{
+  profileId: string;
+  hash: string;
+  enabled: boolean;
+} | null> {
+  const profile = await PortfolioProfile.findOne({
+    slug,
+    isPublished: true,
+    deletedAt: null,
+  }).select('_id');
+  if (!profile) return null;
+  const settings = await SiteSettings.findOne({ portfolioProfileId: profile._id }).select(
+    'accessLockEnabled accessCodeHash'
+  );
+  return {
+    profileId: profile._id.toString(),
+    hash: settings?.accessCodeHash || '',
+    enabled: Boolean(settings?.accessLockEnabled),
+  };
 }
 
 export async function duplicateProfileContent(

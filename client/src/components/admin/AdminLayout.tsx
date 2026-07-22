@@ -64,7 +64,7 @@ type NavItem = {
 const GLOBAL_NAV: NavItem[] = [
   { to: '/dashboard/portfolios', label: 'Portfolios', icon: Users },
   { to: '/dashboard/pricing', label: 'Pricing', icon: Tag },
-  { to: '/dashboard/cart', label: 'Cart', icon: ShoppingCart },
+  { to: '/dashboard/cart', label: 'Saved plans', icon: ShoppingCart },
 ];
 
 const PORTFOLIO_NAV: NavItem[] = [
@@ -74,7 +74,7 @@ const PORTFOLIO_NAV: NavItem[] = [
   { to: '/dashboard/experience', label: 'Experience', icon: Briefcase },
   { to: '/dashboard/projects', label: 'Projects', icon: FolderKanban },
   { to: '/dashboard/education', label: 'Education', icon: GraduationCap },
-  { to: '/dashboard/themes/new', label: 'Add Theme', icon: Palette },
+  { to: '/dashboard/themes/new', label: 'Themes', icon: Palette },
   { to: '/dashboard/settings', label: 'Personalization', icon: Settings },
   { to: '/dashboard/messages', label: 'Messages', icon: Mail },
   { to: '/dashboard/media', label: 'Media Library', icon: Image },
@@ -446,6 +446,7 @@ export default function AdminLayout() {
                 onClick={() => setSwitcherOpen((open) => !open)}
                 aria-expanded={switcherOpen}
                 aria-haspopup="listbox"
+                aria-label="Switch portfolio"
                 className={cn(
                   'flex h-8 max-w-full items-center gap-2 rounded-lg border px-2.5 text-sm transition-colors',
                   'border-[#0066FF]/15 bg-elevated/80 hover:border-[#0066FF]/30 hover:bg-muted dark:border-border',
@@ -457,7 +458,7 @@ export default function AdminLayout() {
                     <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#0066FF]/12 text-[9px] font-bold text-[#0066FF]">
                       {userInitials(activeProfile.displayName)}
                     </span>
-                    <span className="min-w-0 max-w-[7.5rem] truncate font-medium text-primary sm:max-w-[11rem]">
+                    <span className="min-w-0 max-w-[10rem] truncate font-medium text-primary sm:max-w-[14rem] md:max-w-[18rem]">
                       {activeProfile.displayName}
                     </span>
                     {activeProfile.isPublished ? (
@@ -574,11 +575,11 @@ export default function AdminLayout() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 gap-1.5 border-[#0066FF]/15 px-2.5"
+                    className="h-8 w-8 border-[#0066FF]/15 p-0"
                     onClick={copyLink}
+                    aria-label="Copy public link"
                   >
                     <Copy className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Copy</span>
                   </Button>
                 </Tooltip>
                 <Tooltip content={activeProfile.isPublished ? 'Open live site' : 'Open draft preview'}>
@@ -587,6 +588,9 @@ export default function AdminLayout() {
                       href={getPortfolioViewUrl(activeProfile)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={
+                        activeProfile.isPublished ? 'View live portfolio' : 'Preview draft portfolio'
+                      }
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Globe, PanelRightClose, PanelRightOpen, Upload, Eye, Monitor, Smartphone, Tablet } from 'lucide-react';
 import {
   useGuestDraft,
@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { resetDocumentThemeForAdmin } from '@/lib/theme';
+import { buildExampleGuestDraft, getExampleById } from '@/lib/exampleFolios';
 
 const THEME_IDS = new Set(PORTFOLIO_THEME_LIST.map((t) => t.id));
 
@@ -31,8 +32,14 @@ export default function TryEditorPage() {
     resetDocumentThemeForAdmin();
   }, [draft.themeId]);
 
-  // Apply ?theme= from Themes gallery links
+  // Apply ?example= remix or ?theme= from gallery links
   useEffect(() => {
+    const exampleId = params.get('example');
+    const example = getExampleById(exampleId);
+    if (example) {
+      setDraft(buildExampleGuestDraft(example));
+      return;
+    }
     const raw = params.get('theme');
     if (!raw || !THEME_IDS.has(raw as PortfolioThemeId)) return;
     const themeId = raw as PortfolioThemeId;
@@ -124,14 +131,14 @@ export default function TryEditorPage() {
               className="home-cta-secondary h-8 text-xs"
               onClick={() => requireAuth('import')}
             >
-              <Upload className="h-3.5 w-3.5" /> Import
+              <Upload className="h-3.5 w-3.5" /> Sign in to import
             </Button>
             <Button
               size="sm"
               className="home-cta-primary h-8 border-0 text-xs hover:bg-transparent"
               onClick={() => requireAuth('publish')}
             >
-              <Globe className="h-3.5 w-3.5" /> Publish
+              <Globe className="h-3.5 w-3.5" /> Sign in to publish
             </Button>
             <Button
               variant={sidebarOpen ? 'ghost' : 'default'}
@@ -222,7 +229,7 @@ export default function TryEditorPage() {
           </div>
 
           <div className="shrink-0 border-t border-[#0066FF]/10 bg-[#0066FF]/[0.04] px-3.5 py-3 text-xs text-subtle dark:border-white/10 dark:bg-white/[0.03]">
-            Guest draft clears on refresh.{' '}
+            Draft saves in this browser.{' '}
             <button
               type="button"
               className="font-medium text-[#0066FF] hover:underline"
@@ -230,11 +237,7 @@ export default function TryEditorPage() {
             >
               Create an account
             </button>{' '}
-            or{' '}
-            <Link to="/register?claimGuest=1" className="font-medium text-[#0066FF] hover:underline">
-              register
-            </Link>
-            .
+            to keep it forever and publish.
           </div>
         </div>
       </aside>

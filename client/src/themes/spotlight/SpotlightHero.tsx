@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ArrowUp, Download } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { publicApi } from '@/api';
+import { useMemo, useState } from 'react';
+import { Download, Eye } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import SocialIconLinks from '@/themes/shared/SocialIconLinks';
+import { ResumePreviewModal, useResumeUrls } from '@/themes/shared/ResumePreviewModal';
 import { SpotlightContainer } from './layout/SpotlightSection';
 import { usePortfolioData } from '@/context/PortfolioContext';
 import TypewriterText from './components/TypewriterText';
 import FloatingAvatar from './components/FloatingAvatar';
+import { SpotlightMagnetic } from './components/SpotlightMagnetic';
 import type { HeroProps } from '../types';
 
 /** Build the rotating typewriter phrase array from profile data */
@@ -33,11 +34,15 @@ function buildTypewriterPhrases(
   return ['React.js', 'Next.js', 'TypeScript', 'Node.js'];
 }
 
+const ease = [0.22, 1, 0.36, 1] as const;
+
 export default function SpotlightHero({ content, slug }: HeroProps) {
-  const [showTop, setShowTop] = useState(false);
+  const reduceMotion = useReducedMotion();
   const portfolio = usePortfolioData();
-  const firstName = content.name.split(' ')[0];
+  const firstName = content.name.split(' ')[0] || content.name;
   const bioExcerpt = content.bio || content.tagline;
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const { viewUrl, downloadUrl } = useResumeUrls(slug);
 
   const skillNames = useMemo(
     () =>
@@ -52,96 +57,118 @@ export default function SpotlightHero({ content, slug }: HeroProps) {
     [content, skillNames]
   );
 
-  useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 500);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+
+  const item = (delay: number) =>
+    reduceMotion
+      ? { initial: false as const, animate: { opacity: 1, y: 0 } }
+      : {
+          initial: { opacity: 0, y: 18 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.45, delay, ease },
+        };
 
   return (
     <section id="hero" className="min-h-[calc(100vh-4rem)] flex items-center pt-8 pb-16 overflow-hidden">
       <SpotlightContainer>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="grid lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] gap-8 lg:gap-12 items-center"
-        >
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] gap-8 lg:gap-12 items-center">
           <div className="min-w-0 order-2 lg:order-1">
             {content.location && (
-              <div className="spotlight-availability-pill inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-subtle mb-6">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Available &bull; {content.location}
-              </div>
+              <motion.div {...item(0)} className="mb-6">
+                <div className="spotlight-availability-pill inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-subtle">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+                  <span>Available · {content.location}</span>
+                </div>
+              </motion.div>
             )}
 
-            <p className="text-4xl md:text-5xl font-bold text-primary mb-1">Hello.</p>
-            <p className="text-xl md:text-2xl text-secondary mb-4">
-              I&apos;m <span className="font-bold text-primary">{firstName}</span>
-            </p>
-
-            {content.title && (
-              <h1 className="theme-hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-balance mb-4">
-                {content.title}
+            <motion.div {...item(0.05)} className="mb-5">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-primary tracking-tight leading-[1.1] m-0">
+                Hello.
               </h1>
-            )}
-
-            <div className="spotlight-typewriter-row flex items-center gap-2 mb-6 min-h-[2.5rem] md:min-h-[3rem]">
-              <span className="w-[3px] self-stretch min-h-[1.5em] shrink-0 rounded-full bg-accent" aria-hidden />
-              <p className="theme-hero-title text-2xl sm:text-3xl md:text-4xl font-bold leading-tight m-0">
-                <TypewriterText words={typewriterPhrases} />
+              <p className="mt-2 text-xl sm:text-2xl md:text-3xl text-secondary m-0">
+                I&apos;m <span className="font-bold text-primary">{firstName}</span>
               </p>
-            </div>
+            </motion.div>
 
-            {bioExcerpt && (
-              <p className="text-base md:text-lg text-subtle leading-relaxed mb-8 line-clamp-4 md:line-clamp-none">
-                {bioExcerpt}
+            <motion.div
+              {...item(0.12)}
+              className="spotlight-typewriter-row inline-flex items-stretch gap-3 mb-7 min-h-[2.75rem] md:min-h-[3.25rem]"
+            >
+              <span className="spotlight-typewriter-bar spotlight-typewriter-bar--start" aria-hidden />
+              <p className="spotlight-typewriter-text text-2xl sm:text-3xl md:text-4xl font-bold m-0 self-center">
+                <TypewriterText words={typewriterPhrases} textClassName="theme-hero-title" />
               </p>
-            )}
+            </motion.div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => scrollTo('contact')}
-                className="spotlight-cta-primary px-6 py-3 rounded-full text-sm font-semibold transition-colors"
+            {bioExcerpt ? (
+              <motion.p
+                {...item(0.2)}
+                className="text-base md:text-lg text-subtle leading-relaxed mb-8 line-clamp-4 md:line-clamp-none"
               >
-                Got a project?
-              </button>
-              {content.resumeUrl && (
-                <a
-                  href={publicApi.getResumeUrl(slug, true)}
-                  download
-                  className="spotlight-cta-outline inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-colors"
+                {bioExcerpt}
+              </motion.p>
+            ) : null}
+
+            <motion.div {...item(0.28)} className="flex flex-wrap gap-3">
+              <SpotlightMagnetic>
+                <button
+                  type="button"
+                  onClick={() => scrollTo('contact')}
+                  className="spotlight-cta-primary px-6 py-3 rounded-full text-sm font-semibold"
                 >
-                  <Download className="h-4 w-4" />
-                  My resume
-                </a>
-              )}
-            </div>
+                  Got a project?
+                </button>
+              </SpotlightMagnetic>
+              {content.resumeUrl ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setResumeOpen(true)}
+                    className="spotlight-cta-outline inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview resume
+                  </button>
+                  <a
+                    href={downloadUrl}
+                    download
+                    className="spotlight-cta-outline inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
+                </>
+              ) : null}
+            </motion.div>
 
-            <SocialIconLinks
-              content={content}
-              className="mt-6"
-              linkClassName="text-subtle hover:text-accent border border-border/50 hover:border-accent/40"
-            />
+            <motion.div {...item(0.34)}>
+              <SocialIconLinks
+                content={content}
+                className="mt-6"
+                linkClassName="text-subtle hover:text-accent border border-border/50 hover:border-accent/40"
+              />
+            </motion.div>
           </div>
 
-          <div className="order-1 lg:order-2 flex justify-center lg:justify-end min-w-0">
+          <motion.div
+            {...item(0.18)}
+            className="order-1 lg:order-2 flex justify-center lg:justify-end min-w-0"
+          >
             <FloatingAvatar imageUrl={content.profileImageUrl} name={content.name} />
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </SpotlightContainer>
 
-      {showTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 z-30 rounded-full bg-accent p-3 text-black shadow-lg hover:bg-accent-hover transition-colors"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </button>
-      )}
+      {content.resumeUrl ? (
+        <ResumePreviewModal
+          open={resumeOpen}
+          onOpenChange={setResumeOpen}
+          viewUrl={viewUrl}
+          downloadUrl={downloadUrl}
+          resumeUrl={content.resumeUrl}
+        />
+      ) : null}
     </section>
   );
 }

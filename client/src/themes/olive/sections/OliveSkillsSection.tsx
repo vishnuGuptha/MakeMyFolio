@@ -15,6 +15,14 @@ import type { ReactNode } from 'react';
 import type { SkillCategory } from '@/types';
 import OliveSection, { OliveSectionHeader } from '../components/OliveSection';
 import OliveEmptyState, { OliveSkillCard } from '../components/OliveEmptyState';
+import { usePortfolioData } from '@/context/PortfolioContext';
+import {
+  resolveSkillsDisplayStyle,
+  SkillBarsLayout,
+  SkillCardsLayout,
+  SkillChipsLayout,
+  SkillRingsLayout,
+} from '@/themes/shared/skills';
 
 const ICONS: ReactNode[] = [
   <BarChart3 key="chart" className="h-8 w-8" strokeWidth={1.6} />,
@@ -27,20 +35,10 @@ const ICONS: ReactNode[] = [
   <Code2 key="code" className="h-8 w-8" strokeWidth={1.6} />,
 ];
 
-function categoryDescription(cat: SkillCategory) {
-  const names = [...cat.skills]
-    .sort((a, b) => a.order - b.order)
-    .map((s) => s.name)
-    .filter(Boolean);
-  if (!names.length) return 'Skills and tools in this category.';
-  return names.join(', ');
-}
-
 export default function OliveSkillsSection({ skills }: { skills: SkillCategory[] }) {
-  const sorted = useMemo(
-    () => [...(skills || [])].sort((a, b) => a.order - b.order),
-    [skills]
-  );
+  const { settings } = usePortfolioData();
+  const style = resolveSkillsDisplayStyle('olive', settings?.skillsDisplayStyle);
+  const sorted = useMemo(() => [...(skills || [])].sort((a, b) => a.order - b.order), [skills]);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -54,14 +52,13 @@ export default function OliveSkillsSection({ skills }: { skills: SkillCategory[]
   }, []);
 
   useEffect(() => {
+    if (style !== 'cards') return;
     const el = viewportRef.current;
     if (!el) return;
     syncNav();
     el.addEventListener('scroll', syncNav, { passive: true });
     const ro = new ResizeObserver(syncNav);
     ro.observe(el);
-
-    // Map vertical wheel/trackpad gestures to horizontal scroll while over the carousel
     const onWheel = (e: WheelEvent) => {
       if (el.scrollWidth <= el.clientWidth) return;
       const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY);
@@ -74,13 +71,12 @@ export default function OliveSkillsSection({ skills }: { skills: SkillCategory[]
       el.scrollBy({ left: delta, behavior: 'auto' });
     };
     el.addEventListener('wheel', onWheel, { passive: false });
-
     return () => {
       el.removeEventListener('scroll', syncNav);
       el.removeEventListener('wheel', onWheel);
       ro.disconnect();
     };
-  }, [sorted.length, syncNav]);
+  }, [sorted.length, syncNav, style]);
 
   const scrollByPage = (direction: -1 | 1) => {
     const el = viewportRef.current;
@@ -95,8 +91,14 @@ export default function OliveSkillsSection({ skills }: { skills: SkillCategory[]
       {!sorted.length ? (
         <OliveEmptyState
           title="No skills yet"
-          hint="Add skill categories in the Skills editor to populate this carousel."
+          hint="Add skill categories in the Skills editor to populate this section."
         />
+      ) : style === 'rings' ? (
+        <SkillRingsLayout skills={sorted} />
+      ) : style === 'bars' ? (
+        <SkillBarsLayout skills={sorted} />
+      ) : style === 'chips' ? (
+        <SkillChipsLayout skills={sorted} />
       ) : (
         <div className="olive-skill-carousel" aria-label="Skill categories carousel">
           <button
@@ -111,15 +113,22 @@ export default function OliveSkillsSection({ skills }: { skills: SkillCategory[]
 
           <div ref={viewportRef} className="olive-skill-viewport" tabIndex={0}>
             <div className="olive-skill-track">
-              {sorted.map((cat, i) => (
-                <OliveSkillCard
-                  key={cat._id}
-                  title={cat.name}
-                  description={categoryDescription(cat)}
-                  icon={ICONS[i % ICONS.length]}
-                  variant={i === 0 ? 'accent' : 'slate'}
-                />
-              ))}
+              <SkillCardsLayout
+                skills={sorted}
+                horizontal
+                classNames={{ root: 'contents', cardGrid: 'contents' }}
+                renderCard={(cat, names) => {
+                  const i = sorted.findIndex((c) => c._id === cat._id);
+                  return (
+                    <OliveSkillCard
+                      title={cat.name}
+                      description={names.join(', ') || 'Skills and tools in this category.'}
+                      icon={ICONS[i % ICONS.length]}
+                      variant={i === 0 ? 'accent' : 'slate'}
+                    />
+                  );
+                }}
+              />
             </div>
           </div>
 

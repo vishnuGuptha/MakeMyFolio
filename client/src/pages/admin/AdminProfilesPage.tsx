@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -18,7 +18,7 @@ import { adminApi } from '@/api';
 import { useAdminProfile } from '@/context/AdminProfileContext';
 import { useAuth } from '@/context/AuthContext';
 import { cn, generateSlug, getPortfolioViewUrl, getPublicPortfolioLabel, getPublicPortfolioUrl } from '@/lib/utils';
-import { FREE_PUBLISH_MESSAGE } from '@/lib/plans';
+import { GoLivePaywall } from '@/components/billing/GoLivePaywall';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Input } from '@/components/ui/Input';
@@ -52,6 +52,7 @@ export default function AdminProfilesPage() {
   const [detailsSlug, setDetailsSlug] = useState('');
   const [slugHint, setSlugHint] = useState('');
   const [savingDetails, setSavingDetails] = useState(false);
+  const [goLiveOpen, setGoLiveOpen] = useState(false);
 
   const loadBin = useCallback(async () => {
     const items = await adminApi.getBinnedProfiles();
@@ -146,7 +147,7 @@ export default function AdminProfilesPage() {
     if (atPortfolioLimit) {
       toast.error(
         `Your plan allows up to ${maxPortfolios} portfolio${maxPortfolios === 1 ? '' : 's'}. Upgrade to add more.`,
-        { action: { label: 'View plans', onClick: () => navigate('/dashboard/pricing') } }
+        { action: { label: 'Upgrade', onClick: () => setGoLiveOpen(true) } }
       );
       return;
     }
@@ -183,9 +184,7 @@ export default function AdminProfilesPage() {
         case 'publish': {
           const next = !profile.isPublished;
           if (next && !canPublish) {
-            toast.error(FREE_PUBLISH_MESSAGE, {
-              action: { label: 'View plans', onClick: () => navigate('/dashboard/pricing') },
-            });
+            setGoLiveOpen(true);
             return;
           }
           if (
@@ -274,9 +273,13 @@ export default function AdminProfilesPage() {
             {!canPublish ? (
               <>
                 {' '}
-                <Link to="/dashboard/pricing" className="font-medium text-[#0066FF] hover:underline">
-                  View plans
-                </Link>
+                <button
+                  type="button"
+                  className="font-medium text-[#0066FF] hover:underline"
+                  onClick={() => setGoLiveOpen(true)}
+                >
+                  Upgrade to go live
+                </button>
               </>
             ) : null}
           </p>
@@ -604,19 +607,24 @@ export default function AdminProfilesPage() {
                         <EyeOff className="h-3.5 w-3.5" />
                         Unpublish
                       </Button>
+                    ) : !canPublish ? (
+                      <Button
+                        size="sm"
+                        className="home-cta-primary border-0 shadow-none"
+                        onClick={() => setGoLiveOpen(true)}
+                      >
+                        <Globe className="h-3.5 w-3.5" />
+                        Upgrade to go live
+                      </Button>
                     ) : (
-                      <Tooltip content={!canPublish ? FREE_PUBLISH_MESSAGE : 'Publish live'}>
-                        <span className="inline-flex">
-                          <Button
-                            size="sm"
-                            disabled={busy || !canPublish}
-                            onClick={() => handleAction('publish', profile)}
-                          >
-                            <Globe className="h-3.5 w-3.5" />
-                            {canPublish ? 'Publish' : 'Locked'}
-                          </Button>
-                        </span>
-                      </Tooltip>
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => handleAction('publish', profile)}
+                      >
+                        <Globe className="h-3.5 w-3.5" />
+                        Publish
+                      </Button>
                     )}
                     <Tooltip
                       content={profile.isPublished ? 'Open live site' : 'Open draft preview'}
@@ -678,6 +686,13 @@ export default function AdminProfilesPage() {
           );
         })}
       </div>
+      <GoLivePaywall
+        open={goLiveOpen}
+        onOpenChange={setGoLiveOpen}
+        onPaid={() => {
+          void refreshProfiles();
+        }}
+      />
     </div>
   );
 }

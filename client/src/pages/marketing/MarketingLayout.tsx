@@ -21,6 +21,7 @@ type NavItem = { to: string; label: string; hash?: boolean };
 const GUEST_NAV: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/try', label: 'Playground' },
+  { to: '/examples', label: 'Examples' },
   { to: '/themes', label: 'Themes' },
   { to: '/pricing', label: 'Pricing' },
 ];
@@ -221,6 +222,9 @@ export function MarketingChrome({
                     <Link to="/try" className="block text-subtle hover:text-accent">
                       Playground
                     </Link>
+                    <Link to="/examples" className="block text-subtle hover:text-accent">
+                      Examples
+                    </Link>
                     <Link to="/themes" className="block text-subtle hover:text-accent">
                       Themes
                     </Link>
@@ -241,7 +245,7 @@ export function MarketingChrome({
                       Pricing
                     </Link>
                     <Link to="/dashboard/cart" className="block text-subtle hover:text-accent">
-                      Cart{cartItems > 0 ? ` (${cartItems})` : ''}
+                      Saved plans{cartItems > 0 ? ` (${cartItems})` : ''}
                     </Link>
                   </>
                 ) : (
