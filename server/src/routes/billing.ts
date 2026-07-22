@@ -84,70 +84,11 @@ router.post('/checkout', requireUser, checkoutLimiter, async (req: AuthRequest, 
     }
 
     if (currency === 'usd') {
-      if (!stripeConfigured()) {
-        throw new AppError('Card payments are not available yet. Try again later or switch to INR.', 503);
-      }
-      const stripe = getStripe();
-
-      const order = await PaymentOrder.create({
-        userId: user._id,
-        planId,
-        billing,
-        currency,
-        amountMinor,
-        provider: 'stripe',
-        status: 'pending',
-      });
-
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        customer_email: user.email,
-        client_reference_id: user._id.toString(),
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: 'usd',
-              unit_amount: amountMinor,
-              product_data: {
-                name: `BuildMyFolio ${planName}`,
-                description: isUpgrade
-                  ? `${label} — pay remaining $${amountMajor} (list $${listMajor} − credit $${creditMajor})`
-                  : `${label} — publish & portfolio limits unlocked`,
-              },
-            },
-          },
-        ],
-        metadata: {
-          orderId: order._id.toString(),
-          userId: user._id.toString(),
-          planId,
-          billing,
-          creditMajor: String(creditMajor),
-          listMajor: String(listMajor),
-        },
-        success_url: `${CLIENT_URL()}/dashboard/pricing?payment=success&plan=${planId}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${CLIENT_URL()}/dashboard/pricing?payment=cancelled&plan=${planId}`,
-      });
-
-      order.stripeSessionId = session.id;
-      await order.save();
-
-      if (!session.url) throw new AppError('Failed to create Stripe checkout session', 500);
-
-      return res.json({
-        provider: 'stripe' as const,
-        orderId: order._id.toString(),
-        url: session.url,
-        amountMajor,
-        listMajor,
-        creditMajor,
-        isUpgrade,
-      });
+      throw new AppError('USD payments are coming soon. Please pay in INR.', 400);
     }
 
     if (!razorpayConfigured()) {
-      throw new AppError('UPI / card payments are not available yet. Try again later or switch to USD.', 503);
+      throw new AppError('UPI / card payments are not available yet. Try again later.', 503);
     }
     if (amountMinor < 100) {
       throw new AppError('Razorpay requires a minimum payment of ₹1', 400);

@@ -269,7 +269,7 @@ export function CheckoutModal({
 
           <div className="flex flex-col gap-2 sm:flex-row-reverse">
             <Button
-              className="home-cta-primary h-10 flex-1 border-0 hover:bg-transparent"
+              className="home-cta-primary h-10 flex-1 border-0 font-semibold shadow-none"
               loading={paying}
               disabled={due ? !due.ok : false}
               onClick={handlePay}

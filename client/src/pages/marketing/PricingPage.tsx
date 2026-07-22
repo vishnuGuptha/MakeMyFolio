@@ -13,6 +13,8 @@ import {
   normalizePlanId,
   readStoredCurrency,
   storeCurrency,
+  resolveCheckoutCurrency,
+  USD_CHECKOUT_ENABLED,
   type BillingInterval,
   type PlanId,
   type PricingCurrency,
@@ -35,7 +37,7 @@ import {
   type PaidPlanId,
 } from '@/lib/planCheckout';
 import { useAuth } from '@/context/AuthContext';
-import { GlassTiltCard, MagneticCta } from '@/components/marketing/HomeInteractions';
+import { GlassTiltCard } from '@/components/marketing/HomeInteractions';
 import { CheckoutModal } from '@/components/billing/CheckoutModal';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -179,12 +181,22 @@ export default function PricingPage() {
   }, [searchParams, isLoggedIn, billing, currency, refreshUser, setSearchParams]);
 
   const setCurrencyPersist = (next: PricingCurrency) => {
+    if (next === 'usd' && !USD_CHECKOUT_ENABLED) {
+      toast.message('USD payments coming soon', {
+        description: 'Checkout is available in INR for now.',
+      });
+      return;
+    }
     setCurrency(next);
     storeCurrency(next);
   };
 
   const openCheckout = (planId: PaidPlanId) => {
-    const intent: CheckoutIntent = { planId, billing, currency };
+    const intent: CheckoutIntent = {
+      planId,
+      billing,
+      currency: resolveCheckoutCurrency(currency),
+    };
     setCheckoutIntent(intent);
     setCheckoutIntentState(intent);
     setCheckoutOpen(true);
@@ -198,11 +210,12 @@ export default function PricingPage() {
       return;
     }
 
+    const payCurrency = resolveCheckoutCurrency(currency);
     const due = previewUpgradeDue({
       currentPlan: currentPlan || 'free',
       targetPlan: planId,
       billing,
-      currency,
+      currency: payCurrency,
       currentBilling: user?.planBilling,
       currentCurrency: user?.planCurrency,
     });
@@ -211,7 +224,7 @@ export default function PricingPage() {
       return;
     }
 
-    const intent: CheckoutIntent = { planId, billing, currency };
+    const intent: CheckoutIntent = { planId, billing, currency: payCurrency };
     setCheckoutIntent(intent);
 
     if (isLoggedIn) {
@@ -271,7 +284,7 @@ export default function PricingPage() {
           currentPlan: currentPlan || 'free',
           targetPlan: planId,
           billing,
-          currency,
+          currency: resolveCheckoutCurrency(currency),
           currentBilling: user?.planBilling,
           currentCurrency: user?.planCurrency,
         });
@@ -287,7 +300,7 @@ export default function PricingPage() {
         return {
           disabled: false,
           label: due.isUpgrade
-            ? `Pay ${formatMoney(due.amountMajor, currency)} remaining`
+            ? `Pay ${formatMoney(due.amountMajor, resolveCheckoutCurrency(currency))} remaining`
             : `Get ${plan.name}`,
           hint: due.isUpgrade
             ? `Credit applied from ${PLANS.find((p) => p.id === currentPlan)?.name ?? 'your plan'}`
@@ -306,10 +319,7 @@ export default function PricingPage() {
     };
   }, [currentPlan, isLoggedIn, billing, currency, user?.planBilling, user?.planCurrency]);
 
-  const savingsHint =
-    currency === 'usd'
-      ? 'Pro yearly ≈ $0.83/mo · Premium yearly ≈ $1.67/mo'
-      : 'Pro yearly ≈ ₹70/mo · Premium yearly ≈ ₹141/mo';
+  const savingsHint = 'Pro yearly ≈ ₹70/mo · Premium yearly ≈ ₹141/mo · USD checkout coming soon';
 
   const currentPlanDef = currentPlan ? PLANS.find((p) => p.id === currentPlan) : null;
   const currentPrice = currentPlanDef
@@ -430,22 +440,26 @@ export default function PricingPage() {
                   </p>
                 ) : null}
               </div>
-              <div className="flex flex-col gap-2 sm:items-end">
+              <div className="flex flex-col gap-2 sm:min-w-[9.5rem] sm:items-stretch">
                 {upgradePlans.length > 0 ? (
                   showUpgrades ? (
-                    <Button variant="outline" className="home-cta-secondary h-10" onClick={closeUpgradePicker}>
-                      Hide upgrades
+                    <Button
+                      variant="outline"
+                      className="home-cta-secondary h-11 min-w-[9.5rem] px-5 font-semibold"
+                      onClick={closeUpgradePicker}
+                    >
+                      <span>Hide upgrades</span>
                     </Button>
                   ) : (
                     <Button
-                      className="home-cta-primary h-10 border-0 hover:bg-transparent"
+                      className="home-cta-primary h-11 min-w-[9.5rem] border-0 px-5 font-semibold shadow-none"
                       onClick={openUpgradePicker}
                     >
-                      Upgrade
+                      <span>Upgrade</span>
                     </Button>
                   )
                 ) : (
-                  <span className="rounded-lg border border-border/70 bg-muted/40 px-3 py-2 text-xs font-medium text-secondary">
+                  <span className="inline-flex h-11 items-center justify-center rounded-xl border border-border/70 bg-muted/40 px-4 text-xs font-semibold text-secondary">
                     Highest plan
                   </span>
                 )}
@@ -502,18 +516,6 @@ export default function PricingPage() {
                   type="button"
                   className={cn(
                     'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                    currency === 'usd'
-                      ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
-                      : 'text-secondary hover:text-primary'
-                  )}
-                  onClick={() => setCurrencyPersist('usd')}
-                >
-                  USD $
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                     currency === 'inr'
                       ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
                       : 'text-secondary hover:text-primary'
@@ -521,6 +523,25 @@ export default function PricingPage() {
                   onClick={() => setCurrencyPersist('inr')}
                 >
                   INR ₹
+                </button>
+                <button
+                  type="button"
+                  disabled={!USD_CHECKOUT_ENABLED}
+                  title={USD_CHECKOUT_ENABLED ? 'USD' : 'USD payments coming soon'}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                    USD_CHECKOUT_ENABLED && currency === 'usd'
+                      ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
+                      : 'cursor-not-allowed text-subtle opacity-70'
+                  )}
+                  onClick={() => setCurrencyPersist('usd')}
+                >
+                  USD $
+                  {!USD_CHECKOUT_ENABLED ? (
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-subtle">
+                      Soon
+                    </span>
+                  ) : null}
                 </button>
               </div>
 
@@ -558,6 +579,7 @@ export default function PricingPage() {
                     className="h-full"
                   >
                     <GlassTiltCard
+                      tilt={false}
                       className={cn(
                         'flex h-full flex-col',
                         showPopular &&
@@ -602,42 +624,40 @@ export default function PricingPage() {
                         ))}
                       </ul>
                       <div className="mt-8 w-full">
-                        <MagneticCta className="w-full">
                           {cta.disabled ? (
                             <Button
                               className={cn(
-                                'h-11 w-full disabled:opacity-100',
+                                'h-11 w-full cursor-default font-semibold disabled:opacity-100',
                                 cta.kind === 'current'
-                                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300'
+                                  ? 'border-emerald-500/35 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
                                   : 'border-border/80 bg-muted/50 text-secondary'
                               )}
                               variant="outline"
                               disabled
                             >
-                              {cta.label}
+                              <span>{cta.label}</span>
                             </Button>
                           ) : paid ? (
                             <Button
-                              className="home-cta-primary h-11 w-full border-0 hover:bg-transparent"
+                              className="home-cta-primary h-11 w-full border-0 px-4 font-semibold shadow-none"
                               onClick={() => startPaidPlan(plan.id as PaidPlanId)}
                             >
-                              {cta.label}
+                              <span>{cta.label}</span>
                             </Button>
                           ) : (
                             <Button
                               className={cn(
-                                'w-full',
-                                showPopular
-                                  ? 'home-cta-primary h-11 border-0 hover:bg-transparent'
-                                  : 'home-cta-secondary h-11'
+                                'h-11 w-full border-0 px-4 font-semibold shadow-none',
+                                showPopular ? 'home-cta-primary' : 'home-cta-secondary'
                               )}
                               variant={showPopular ? 'default' : 'outline'}
                               asChild
                             >
-                              <Link to={cta.to || '/dashboard'}>{cta.label}</Link>
+                              <Link to={cta.to || '/dashboard'}>
+                                <span>{cta.label}</span>
+                              </Link>
                             </Button>
                           )}
-                        </MagneticCta>
                         {cta.hint ? (
                           <p className="mt-2 text-center text-[11px] text-subtle">{cta.hint}</p>
                         ) : null}

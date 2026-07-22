@@ -5,13 +5,14 @@ import { cn } from '@/lib/utils';
 import { InlineSpinner } from '@/components/ui/PageLoader';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[colors,transform,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.985] disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100',
   {
     variants: {
       variant: {
-        default: 'bg-accent text-white hover:bg-accent-hover',
+        default:
+          'bg-accent text-white shadow-[0_10px_24px_-12px_rgb(0_102_255/0.55)] hover:bg-accent-hover hover:shadow-[0_14px_28px_-10px_rgb(0_102_255/0.65)]',
         outline:
-          'border border-border/90 text-primary bg-elevated/50 hover:bg-muted hover:border-[#0066FF]/35',
+          'border border-border/90 text-primary bg-elevated/50 hover:bg-muted hover:border-[#0066FF]/35 hover:text-[#0066FF]',
         ghost: 'text-secondary hover:bg-muted hover:text-primary',
         danger: 'bg-red-600 text-white hover:bg-red-700',
       },

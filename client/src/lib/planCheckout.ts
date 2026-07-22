@@ -1,4 +1,5 @@
 import type { BillingInterval, PlanId, PricingCurrency } from '@/lib/plans';
+import { resolveCheckoutCurrency } from '@/lib/plans';
 
 /** Paid plans that can enter checkout / cart (not Free). */
 export type PaidPlanId = Exclude<PlanId, 'free'>;
@@ -35,7 +36,11 @@ function parseIntent(raw: unknown): CheckoutIntent | null {
   if (!raw || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
   if (!isPaidPlanId(o.planId) || !isBilling(o.billing) || !isCurrency(o.currency)) return null;
-  return { planId: o.planId, billing: o.billing, currency: o.currency };
+  return {
+    planId: o.planId,
+    billing: o.billing,
+    currency: resolveCheckoutCurrency(o.currency),
+  };
 }
 
 function emitCartUpdated() {

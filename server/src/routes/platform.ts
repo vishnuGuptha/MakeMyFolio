@@ -145,7 +145,7 @@ router.patch('/users/:userId/plan', async (req, res) => {
       } else if (user.planCurrency === 'usd' || user.planCurrency === 'inr') {
         planCurrency = user.planCurrency;
       } else {
-        planCurrency = 'usd';
+        planCurrency = 'inr';
       }
       planActivatedAt = new Date();
     }

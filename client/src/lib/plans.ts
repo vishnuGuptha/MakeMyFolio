@@ -148,22 +148,35 @@ export const PLANS: PlanDef[] = [
 
 const CURRENCY_KEY = 'bmf-pricing-currency';
 
+/** Stripe USD checkout — not live yet; INR (Razorpay) is the default. */
+export const USD_CHECKOUT_ENABLED = false;
+
 export function readStoredCurrency(): PricingCurrency {
   try {
     const v = localStorage.getItem(CURRENCY_KEY);
-    if (v === 'usd' || v === 'inr') return v;
+    if (v === 'inr') return 'inr';
+    if (v === 'usd' && USD_CHECKOUT_ENABLED) return 'usd';
   } catch {
     /* ignore */
   }
-  return 'usd';
+  return 'inr';
 }
 
 export function storeCurrency(currency: PricingCurrency) {
+  if (currency === 'usd' && !USD_CHECKOUT_ENABLED) {
+    currency = 'inr';
+  }
   try {
     localStorage.setItem(CURRENCY_KEY, currency);
   } catch {
     /* ignore */
   }
+}
+
+/** Coerce to a currently payable currency (INR until USD ships). */
+export function resolveCheckoutCurrency(currency?: PricingCurrency | null): PricingCurrency {
+  if (currency === 'usd' && USD_CHECKOUT_ENABLED) return 'usd';
+  return 'inr';
 }
 
 export function formatPlanPrice(

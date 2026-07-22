@@ -53,11 +53,15 @@ export function MagneticCta({
 export function GlassTiltCard({
   children,
   className,
+  tilt = true,
 }: {
   children: ReactNode;
   className?: string;
+  /** Set false on dense action cards so buttons stay rock-solid to click */
+  tilt?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
+  const enabled = tilt && !reduceMotion;
   const ref = useRef<HTMLDivElement>(null);
   const rx = useMotionValue(0);
   const ry = useMotionValue(0);
@@ -69,16 +73,16 @@ export function GlassTiltCard({
       ref={ref}
       className={cn('home-glass-card group relative h-full will-change-transform', className)}
       style={
-        reduceMotion
-          ? undefined
-          : {
+        enabled
+          ? {
               rotateX: srx,
               rotateY: sry,
               transformPerspective: 900,
             }
+          : undefined
       }
       onPointerMove={(e) => {
-        if (reduceMotion) return;
+        if (!enabled) return;
         const el = ref.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
@@ -91,15 +95,15 @@ export function GlassTiltCard({
         rx.set(0);
         ry.set(0);
       }}
-      animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
-      whileHover={reduceMotion ? undefined : { y: -8, scale: 1.015 }}
+      animate={enabled ? { y: [0, -3, 0] } : undefined}
+      whileHover={enabled ? { y: -8, scale: 1.015 } : undefined}
       transition={
-        reduceMotion
-          ? undefined
-          : {
+        enabled
+          ? {
               y: { duration: 5.5, repeat: Infinity, ease: 'easeInOut' },
               scale: { type: 'spring', stiffness: 300, damping: 24 },
             }
+          : undefined
       }
     >
       <div className="home-glass-card-shine pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

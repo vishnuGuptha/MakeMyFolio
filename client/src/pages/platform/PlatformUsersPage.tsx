@@ -71,7 +71,7 @@ export default function PlatformUsersPage() {
       await platformApi.setUserPlan(user._id, {
         plan: draft.plan,
         planBilling: draft.plan === 'free' ? null : draft.planBilling,
-        planCurrency: draft.plan === 'free' ? null : user.planCurrency ?? 'usd',
+        planCurrency: draft.plan === 'free' ? null : user.planCurrency ?? 'inr',
       });
       toast.success(`Updated ${user.name} to ${planLabel(draft.plan, draft.planBilling)}`);
       await load();

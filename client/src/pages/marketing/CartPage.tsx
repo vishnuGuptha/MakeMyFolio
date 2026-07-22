@@ -9,6 +9,8 @@ import {
   previewUpgradeDue,
   PLAN_RANK,
   normalizePlanId,
+  resolveCheckoutCurrency,
+  USD_CHECKOUT_ENABLED,
   type BillingInterval,
   type PricingCurrency,
 } from '@/lib/plans';
@@ -39,7 +41,7 @@ function ToggleGroup<T extends string>({
   ariaLabel,
 }: {
   value: T;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; disabled?: boolean; badge?: string }[];
   onChange: (v: T) => void;
   ariaLabel: string;
 }) {
@@ -53,15 +55,27 @@ function ToggleGroup<T extends string>({
         <button
           key={opt.value}
           type="button"
+          disabled={opt.disabled}
+          title={opt.disabled ? `${opt.label} coming soon` : undefined}
           className={cn(
-            'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
-            value === opt.value
-              ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
-              : 'text-secondary hover:text-primary'
+            'inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+            opt.disabled
+              ? 'cursor-not-allowed text-subtle opacity-70'
+              : value === opt.value
+                ? 'bg-elevated text-[#0066FF] shadow-sm ring-1 ring-[#0066FF]/20'
+                : 'text-secondary hover:text-primary'
           )}
-          onClick={() => onChange(opt.value)}
+          onClick={() => {
+            if (opt.disabled) return;
+            onChange(opt.value);
+          }}
         >
           {opt.label}
+          {opt.badge ? (
+            <span className="rounded-full bg-muted px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-subtle">
+              {opt.badge}
+            </span>
+          ) : null}
         </button>
       ))}
     </div>
@@ -133,11 +147,12 @@ export default function CartPage() {
 
   const duePreview = useMemo(() => {
     if (!selected) return null;
+    const currency = resolveCheckoutCurrency(selected.currency);
     return previewUpgradeDue({
       currentPlan,
       targetPlan: selected.planId,
       billing: selected.billing,
-      currency: selected.currency,
+      currency,
       currentBilling: user?.planBilling,
       currentCurrency: user?.planCurrency,
     });
@@ -148,11 +163,12 @@ export default function CartPage() {
       toast.message('Custom domain is not available yet');
       return;
     }
+    const currency = resolveCheckoutCurrency(item.currency);
     const preview = previewUpgradeDue({
       currentPlan,
       targetPlan: item.planId,
       billing: item.billing,
-      currency: item.currency,
+      currency,
       currentBilling: user?.planBilling,
       currentCurrency: user?.planCurrency,
     });
@@ -164,7 +180,7 @@ export default function CartPage() {
     const intent: CheckoutIntent = {
       planId: item.planId as PaidPlanId,
       billing: item.billing,
-      currency: item.currency,
+      currency,
     };
     setCheckoutIntent(intent);
     if (user?.role !== 'user') {
@@ -213,7 +229,7 @@ export default function CartPage() {
               const plan = getPlan(item.planId);
               const { price, note, equivalent } = formatPlanPrice(
                 plan,
-                item.currency,
+                resolveCheckoutCurrency(item.currency),
                 item.billing
               );
               const isSelected = selected?.id === item.id;
@@ -254,13 +270,24 @@ export default function CartPage() {
                           />
                           <ToggleGroup
                             ariaLabel="Currency"
-                            value={item.currency}
-                            onChange={(currency: PricingCurrency) =>
-                              patchItem(item.id, { currency })
-                            }
+                            value={resolveCheckoutCurrency(item.currency)}
+                            onChange={(currency: PricingCurrency) => {
+                              if (currency === 'usd' && !USD_CHECKOUT_ENABLED) {
+                                toast.message('USD payments coming soon', {
+                                  description: 'Checkout is available in INR for now.',
+                                });
+                                return;
+                              }
+                              patchItem(item.id, { currency });
+                            }}
                             options={[
-                              { value: 'usd', label: 'USD $' },
                               { value: 'inr', label: 'INR ₹' },
+                              {
+                                value: 'usd',
+                                label: 'USD $',
+                                disabled: !USD_CHECKOUT_ENABLED,
+                                badge: USD_CHECKOUT_ENABLED ? undefined : 'Soon',
+                              },
                             ]}
                           />
                         </div>
@@ -314,20 +341,29 @@ export default function CartPage() {
                     <span className="font-medium text-primary">
                       {formatMoney(
                         duePreview?.listMajor ?? 0,
-                        selected.currency
+                        resolveCheckoutCurrency(selected.currency)
                       )}
                     </span>
                   </div>
                   {duePreview?.isUpgrade && duePreview.creditMajor > 0 ? (
                     <div className="flex justify-between gap-2 text-emerald-600 dark:text-emerald-400">
                       <span>Credit ({normalizePlanId(user?.plan)})</span>
-                      <span>−{formatMoney(duePreview.creditMajor, selected.currency)}</span>
+                      <span>
+                        −
+                        {formatMoney(
+                          duePreview.creditMajor,
+                          resolveCheckoutCurrency(selected.currency)
+                        )}
+                      </span>
                     </div>
                   ) : null}
                   <div className="flex justify-between gap-2 font-semibold text-primary">
                     <span>Due now</span>
                     <span>
-                      {formatMoney(duePreview?.amountMajor ?? 0, selected.currency)}
+                      {formatMoney(
+                        duePreview?.amountMajor ?? 0,
+                        resolveCheckoutCurrency(selected.currency)
+                      )}
                     </span>
                   </div>
                 </div>
@@ -340,13 +376,13 @@ export default function CartPage() {
                 </p>
                 <Button
                   className={cn(
-                    'home-cta-primary mt-4 h-11 w-full border-0 hover:bg-transparent',
+                    'home-cta-primary mt-4 h-11 w-full border-0 font-semibold shadow-none',
                     highlightCheckout && 'ring-2 ring-[#0066FF]/40 ring-offset-2 ring-offset-elevated'
                   )}
                   disabled={!duePreview?.ok}
                   onClick={() => startCheckout(selected)}
                 >
-                  {duePreview?.ok ? duePreview.dueLabel : 'Unavailable'}
+                  <span>{duePreview?.ok ? duePreview.dueLabel : 'Unavailable'}</span>
                 </Button>
               </>
             ) : null}
